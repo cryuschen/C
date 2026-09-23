@@ -14,34 +14,31 @@
    - 正则化三次平滑样条拟合，配备 95% Bootstrap 连续置信区间
 3. 严谨闭环自证体系（Closed-Loop Validation）：
    - 5折交叉验证（Out-of-Fold 评估，杜绝模板自循环数据泄漏）
-   - 半合成金标准真值注入测试（定量自证波形恢复度与形状差分保留率）
+   - 半合成注入测试（量化已知注入信号的恢复误差与左右差分）
    - 左右刺激特征可分离性检验
 4. 完整全通道科研绘图（Complete Multi-Channel Visualization）：
    - 包含 Fz、F3、F4 全部通道波形与拟合曲线
    - 包含左右三角刺激响应对比与半球侧化图
    - 包含 Task-1 与 Task-2 认知负荷跨任务对比图
-   - 包含半合成金标准恢复对比图与 V1/V2/V3 综合指标对比柱状图
+   - 包含半合成注入测试图、典型单试次、左右 ERP、P300 放大图和 Trial×Time 热力图
 ================================================================================
 """
 
 import os
-import sys
-import glob
-from pathlib import Path
+os.environ.setdefault('MPLCONFIGDIR', '/tmp/mpl_cache')
 import numpy as np
 import pandas as pd
 import scipy.io as sio
-from scipy.signal import butter, sosfiltfilt, iirnotch, filtfilt, savgol_filter
+from scipy.signal import butter, sosfiltfilt, iirnotch, filtfilt, savgol_filter, welch
 from scipy.stats import median_abs_deviation
 from scipy.optimize import curve_fit
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 # -----------------------------------------------------------------------------
 # 0. 环境与绘图配置
 # -----------------------------------------------------------------------------
-os.environ['MPLCONFIGDIR'] = '/tmp/mpl_cache'
-matplotlib.use('Agg')
 
 # 配置中文字体支持
 plt.rcParams['font.sans-serif'] = ['Noto Sans CJK SC', 'SimHei', 'WenQuanYi Zen Hei', 'DejaVu Sans']
@@ -321,7 +318,7 @@ def fit_erp_curve(t_ms, y_erp):
     
     # 初始参数猜测：a0, a1, A_n1, mu_n1, sig_n1, A_n2, mu_n2, sig_n2, A_p3, mu_p3, sig_p3
     p300_idx = np.where((t_fit >= 250) & (t_fit <= 500))[0]
-    p300_peak_init = float(np.max(y_fit[p300_idx])) if len(p300_idx) > 0 else 10.0
+    p300_peak_init = max(0.0, float(np.max(y_fit[p300_idx]))) if len(p300_idx) > 0 else 10.0
     p300_loc_init = float(t_fit[p300_idx[np.argmax(y_fit[p300_idx])]]) if len(p300_idx) > 0 else 350.0
     
     p0 = [
@@ -366,20 +363,16 @@ def fit_erp_curve(t_ms, y_erp):
             "N100_amp": popt[2], "N100_lat_ms": popt[3], "N100_fwhm_ms": 2.355 * popt[4],
             "N200_amp": popt[5], "N200_lat_ms": popt[6], "N200_fwhm_ms": 2.355 * popt[7],
             "P300_amp": popt[8], "P300_lat_ms": popt[9], "P300_fwhm_ms": 2.355 * popt[10],
-            "R2": r2, "RMSE": rmse
+            "R2": r2, "RMSE": rmse, "fit_status": "gaussian"
         }
-    except Exception as e:
-        # 若非线性拟合未收敛，平滑样条兜底
+    except (RuntimeError, ValueError) as e:
+        # 平滑线仅供视觉辅助；不能把它当成成功的三高斯拟合。
         fitted_full = savgol_filter(y_erp, window_length=25, polyorder=3)
-        r2 = 0.85
-        rmse = float(np.std(y_erp - fitted_full))
         fit_params = {
             "N100_amp": np.nan, "N100_lat_ms": np.nan, "N100_fwhm_ms": np.nan,
             "N200_amp": np.nan, "N200_lat_ms": np.nan, "N200_fwhm_ms": np.nan,
-            "P300_amp": float(np.max(fitted_full[P300_MASK])),
-            "P300_lat_ms": float(TIMES_MS[P300_MASK][np.argmax(fitted_full[P300_MASK])]),
-            "P300_fwhm_ms": 100.0,
-            "R2": r2, "RMSE": rmse
+            "P300_amp": np.nan, "P300_lat_ms": np.nan, "P300_fwhm_ms": np.nan,
+            "R2": np.nan, "RMSE": np.nan, "fit_status": "smooth_fallback"
         }
         
     return fitted_full, fit_params
@@ -458,15 +451,15 @@ def run_5fold_cv_correction(epochs, cues, irrecoverable, artifact_scores):
     return corrected_all, global_templates, ref_mask
 
 # -----------------------------------------------------------------------------
-# 8. 半合成金标准真值注入验证（Closed-Loop Benchmark）
+# 8. 半合成注入验证（Closed-Loop Benchmark）
 # -----------------------------------------------------------------------------
 def run_synthetic_benchmark(clean_background_epochs, output_dir):
     """
-    数学闭环验证金标准：
+    半合成闭环验证：
     在实测干净背景脑电上注入已知 P300 信号和强眼电伪影，
-    验证 V3 算法能否在完全未知的真实背景下，完美恢复已知的真实 ERP 与左右差分！
+    比较注入前后的恢复误差；真实背景未知，因此该测试不等同于完整真值验证。
     """
-    print("\n>>> 正在运行半合成金标准闭环验证 (Synthetic Gold-Standard Benchmark)...")
+    print("\n>>> 正在运行半合成注入验证 (Semi-synthetic Benchmark)...")
     n_samples = TOTAL_EPOCH_POINTS
     t_ms = TIMES_MS
     
@@ -491,27 +484,32 @@ def run_synthetic_benchmark(clean_background_epochs, output_dir):
     synth_epochs = np.zeros((n_synth, 3, n_samples))
     synth_cues = np.array([-1] * (n_synth // 2) + [1] * (n_synth // 2))
     
-    # 真实背景取自实测纯净试次
-    bg_pool = clean_background_epochs[:n_synth]
+    # 左右条件使用同一批背景试次，使注入差分有可核对的真值。
+    bg_pool = clean_background_epochs[:n_synth // 2]
+    truth_epochs = np.zeros_like(synth_epochs)
     
     # 人工强伪影 (峰值高达 120 uV 的眨眼与 40 uV 的扫视)
     blink_art = 100.0 * np.exp(-0.5 * ((t_ms - 300.0) / 60.0) ** 2)
     saccade_art = 35.0 * np.exp(-0.5 * ((t_ms - 310.0) / 40.0) ** 2)
+    artifact_rng = np.random.default_rng(42)
     
     for i in range(n_synth):
         cond = synth_cues[i]
         true_sig = true_left if cond == -1 else true_right
-        synth_epochs[i] = bg_pool[i % len(bg_pool)] + true_sig
+        truth_epochs[i] = bg_pool[i % len(bg_pool)] + true_sig
+        synth_epochs[i] = truth_epochs[i]
         
         # 对半数试次注入重度伪影
         if i % 2 == 0:
-            synth_epochs[i, 0] += blink_art + 0.1 * saccade_art
-            synth_epochs[i, 1] += 0.9 * blink_art - saccade_art
-            synth_epochs[i, 2] += 0.9 * blink_art + saccade_art
+            blink = artifact_rng.uniform(.75, 1.25) * blink_art
+            saccade = artifact_rng.uniform(.65, 1.35) * saccade_art
+            synth_epochs[i, 0] += blink + 0.1 * saccade
+            synth_epochs[i, 1] += 0.9 * blink - saccade
+            synth_epochs[i, 2] += 0.9 * blink + saccade
             
     # 3. 运行 V3 去噪
     irrecoverable = np.zeros(n_synth, dtype=bool)
-    score = np.ones(n_synth)
+    score = np.where(np.arange(n_synth) % 2 == 0, 10.0, 0.0)
     tpls, sc_v, sc_h, _ = build_clean_reference_model(
         synth_epochs, synth_cues, irrecoverable, score, ref_ratio=0.50
     )
@@ -524,7 +522,7 @@ def run_synthetic_benchmark(clean_background_epochs, output_dir):
         )
         
     # 4. 闭环定量恢复度评估
-    mean_true_fz = 0.5 * (true_left[0] + true_right[0])
+    mean_true_fz = np.mean(truth_epochs[:, 0, :], axis=0)
     mean_raw_fz = np.mean(synth_epochs[:, 0, :], axis=0)
     mean_cor_fz = np.mean(corrected_synth[:, 0, :], axis=0)
     
@@ -537,18 +535,25 @@ def run_synthetic_benchmark(clean_background_epochs, output_dir):
     est_amp = float(np.max(mean_cor_fz[P300_MASK]))
     est_lat = float(t_ms[P300_MASK][np.argmax(mean_cor_fz[P300_MASK])])
     
-    amp_err = abs(est_amp - true_p300_amp)
-    lat_err = abs(est_lat - true_p300_lat)
+    true_observed_amp = float(np.max(mean_true_fz[P300_MASK]))
+    true_observed_lat = float(t_ms[P300_MASK][np.argmax(mean_true_fz[P300_MASK])])
+    amp_err = abs(est_amp - true_observed_amp)
+    lat_err = abs(est_lat - true_observed_lat)
     
     # 左右视物形状差分保留率
     cor_diff = np.mean(corrected_synth[synth_cues == 1, 0, :], axis=0) - np.mean(corrected_synth[synth_cues == -1, 0, :], axis=0)
-    diff_preservation_ratio = 100.0 * (np.max(cor_diff[P300_MASK]) / (np.max(s_diff[P300_MASK]) + 1e-6))
+    true_diff = (np.mean(truth_epochs[synth_cues == 1, 0, :], axis=0)
+                 - np.mean(truth_epochs[synth_cues == -1, 0, :], axis=0))
+    diff_preservation_ratio = 100.0 * (np.linalg.norm(cor_diff[P300_MASK]) /
+                                       (np.linalg.norm(true_diff[P300_MASK]) + 1e-12))
     
     benchmark_metrics = {
-        "True_P300_Amp": true_p300_amp,
+        "Injected_P300_Amp": true_p300_amp,
+        "True_P300_Amp": true_observed_amp,
         "Est_P300_Amp": est_amp,
         "Amp_Error": amp_err,
-        "True_P300_Lat_ms": true_p300_lat,
+        "Injected_P300_Lat_ms": true_p300_lat,
+        "True_P300_Lat_ms": true_observed_lat,
         "Est_P300_Lat_ms": est_lat,
         "Lat_Error_ms": lat_err,
         "RMSE_before": rmse_before,
@@ -556,7 +561,8 @@ def run_synthetic_benchmark(clean_background_epochs, output_dir):
         "RMSE_reduction_percent": 100.0 * (1.0 - rmse_after / rmse_before),
         "Corr_before": corr_before,
         "Corr_after": corr_after,
-        "Diff_Shape_Preservation_Ratio_percent": diff_preservation_ratio
+        "Diff_Amplitude_Retention_Ratio_percent": diff_preservation_ratio,
+        "Diff_Waveform_Correlation": safe_corr(cor_diff[P300_MASK], true_diff[P300_MASK])
     }
     
     # 保存指标
@@ -586,8 +592,8 @@ def run_synthetic_benchmark(clean_background_epochs, output_dir):
     axes[1].grid(True, linestyle=":", alpha=0.6)
     
     # Panel 3: 视物形状左右差分保留检验
-    axes[2].plot(t_ms, s_diff, "k--", linewidth=2.0, label="真实注入左右差分真值")
-    axes[2].plot(t_ms, cor_diff, "m-", linewidth=1.8, label=f"去噪后恢复差分 (保留率={diff_preservation_ratio:.1f}%)")
+    axes[2].plot(t_ms, true_diff, "k--", linewidth=2.0, label="注入后左右差分真值")
+    axes[2].plot(t_ms, cor_diff, "m-", linewidth=1.8, label=f"去噪后差分 (幅度比={diff_preservation_ratio:.1f}%)")
     axes[2].axvspan(250, 500, color="orange", alpha=0.15)
     axes[2].set_title("(c) 视物形状特征保留度闭环验证")
     axes[2].set_xlabel("时间 (ms)")
@@ -598,7 +604,7 @@ def run_synthetic_benchmark(clean_background_epochs, output_dir):
     save_fig_path = os.path.join(output_dir, "Synthetic_ClosedLoop_Validation_v3.png")
     plt.savefig(save_fig_path, dpi=200, bbox_inches="tight")
     plt.close()
-    print(f"  [闭环验证完成] RMSE 从 {rmse_before:.2f} 下降至 {rmse_after:.2f}, 相关系数达到 {corr_after:.3f}, 形状特征保留率 {diff_preservation_ratio:.1f}%")
+    print(f"  [闭环验证完成] RMSE {rmse_before:.2f} → {rmse_after:.2f}, 相关系数 {corr_after:.3f}, 左右差分幅度比 {diff_preservation_ratio:.1f}%")
     return benchmark_metrics
 
 # -----------------------------------------------------------------------------
@@ -639,14 +645,16 @@ def plot_three_channel_erp_fitting(dataset_name, ep_before, ep_after, templates,
         p3_amp = popt["P300_amp"]
         p3_lat = popt["P300_lat_ms"]
         
-        ax.plot(TIMES_MS, fit_curve, color="#D32F2F", linestyle="-", linewidth=2.0, label=f"高斯拟合曲线 (R²={r2:.2f})")
+        fit_label = (f"三高斯拟合 (R²={r2:.2f})" if popt["fit_status"] == "gaussian"
+                     else "平滑显示（高斯拟合失败）")
+        ax.plot(TIMES_MS, fit_curve, color="#D32F2F", linestyle="-", linewidth=2.0, label=fit_label)
         
         # 4. 关键区域标注
         ax.axvline(0, color="black", linestyle="--", linewidth=1.0, alpha=0.6, label="提示出现时刻 (0 ms)")
         ax.axvspan(250, 500, color="#FFF9C4", alpha=0.5, label="P300 关键时间窗")
         
         # 标注 P300 极值点
-        if not np.isnan(p3_amp) and not np.isnan(p3_lat):
+        if np.isfinite(p3_amp) and np.isfinite(p3_lat) and p3_amp > 0.5:
             ax.plot(p3_lat, p3_amp, "ro", markersize=6)
             ax.annotate(
                 f"P300: {p3_amp:.1f}\n{p3_lat:.0f} ms",
@@ -694,7 +702,7 @@ def plot_left_vs_right_contrast(dataset_name, ep_after, cues, output_dir):
         ax = axes[ch_idx]
         ax.plot(TIMES_MS, avg_left[ch_idx], color="#E65100", linestyle="-", linewidth=1.8, label="左三角提示 (Left Cue)")
         ax.plot(TIMES_MS, avg_right[ch_idx], color="#0D47A1", linestyle="-", linewidth=1.8, label="右三角提示 (Right Cue)")
-        ax.plot(TIMES_MS, avg_right[ch_idx] - avg_left[ch_idx], color="#4A148C", linestyle=":", linewidth=1.5, label="条件差分 (R - L)")
+        ax.plot(TIMES_MS, avg_left[ch_idx] - avg_right[ch_idx], color="#4A148C", linestyle=":", linewidth=1.5, label="条件差分 (L - R)")
         
         ax.axvline(0, color="gray", linestyle="--", linewidth=1.0)
         ax.axvspan(250, 500, color="#FFF9C4", alpha=0.45)
@@ -706,20 +714,20 @@ def plot_left_vs_right_contrast(dataset_name, ep_after, cues, output_dir):
         ax.grid(True, linestyle=":", alpha=0.6)
         ax.legend(loc="upper right", fontsize=8.5)
         
-    # 2. 半球侧化不对称性分析 (F4 - F3)
+    # 2. 半球侧化不对称性分析 (F3 - F4)
     ax_lat = axes[3]
-    lat_left = avg_left[2] - avg_left[1]    # 左刺激时的 F4 - F3
-    lat_right = avg_right[2] - avg_right[1]  # 右刺激时的 F4 - F3
+    lat_left = avg_left[1] - avg_left[2]
+    lat_right = avg_right[1] - avg_right[2]
     
-    ax_lat.plot(TIMES_MS, lat_left, color="#E65100", linestyle="-", linewidth=2.0, label="左刺激侧化 (F4 - F3)")
-    ax_lat.plot(TIMES_MS, lat_right, color="#0D47A1", linestyle="-", linewidth=2.0, label="右刺激侧化 (F4 - F3)")
+    ax_lat.plot(TIMES_MS, lat_left, color="#E65100", linestyle="-", linewidth=2.0, label="左刺激侧化 (F3 - F4)")
+    ax_lat.plot(TIMES_MS, lat_right, color="#0D47A1", linestyle="-", linewidth=2.0, label="右刺激侧化 (F3 - F4)")
     ax_lat.axhline(0, color="black", linestyle="-", linewidth=0.8, alpha=0.5)
     ax_lat.axvline(0, color="gray", linestyle="--", linewidth=1.0)
     ax_lat.axvspan(250, 500, color="#FFF9C4", alpha=0.45, label="P300 认知窗口")
     
-    ax_lat.set_title("大脑半球侧化不对称性对比 (F4 - F3)")
+    ax_lat.set_title("额区空间不对称性对比 (F3 - F4)")
     ax_lat.set_xlabel("时间 (ms)")
-    ax_lat.set_ylabel("偏侧电位差 (F4 - F3)")
+    ax_lat.set_ylabel("电位差 (F3 - F4)")
     ax_lat.set_xlim(-200, 750)
     ax_lat.grid(True, linestyle=":", alpha=0.6)
     ax_lat.legend(loc="upper right", fontsize=8.5)
@@ -760,74 +768,203 @@ def plot_task_comparison(task1_dataset, task2_dataset, t1_ep, t2_ep, output_dir,
     plt.savefig(save_path, dpi=200, bbox_inches="tight")
     plt.close()
 
-def plot_v1_v2_v3_overall_comparison(comp_df, output_dir):
-    """
-    绘制 V1、V2 与 V3 在 MAE、相关系数、振幅误差、潜伏期误差上的全面柱状对比图
-    """
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    datasets = comp_df["dataset"].values
-    x = np.arange(len(datasets))
-    width = 0.25
-    
-    # 1. MAE 对比 (越低越好)
-    ax1 = axes[0, 0]
-    ax1.bar(x - width, comp_df["V1_MAE"], width, label="V1 (基线)", color="#B0BEC5")
-    ax1.bar(x, comp_df["V2_MAE"], width, label="V2 (原优化版)", color="#64B5F6")
-    ax1.bar(x + width, comp_df["V3_MAE"], width, label="V3 (闭环优化版)", color="#1976D2")
-    ax1.set_ylabel("残余 MAE 误差 (越低越好)")
-    ax1.set_title("各数据集残余 MAE 误差对比")
-    ax1.set_xticks(x)
-    ax1.set_xticklabels(datasets, rotation=15)
-    ax1.legend()
-    ax1.grid(True, linestyle=":", alpha=0.6)
-    
-    # 2. 波形相关系数 (越高越好)
-    ax2 = axes[0, 1]
-    ax2.bar(x - width, comp_df["V1_corr"], width, label="V1", color="#B0BEC5")
-    ax2.bar(x, comp_df["V2_corr"], width, label="V2", color="#81C784")
-    ax2.bar(x + width, comp_df["V3_corr"], width, label="V3", color="#388E3C")
-    ax2.set_ylabel("波形相关系数 (越高越好)")
-    ax2.set_title("P300 时间窗波形相关系数对比")
-    ax2.set_xticks(x)
-    ax2.set_xticklabels(datasets, rotation=15)
-    ax2.legend()
-    ax2.grid(True, linestyle=":", alpha=0.6)
-    
-    # 3. 振幅误差 (越低越好)
-    ax3 = axes[1, 0]
-    ax3.bar(x - width, comp_df["V1_amp_error"], width, label="V1", color="#B0BEC5")
-    ax3.bar(x, comp_df["V2_amp_error"], width, label="V2", color="#FFB74D")
-    ax3.bar(x + width, comp_df["V3_amp_error"], width, label="V3", color="#F57C00")
-    ax3.set_ylabel("P300 振幅绝对误差 (越低越好)")
-    ax3.set_title("P300 峰值振幅估计误差对比")
-    ax3.set_xticks(x)
-    ax3.set_xticklabels(datasets, rotation=15)
-    ax3.legend()
-    ax3.grid(True, linestyle=":", alpha=0.6)
-    
-    # 4. 潜伏期误差 (越低越好)
-    ax4 = axes[1, 1]
-    ax4.bar(x - width, comp_df["V1_latency_error_ms"], width, label="V1", color="#B0BEC5")
-    ax4.bar(x, comp_df["V2_latency_error_ms"], width, label="V2", color="#BA68C8")
-    ax4.bar(x + width, comp_df["V3_latency_error_ms"], width, label="V3", color="#7B1FA2")
-    ax4.set_ylabel("潜伏期误差 ms (越低越好)")
-    ax4.set_title("P300 峰值潜伏期估计误差对比")
-    ax4.set_xticks(x)
-    ax4.set_xticklabels(datasets, rotation=15)
-    ax4.legend()
-    ax4.grid(True, linestyle=":", alpha=0.6)
-    
-    fig.suptitle("第一问去噪与响应提取综合性能对比 (V1 vs V2 vs V3)", fontsize=14, fontweight="bold", y=0.99)
-    plt.tight_layout()
-    save_path = os.path.join(output_dir, "eeg_v1_v2_v3_overall_comparison.png")
-    plt.savefig(save_path, dpi=200, bbox_inches="tight")
-    plt.close()
-
 # -----------------------------------------------------------------------------
 # 10. 主评估与执行引擎
 # -----------------------------------------------------------------------------
+def plot_representative_trials(dataset_name, raw_epochs, corrected_epochs, cues,
+                               artifact_scores, trial_numbers, output_dir):
+    """各方向各选一条可恢复且伪影较明显的试次，不跨方向平均。"""
+    fig, axes = plt.subplots(2, 3, figsize=(17, 8), sharex=True)
+    for row, cond in enumerate((-1, 1)):
+        candidates = np.where(cues == cond)[0]
+        order = candidates[np.argsort(artifact_scores[candidates])]
+        chosen = order[min(len(order) - 1, int(0.75 * len(order)))]
+        raw = raw_epochs[chosen] - np.median(raw_epochs[chosen, :, :N_PRE], axis=1)[:, None]
+        for ch, name in enumerate(CHANNEL_NAMES):
+            ax = axes[row, ch]
+            ax.plot(TIMES_MS, raw[ch], color='#8D6E63', lw=1, alpha=.8, label='原始通道（基线对齐）')
+            ax.plot(TIMES_MS, corrected_epochs[chosen, ch], color='#1565C0', lw=1.4,
+                    label='预处理 + V3')
+            ax.axvline(0, color='black', lw=.8, ls='--')
+            ax.axvspan(250, 500, color='#FFF3C4', alpha=.55)
+            ax.set_title(f"{'左' if cond == -1 else '右'}刺激 · {name} · 原始试次 {trial_numbers[chosen]}")
+            ax.set_xlim(-250, 800)
+            ax.set_xlabel('相对视觉提示时间 (ms)')
+            if ch == 0:
+                ax.set_ylabel('原始电位单位')
+            ax.grid(alpha=.2)
+    axes[0, 0].legend(loc='upper right', fontsize=8)
+    fig.suptitle(f'{dataset_name} · 典型单试次原始/去噪对比（按刺激方向分开）')
+    fig.tight_layout()
+    fig.savefig(os.path.join(output_dir, f'{dataset_name}_Representative_Trial_v3.png'), dpi=180)
+    plt.close(fig)
+
+
+def plot_condition_erps(dataset_name, ep_before, ep_after, cues, output_dir):
+    """左右刺激各三通道 ERP；每格同时显示预处理前后及 V3 结果。"""
+    fig, axes = plt.subplots(3, 2, figsize=(14, 11), sharex=True, sharey='row')
+    for col, cond in enumerate((-1, 1)):
+        mask = cues == cond
+        avg_before = np.mean(ep_before[mask], axis=0)
+        avg_after = np.mean(ep_after[mask], axis=0)
+        for ch, name in enumerate(CHANNEL_NAMES):
+            ax = axes[ch, col]
+            ax.plot(TIMES_MS, avg_before[ch], color='#78909C', ls='--', lw=1.4,
+                    label='V3 前（已带通）')
+            ax.plot(TIMES_MS, avg_after[ch], color='#1565C0', lw=1.8, label='V3 后')
+            ax.axvline(0, color='black', lw=.8, ls='--')
+            ax.axvspan(250, 500, color='#FFF3C4', alpha=.55)
+            ax.set_title(f"{'左' if cond == -1 else '右'}刺激 · {name} · n={mask.sum()}")
+            ax.set_xlim(-250, 800)
+            ax.set_xlabel('相对视觉提示时间 (ms)')
+            if col == 0:
+                ax.set_ylabel('原始电位单位')
+            ax.grid(alpha=.2)
+    axes[0, 0].legend(fontsize=9)
+    fig.suptitle(f'{dataset_name} · Fz/F3/F4 左右刺激 ERP')
+    fig.tight_layout()
+    fig.savefig(os.path.join(output_dir, f'{dataset_name}_Left_Right_ERP_v3.png'), dpi=180)
+    plt.close(fig)
+
+
+def plot_p300_zoom(dataset_name, ep_before, ep_after, cues, templates, output_dir):
+    """250–500 ms 三通道 × 两刺激方向的局部波形。"""
+    fig, axes = plt.subplots(3, 2, figsize=(13, 10), sharex=True, sharey='row')
+    margin = (TIMES_MS >= 225) & (TIMES_MS <= 525)
+    for col, cond in enumerate((-1, 1)):
+        before = np.mean(ep_before[cues == cond], axis=0)
+        after = np.mean(ep_after[cues == cond], axis=0)
+        for ch, name in enumerate(CHANNEL_NAMES):
+            ax = axes[ch, col]
+            ax.plot(TIMES_MS[margin], before[ch, margin], color='#78909C', ls='--', label='V3 前')
+            ax.plot(TIMES_MS[margin], after[ch, margin], color='#1565C0', lw=2, label='V3 后')
+            ax.plot(TIMES_MS[margin], templates[cond][ch, margin], color='#2E7D32', ls=':',
+                    label='低伪影参考')
+            ax.axvspan(250, 500, color='#FFF3C4', alpha=.5)
+            ax.set_title(f"{'左' if cond == -1 else '右'}刺激 · {name}")
+            ax.set_xlabel('相对视觉提示时间 (ms)')
+            if col == 0:
+                ax.set_ylabel('原始电位单位')
+            ax.grid(alpha=.2)
+    axes[0, 0].legend(fontsize=8)
+    fig.suptitle(f'{dataset_name} · P300 250–500 ms 局部对比')
+    fig.tight_layout()
+    fig.savefig(os.path.join(output_dir, f'{dataset_name}_P300_Zoom_v3.png'), dpi=180)
+    plt.close(fig)
+
+
+def plot_trial_heatmaps(dataset_name, ep_before, ep_after, cues, output_dir):
+    """Fz 试次 × 时间热力图，方向分组，去噪前后共享色标。"""
+    fig, axes = plt.subplots(2, 2, figsize=(15, 9), sharex=True)
+    limit = np.percentile(np.abs(np.concatenate([ep_before[:, 0, :].ravel(),
+                                                  ep_after[:, 0, :].ravel()])), 98)
+    image = None
+    for row, cond in enumerate((-1, 1)):
+        mask = cues == cond
+        for col, (epochs, phase) in enumerate(((ep_before, 'V3 前（已带通）'),
+                                               (ep_after, 'V3 后'))):
+            ax = axes[row, col]
+            image = ax.imshow(epochs[mask, 0, :], aspect='auto', origin='lower', cmap='RdBu_r',
+                              vmin=-limit, vmax=limit, extent=[TIMES_MS[0], TIMES_MS[-1], 1, mask.sum()])
+            ax.axvline(0, color='black', ls='--', lw=.8)
+            ax.axvline(250, color='#F9A825', ls=':', lw=1)
+            ax.axvline(500, color='#F9A825', ls=':', lw=1)
+            ax.set_title(f"{'左' if cond == -1 else '右'}刺激 · {phase} · n={mask.sum()}")
+            ax.set_ylabel('试次序号')
+            ax.set_xlabel('相对视觉提示时间 (ms)')
+    fig.subplots_adjust(left=.08, right=.86, top=.91, bottom=.10, hspace=.25, wspace=.18)
+    color_axis = fig.add_axes([.89, .18, .018, .64])
+    fig.colorbar(image, cax=color_axis, label='Fz 原始电位单位')
+    fig.suptitle(f'{dataset_name} · Fz Trial × Time 热力图')
+    fig.savefig(os.path.join(output_dir, f'{dataset_name}_Trial_Time_Heatmap_v3.png'), dpi=180)
+    plt.close(fig)
+
+
+def evaluate_spatial_metrics(ep_before, ep_after, cues, dataset_name):
+    """左右条件差分与 F3−F4 不对称性；保留率以去噪前为分母。"""
+    rows = []
+    erps = {}
+    for stage, epochs in (('before', ep_before), ('after', ep_after)):
+        erps[stage] = {cond: np.mean(epochs[cues == cond], axis=0) for cond in (-1, 1)}
+    for ch, name in enumerate(CHANNEL_NAMES):
+        before = erps['before'][-1][ch, P300_MASK] - erps['before'][1][ch, P300_MASK]
+        after = erps['after'][-1][ch, P300_MASK] - erps['after'][1][ch, P300_MASK]
+        rows.append({'dataset': dataset_name, 'quantity': 'left_minus_right_ERP', 'channel_or_cue': name,
+                     'RMS_before': float(np.sqrt(np.mean(before ** 2))),
+                     'RMS_after': float(np.sqrt(np.mean(after ** 2))),
+                     'retention_ratio': float(np.linalg.norm(after) / (np.linalg.norm(before) + 1e-12)),
+                     'waveform_correlation': safe_corr(before, after)})
+    for cond in (-1, 1):
+        before = erps['before'][cond][1, P300_MASK] - erps['before'][cond][2, P300_MASK]
+        after = erps['after'][cond][1, P300_MASK] - erps['after'][cond][2, P300_MASK]
+        rows.append({'dataset': dataset_name, 'quantity': 'F3_minus_F4',
+                     'channel_or_cue': 'left' if cond == -1 else 'right',
+                     'RMS_before': float(np.sqrt(np.mean(before ** 2))),
+                     'RMS_after': float(np.sqrt(np.mean(after ** 2))),
+                     'retention_ratio': float(np.linalg.norm(after) / (np.linalg.norm(before) + 1e-12)),
+                     'waveform_correlation': safe_corr(before, after),
+                     'P300_positive_mean_difference_before': positive_p300_features(erps['before'][cond][1])[0]
+                     - positive_p300_features(erps['before'][cond][2])[0],
+                     'P300_positive_mean_difference_after': positive_p300_features(erps['after'][cond][1])[0]
+                     - positive_p300_features(erps['after'][cond][2])[0]})
+    return rows
+
+
+def positive_p300_features(erp):
+    """250–500 ms 正向均值、正面积、正峰值和峰潜伏期。幅值沿用数据原始单位。"""
+    segment = np.asarray(erp)[P300_MASK]
+    positive = np.maximum(segment, 0.0)
+    peak_index = int(np.argmax(segment))
+    peak = float(segment[peak_index])
+    # 窗内无正峰时，不给负波指定 P300 峰值或潜伏期。
+    positive_peak = peak if peak > 0 else np.nan
+    peak_latency = float(TIMES_MS[P300_MASK][peak_index]) if peak > 0 else np.nan
+    return (
+        float(np.mean(positive)),
+        float(np.trapezoid(positive, TIMES_MS[P300_MASK])),
+        positive_peak,
+        peak_latency,
+    )
+
+
+def safe_corr(a, b):
+    if np.std(a) < 1e-12 or np.std(b) < 1e-12:
+        return np.nan
+    return float(np.corrcoef(a, b)[0, 1])
+
+
+def shape_distance(a, b):
+    """P300 窗内 z 标准化后的平均绝对距离。"""
+    if np.std(a) < 1e-12 or np.std(b) < 1e-12:
+        return np.nan
+    return float(np.mean(np.abs((a - np.mean(a)) / np.std(a) -
+                                (b - np.mean(b)) / np.std(b))))
+
+
+def snr_proxy_db(trials):
+    """ERP 功率 / 试次相对 ERP 的残差功率；残差包含真实试次变异。"""
+    post_mask = (TIMES_MS >= 0) & (TIMES_MS <= 500)
+    x = trials[:, post_mask]
+    erp = np.mean(x, axis=0)
+    signal_power = np.mean(erp ** 2)
+    residual_power = np.mean((x - erp[None, :]) ** 2)
+    return float(10 * np.log10((signal_power + 1e-12) / (residual_power + 1e-12)))
+
+
+def edge_band_power_ratio(trials):
+    """1–3 Hz 和 20–30 Hz 占 1–30 Hz 功率比；仅为频谱描述量。"""
+    freq, psd = welch(trials, fs=FS_EXPECTED, axis=-1,
+                      nperseg=trials.shape[-1], detrend='linear')
+    mean_psd = np.mean(psd, axis=0)
+    def power(lo, hi):
+        mask = (freq >= lo) & (freq <= hi)
+        return float(np.trapezoid(mean_psd[mask], freq[mask]))
+    total = power(1, 30)
+    return (power(1, 3) + power(20, 30)) / (total + 1e-12)
+
+
 def evaluate_metrics(ep_before, ep_after, cues, ref_templates):
-    """计算各通道详细评价指标"""
+    """按刺激方向及通道计算真实数据的描述量与低伪影模板代理误差。"""
     records = []
     for cond in (-1, 1):
         idx = np.where(cues == cond)[0]
@@ -838,6 +975,8 @@ def evaluate_metrics(ep_before, ep_after, cues, ref_templates):
         ref = ref_templates[cond]
         
         for ch_idx, ch_name in enumerate(CHANNEL_NAMES):
+            trials_before = ep_before[idx, ch_idx, :]
+            trials_after = ep_after[idx, ch_idx, :]
             ref_p3 = ref[ch_idx, P300_MASK]
             bef_p3 = avg_before[ch_idx, P300_MASK]
             aft_p3 = avg_after[ch_idx, P300_MASK]
@@ -845,31 +984,53 @@ def evaluate_metrics(ep_before, ep_after, cues, ref_templates):
             mae_before = float(np.mean(np.abs(bef_p3 - ref_p3)))
             mae_after = float(np.mean(np.abs(aft_p3 - ref_p3)))
             
-            corr_before = float(np.corrcoef(bef_p3, ref_p3)[0, 1])
-            corr_after = float(np.corrcoef(aft_p3, ref_p3)[0, 1])
-            if np.isnan(corr_before): corr_before = 0.0
-            if np.isnan(corr_after): corr_after = 0.0
-            
-            amp_ref = float(np.max(ref_p3))
-            amp_bef = float(np.max(bef_p3))
-            amp_aft = float(np.max(aft_p3))
-            
-            lat_ref = float(TIMES_MS[P300_MASK][np.argmax(ref_p3)])
-            lat_bef = float(TIMES_MS[P300_MASK][np.argmax(bef_p3)])
-            lat_aft = float(TIMES_MS[P300_MASK][np.argmax(aft_p3)])
+            corr_before = safe_corr(bef_p3, ref_p3)
+            corr_after = safe_corr(aft_p3, ref_p3)
+
+            rmse_before = float(np.sqrt(np.mean((bef_p3 - ref_p3) ** 2)))
+            rmse_after = float(np.sqrt(np.mean((aft_p3 - ref_p3) ** 2)))
+
+            pos_ref, auc_ref, _, _ = positive_p300_features(ref[ch_idx])
+            pos_bef, auc_bef, amp_bef, lat_bef = positive_p300_features(avg_before[ch_idx])
+            pos_aft, auc_aft, amp_aft, lat_aft = positive_p300_features(avg_after[ch_idx])
+            _, _, amp_ref, lat_ref = positive_p300_features(ref[ch_idx])
             
             records.append({
                 "cue": cond,
                 "channel": ch_name,
                 "MAE_before": mae_before,
                 "MAE_after": mae_after,
+                "RMSE_before": rmse_before,
+                "RMSE_after": rmse_after,
                 "corr_before": corr_before,
                 "corr_after": corr_after,
+                "shape_distance_before": shape_distance(bef_p3, ref_p3),
+                "shape_distance_after": shape_distance(aft_p3, ref_p3),
+                "baseline_RMS_before": float(np.mean(np.sqrt(np.mean(trials_before[:, :N_PRE] ** 2, axis=1)))),
+                "baseline_RMS_after": float(np.mean(np.sqrt(np.mean(trials_after[:, :N_PRE] ** 2, axis=1)))),
+                "trial_PTP_median_before": float(np.median(np.ptp(trials_before, axis=1))),
+                "trial_PTP_median_after": float(np.median(np.ptp(trials_after, axis=1))),
+                "SNR_proxy_dB_before": snr_proxy_db(trials_before),
+                "SNR_proxy_dB_after": snr_proxy_db(trials_after),
+                "edge_band_ratio_before": edge_band_power_ratio(trials_before),
+                "edge_band_ratio_after": edge_band_power_ratio(trials_after),
                 "amp_error_before": abs(amp_bef - amp_ref),
                 "amp_error_after": abs(amp_aft - amp_ref),
                 "latency_error_before_ms": abs(lat_bef - lat_ref),
                 "latency_error_after_ms": abs(lat_aft - lat_ref),
+                "P300_positive_mean_before": pos_bef,
+                "P300_positive_mean_after": pos_aft,
+                "P300_positive_mean_ref": pos_ref,
+                "P300_positive_mean_error_before": abs(pos_bef - pos_ref),
+                "P300_positive_mean_error_after": abs(pos_aft - pos_ref),
+                "P300_AUC_before_unit_ms": auc_bef,
+                "P300_AUC_after_unit_ms": auc_aft,
+                "P300_AUC_ref_unit_ms": auc_ref,
+                "P300_AUC_error_before_unit_ms": abs(auc_bef - auc_ref),
+                "P300_AUC_error_after_unit_ms": abs(auc_aft - auc_ref),
+                "P300_amp_before": amp_bef,
                 "P300_amp_after": amp_aft,
+                "P300_lat_before_ms": lat_bef,
                 "P300_lat_after_ms": lat_aft
             })
     return pd.DataFrame(records)
@@ -892,12 +1053,8 @@ def main():
     
     dataset_epochs_cleaned = {}
     summary_v3_rows = []
-    comparison_rows = []
     all_fitting_rows = []
-    
-    # 读取原有 V1 与 V2 对比数据（若存在）
-    v1_v2_comp_path = os.path.join("eeg_v2_results", "eeg_first_question_v1_vs_v2.csv")
-    prev_comp_df = pd.read_csv(v1_v2_comp_path) if os.path.exists(v1_v2_comp_path) else None
+    all_spatial_rows = []
     
     for filename in dataset_filenames:
         print(f"\n[处理数据集] {filename}")
@@ -927,14 +1084,23 @@ def main():
         corrected_epochs, global_templates, ref_mask = run_5fold_cv_correction(
             filtered_epochs, cues, irrecoverable, artifact_scores
         )
-        print(f"  5折交叉验证去噪完成: 纯净参考试次 {ref_mask.sum()} 个, 矫正试次 {(~ref_mask & ~irrecoverable).sum()} 个")
-        
-        dataset_epochs_cleaned[ds_name] = corrected_epochs
+        print(f"  5折交叉验证去噪完成: 低伪影参考试次 {ref_mask.sum()} 个, 可用试次 {(~irrecoverable).sum()} 个")
+
+        # 严重截幅或跳变的试次只计入剔除率，不参加 ERP、拟合、图表或质量指标。
+        valid = ~irrecoverable
+        valid_cues = cues[valid]
+        valid_raw = raw_epochs[valid]
+        valid_before = filtered_epochs[valid]
+        valid_after = corrected_epochs[valid]
+        valid_scores = artifact_scores[valid]
+        dataset_epochs_cleaned[ds_name] = valid_after
+        # 参考模板来自 ref_mask；误差只在未进入参考模板的试次上汇总。
+        eval_valid = ~ref_mask[valid]
         
         # 6. 数学曲线拟合 (Fz, F3, F4)
         fit_results = {}
         for ch_idx, ch_name in enumerate(CHANNEL_NAMES):
-            erp_signal = np.mean(corrected_epochs[:, ch_idx, :], axis=0)
+            erp_signal = np.mean(valid_after[:, ch_idx, :], axis=0)
             fitted_curve, fit_params = fit_erp_curve(TIMES_MS, erp_signal)
             fit_results[ch_name] = {"fitted_curve": fitted_curve, "params": fit_params}
             
@@ -943,8 +1109,10 @@ def main():
             all_fitting_rows.append(fit_row)
             
         # 7. 计算 V3 评估指标
-        metrics_df = evaluate_metrics(filtered_epochs, corrected_epochs, cues, global_templates)
+        metrics_df = evaluate_metrics(valid_before[eval_valid], valid_after[eval_valid],
+                                      valid_cues[eval_valid], global_templates)
         metrics_df.to_csv(os.path.join(output_dir, f"{ds_name}_V3_metrics.csv"), index=False)
+        all_spatial_rows.extend(evaluate_spatial_metrics(valid_before, valid_after, valid_cues, ds_name))
         
         mae_bef = metrics_df["MAE_before"].mean()
         mae_aft = metrics_df["MAE_after"].mean()
@@ -959,43 +1127,48 @@ def main():
             "dataset": ds_name,
             "trials": len(cues),
             "reference_trials": int(ref_mask.sum()),
-            "corrected_trials": int((~ref_mask & ~irrecoverable).sum()),
+            "corrected_trials": int(valid.sum()),
+            "evaluation_trials": int(eval_valid.sum()),
             "rejected_trials": int(irrecoverable.sum()),
+            "trial_retention_percent": 100.0 * valid.sum() / len(cues),
+            "baseline_RMS_before": metrics_df["baseline_RMS_before"].mean(),
+            "baseline_RMS_after_V3": metrics_df["baseline_RMS_after"].mean(),
+            "trial_PTP_median_before": metrics_df["trial_PTP_median_before"].mean(),
+            "trial_PTP_median_after_V3": metrics_df["trial_PTP_median_after"].mean(),
+            "SNR_proxy_dB_before": metrics_df["SNR_proxy_dB_before"].mean(),
+            "SNR_proxy_dB_after_V3": metrics_df["SNR_proxy_dB_after"].mean(),
+            "edge_band_ratio_before": metrics_df["edge_band_ratio_before"].mean(),
+            "edge_band_ratio_after_V3": metrics_df["edge_band_ratio_after"].mean(),
             "MAE_before": mae_bef,
             "MAE_after_V3": mae_aft,
             "MAE_reduction_V3_percent": 100.0 * (1.0 - mae_aft / mae_bef),
+            "RMSE_before": metrics_df["RMSE_before"].mean(),
+            "RMSE_after_V3": metrics_df["RMSE_after"].mean(),
             "corr_before": corr_bef,
             "corr_after_V3": corr_aft,
+            "shape_distance_before": metrics_df["shape_distance_before"].mean(),
+            "shape_distance_after_V3": metrics_df["shape_distance_after"].mean(),
             "amp_error_before": amp_err_bef,
             "amp_error_after_V3": amp_err_aft,
             "latency_error_before_ms": lat_err_bef,
-            "latency_error_after_V3_ms": lat_err_aft
+            "latency_error_after_V3_ms": lat_err_aft,
+            "P300_positive_mean_error_before": metrics_df["P300_positive_mean_error_before"].mean(),
+            "P300_positive_mean_error_after_V3": metrics_df["P300_positive_mean_error_after"].mean(),
+            "P300_AUC_error_before_unit_ms": metrics_df["P300_AUC_error_before_unit_ms"].mean(),
+            "P300_AUC_error_after_V3_unit_ms": metrics_df["P300_AUC_error_after_unit_ms"].mean()
         })
-        
-        # 提取历史 V1/V2 数据进行三版本对比
-        v1_row = prev_comp_df[prev_comp_df["dataset"] == ds_name].iloc[0] if prev_comp_df is not None else None
-        comparison_rows.append({
-            "dataset": ds_name,
-            "V1_MAE": v1_row["V1_MAE"] if v1_row is not None else mae_bef * 0.9,
-            "V2_MAE": v1_row["V2_MAE"] if v1_row is not None else mae_bef * 0.5,
-            "V3_MAE": mae_aft,
-            "V1_corr": v1_row["V1_corr"] if v1_row is not None else corr_bef,
-            "V2_corr": v1_row["V2_corr"] if v1_row is not None else corr_aft * 0.9,
-            "V3_corr": corr_aft,
-            "V1_amp_error": v1_row["V1_amp_error"] if v1_row is not None else amp_err_bef,
-            "V2_amp_error": v1_row["V2_amp_error"] if v1_row is not None else amp_err_aft * 1.1,
-            "V3_amp_error": amp_err_aft,
-            "V1_latency_error_ms": v1_row["V1_latency_error_ms"] if v1_row is not None else lat_err_bef,
-            "V2_latency_error_ms": v1_row["V2_latency_error_ms"] if v1_row is not None else lat_err_aft * 1.1,
-            "V3_latency_error_ms": lat_err_aft
-        })
-        
+
         # 8. 绘制全套图像
         print(f"  绘制三通道综合波形与拟合图: {ds_name}_ThreeChannel_ERP_Fitting_v3.png")
-        plot_three_channel_erp_fitting(ds_name, filtered_epochs, corrected_epochs, global_templates, fit_results, output_dir)
+        plot_three_channel_erp_fitting(ds_name, valid_before, valid_after, global_templates, fit_results, output_dir)
         
         print(f"  绘制左右刺激特征对比图: {ds_name}_Left_vs_Right_Contrast_v3.png")
-        plot_left_vs_right_contrast(ds_name, corrected_epochs, cues, output_dir)
+        plot_left_vs_right_contrast(ds_name, valid_after, valid_cues, output_dir)
+        plot_representative_trials(ds_name, valid_raw, valid_after, valid_cues,
+                                   valid_scores, np.flatnonzero(valid) + 1, output_dir)
+        plot_condition_erps(ds_name, valid_before, valid_after, valid_cues, output_dir)
+        plot_p300_zoom(ds_name, valid_before, valid_after, valid_cues, global_templates, output_dir)
+        plot_trial_heatmaps(ds_name, valid_before, valid_after, valid_cues, output_dir)
         
     # 9. 绘制跨任务对比图 (Task 1 vs Task 2)
     if "VisualCogA_Task-1" in dataset_epochs_cleaned and "VisualCogA_Task-2" in dataset_epochs_cleaned:
@@ -1017,26 +1190,18 @@ def main():
     first_clean_ep = dataset_epochs_cleaned["VisualCogA_Task-1"]
     bm_res = run_synthetic_benchmark(first_clean_ep, output_dir)
     
-    # 11. 导出汇总表格与版本对比图
+    # 11. 导出汇总表格
     df_summary_v3 = pd.DataFrame(summary_v3_rows)
-    df_comp = pd.DataFrame(comparison_rows)
     df_fitting = pd.DataFrame(all_fitting_rows)
     
     df_summary_v3.to_csv(os.path.join(output_dir, "eeg_first_question_optimized_v3_summary.csv"), index=False)
-    df_comp.to_csv(os.path.join(output_dir, "eeg_first_question_v2_vs_v3.csv"), index=False)
     df_fitting.to_csv(os.path.join(output_dir, "eeg_three_channels_fitting_parameters.csv"), index=False)
-    
-    plot_v1_v2_v3_overall_comparison(df_comp, output_dir)
+    pd.DataFrame(all_spatial_rows).to_csv(os.path.join(output_dir, "eeg_left_right_spatial_metrics.csv"), index=False)
     
     print("\n" + "=" * 80)
-    print(" V3 优化总结报告 (与 V2 详细指标对比) ")
+    print(" V3 优化总结报告 ")
     print("=" * 80)
     print(df_summary_v3.to_string(index=False))
-    
-    print("\n" + "=" * 80)
-    print(" V1 vs V2 vs V3 演进对比表 ")
-    print("=" * 80)
-    print(df_comp.to_string(index=False))
     
     print("\n" + "=" * 80)
     print(" Fz/F3/F4 三通道高斯电生理拟合物理参数表 ")
