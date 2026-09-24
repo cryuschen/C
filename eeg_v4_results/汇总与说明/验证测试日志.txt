@@ -1,0 +1,14 @@
+test_all_trials_accounted_and_reference_disjoint (test_eeg_v4.OutputTests.test_all_trials_accounted_and_reference_disjoint) ... ok
+test_metrics_recomputed_from_saved_waves (test_eeg_v4.OutputTests.test_metrics_recomputed_from_saved_waves) ... ok
+test_original_baseline_is_unchanged (test_eeg_v4.OutputTests.test_original_baseline_is_unchanged) ... ok
+test_simulation_scenarios_paired (test_eeg_v4.OutputTests.test_simulation_scenarios_paired) ... ok
+test_boundary_rejection_keeps_ids_and_cues_aligned (test_eeg_v4.SignalTests.test_boundary_rejection_keeps_ids_and_cues_aligned) ... ok
+test_no_positive_peak_is_missing_not_zero (test_eeg_v4.SignalTests.test_no_positive_peak_is_missing_not_zero) ... ok
+test_semisynthetic_latency_uses_common_valid_rows (test_eeg_v4.SignalTests.test_semisynthetic_latency_uses_common_valid_rows) ... ok
+test_three_stage_summary_has_identical_denominator (test_eeg_v4.SignalTests.test_three_stage_summary_has_identical_denominator) ... ok
+test_zero_injection_and_safety_fallback (test_eeg_v4.SignalTests.test_zero_injection_and_safety_fallback) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.361s
+
+OK
