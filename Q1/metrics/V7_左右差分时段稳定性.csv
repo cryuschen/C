@@ -1,0 +1,5 @@
+dataset,stage,channel,first_left_n,first_right_n,second_left_n,second_right_n,contrast_correlation,second_first_norm_ratio
+VisualCogA_Task-1,V7,三通道合并,26,19,21,24,-0.3217897312854882,0.1774557421669223
+VisualCogA_Task-2,V7,三通道合并,27,20,26,22,0.7667657325119595,1.660127573276129
+VisualCogB_Task-1,V7,三通道合并,21,26,25,22,0.4759940324302587,1.4583910518122465
+VisualCogB_Task-2,V7,三通道合并,20,26,25,21,-0.3998272815715188,4.6503552507509385
