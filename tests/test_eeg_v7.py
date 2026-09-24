@@ -35,18 +35,21 @@ class FinalOutputTests(unittest.TestCase):
             dataset = 'VisualCog' + folder.name[3] + '_Task-' + ('1' if folder.name.endswith('一') else '2')
             selected = decisions[decisions.dataset == dataset]
             self.assertEqual(len(selected), 5)
-            np.testing.assert_allclose(w['v6'], w['before'] + .15 * (w['v4'] - w['before']), atol=1e-10)
+            self.assertEqual(set(w.files), {'raw', 'before', 'candidate_output', 'v7', 'cues',
+                                            'trial_ids', 'folds', 'fold_mean_deltas',
+                                            'reference_per_trial', 'times_ms'})
             for _, decision in selected.iterrows():
                 fold = int(decision.fold)
                 mask = w['folds'] == fold
                 self.assertTrue(mask.any())
                 if decision.V7_policy == '保守比例':
-                    np.testing.assert_allclose(w['v7'][mask], w['v6'][mask], atol=1e-10)
+                    expected = w['before'][mask] + .15 * (w['candidate_output'][mask] - w['before'][mask])
+                    np.testing.assert_allclose(w['v7'][mask], expected, atol=1e-10)
                 else:
-                    self.assertEqual(decision.V4_candidate, '保守双分量')
+                    self.assertEqual(decision.selected_candidate, '保守双分量')
                     for cue, index in ((-1, 0), (1, 1)):
                         chosen = mask & (w['cues'] == cue)
-                        expected = w['before'][chosen] - .25 * (w['before'][chosen] - w['v4'][chosen])
+                        expected = w['before'][chosen] - .25 * (w['before'][chosen] - w['candidate_output'][chosen])
                         expected += .10 * w['fold_mean_deltas'][fold - 1, index]
                         np.testing.assert_allclose(w['v7'][chosen], expected, atol=1e-10)
 
@@ -69,13 +72,14 @@ class FinalOutputTests(unittest.TestCase):
                     self.assertAlmostEqual(row.MAE_after, mae, places=9)
                     self.assertEqual(row.n_trials, int(chosen.sum()))
 
-    def test_benchmark_improvement_and_replay_manifest(self):
+    def test_benchmark_baseline_and_replay_manifest(self):
         bench = pd.read_csv(self.root / '半合成验证/按数据组和幅度汇总.csv')
+        self.assertEqual(set(bench.stage), {'未校正', 'V7'})
         for dataset, group in bench.groupby('dataset'):
-            for level in (1., 2.):
-                rows = group[group.level == level].set_index('stage')
-                self.assertLess(rows.loc['V7', 'normalized_RMSE'],
-                                rows.loc['V6', 'normalized_RMSE'], (dataset, level))
+            self.assertEqual(set(group.level), {0., .5, 1., 2.})
+            zero = group[group.level == 0].set_index('stage')
+            self.assertAlmostEqual(zero.loc['未校正', 'normalized_RMSE'], 0., places=12)
+            self.assertGreater(zero.loc['V7', 'normalized_RMSE'], 0.)
         spatial = pd.read_csv(self.root / '汇总与说明/左右刺激与额区空间差异指标.csv')
         ratios = spatial[(spatial.stage == 'V7') & (spatial.quantity == 'left_minus_right_ERP')]
         self.assertTrue((ratios.groupby('dataset').retention_ratio.mean() > .8).all())
@@ -86,6 +90,13 @@ class FinalOutputTests(unittest.TestCase):
         for relative, digest in manifest['csv_sha256'].items():
             self.assertEqual(final.sha(self.root / relative), digest)
         self.assertEqual(len(list(self.root.rglob('*.png'))), 44)
+        summary = pd.read_csv(self.root / '汇总与说明/预处理与V7共同配对指标汇总.csv')
+        self.assertEqual(set(summary.stage), {'预处理', 'V7'})
+        for folder in sorted(self.root.glob('受试者*')):
+            metrics = pd.read_csv(folder / '逐方向逐通道评价指标.csv')
+            bootstrap = pd.read_csv(folder / '试次重采样区间.csv')
+            self.assertEqual(set(metrics.stage), {'预处理', 'V7'})
+            self.assertEqual(set(bootstrap.stage), {'预处理', 'V7', 'V7减预处理'})
 
     def test_group_intervals_and_temporal_contrast_recompute_from_saved_trials(self):
         intervals = pd.read_csv(self.root / '汇总与说明/四组核心指标重采样区间.csv')

@@ -1,4 +1,4 @@
-﻿dataset,fold,train_n,test_n,train_median_pre_slope,V4_candidate,V7_policy,trial_fraction,mean_fraction,reference_count
+﻿dataset,fold,train_n,test_n,train_median_pre_slope,selected_candidate,V7_policy,trial_fraction,mean_fraction,reference_count
 VisualCogA_Task-1,1,72,18,-0.011415974006042674,中位数基线,保守比例,0.15,0.0,37
 VisualCogA_Task-1,2,72,18,-0.0029437303811739087,中位数基线,保守比例,0.15,0.0,37
 VisualCogA_Task-1,3,72,18,-0.006551580024135746,保守双分量,训练均值保护,0.25,0.1,36

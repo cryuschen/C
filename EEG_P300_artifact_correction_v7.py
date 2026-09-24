@@ -25,7 +25,7 @@ from sklearn.model_selection import StratifiedKFold, train_test_split
 
 ROOT=Path(__file__).resolve().parent
 
-# 与原 V3 相同的时间轴、校正参数和绘图设置。
+# 时间轴、校正参数和绘图设置。
 FS_EXPECTED = 256
 PRE_SEC = 0.25      # 刺激前 250 ms 基线
 POST_SEC = 0.80     # 刺激后 800 ms 分析窗
@@ -38,8 +38,8 @@ TIMES_MS = TIMES * 1000.0
 P300_MASK = (TIMES >= 0.25) & (TIMES <= 0.50)
 CHANNEL_NAMES = ["Fz", "F3", "F4"]
 
-# V3 核心去噪参数
-V3_PARAMS = {
+# 双分量校正参数
+CORRECTION_PARAMS = {
     "win_blink": 41,        # 垂直眼电平滑窗长 (约 160 ms)
     "win_saccade": 31,      # 水平扫视平滑窗长 (约 120 ms)
     "gate_z_v": 2.2,        # 垂直软门控阈值
@@ -57,7 +57,7 @@ plt.rcParams['axes.labelsize'] = 11
 plt.rcParams['axes.titlesize'] = 12
 plt.rcParams['legend.fontsize'] = 9
 
-# V7 原有时间轴为毫秒；V4 内部别名保持原值。
+# 校正与绘图统一使用毫秒时间轴。
 TIMES=TIMES_MS
 WINDOW=P300_MASK
 CHANNELS=CHANNEL_NAMES
@@ -65,7 +65,7 @@ T=TIMES_MS
 P=P300_MASK
 N=N_PRE
 
-# 原 V4 训练内候选集与诊断候选集。
+# 训练内候选集与诊断候选集。
 CANDIDATES = {
     '不校正': (0., 2.2, 1.5, False),
     '中位数基线': (1., 2.2, 1.5, False),
@@ -83,14 +83,13 @@ DIAGNOSTIC_CANDIDATES = {
     '诊断_关闭垂直分量': (1., 2.2, 1.5, False),
 }
 
-STAGES=('预处理','V3','V4','V6','V7')
-PLOT_STAGES=('预处理','V6','V7')
-COLORS={'原始':'#a8adb4','预处理':'#596e83','V3':'#c87927','V4':'#6b61a8','V6':'#8b89b4','V7':'#007f89','代理参考':'#30343a'}
-LINES={'原始':':','预处理':'--','V3':'-.','V4':':','V6':':','V7':'-','代理参考':':'}
+STAGES=('预处理','V7')
+COLORS={'原始':'#a8adb4','预处理':'#596e83','V7':'#007f89','代理参考':'#30343a'}
+LINES={'原始':':','预处理':'--','V7':'-','代理参考':':'}
 
 
 
-# 从 V3/V4 精确整合的运行时实现；阶段名称继续用于同口径比较。
+# V7 单文件运行所需的预处理与校正实现。
 def load_mat_file(filepath):
     """读取赛题 .mat 文件"""
     mat = sio.loadmat(filepath, squeeze_me=True, struct_as_record=False)
@@ -216,9 +215,9 @@ def build_clean_reference_model(epochs, cues, irrecoverable, artifact_scores, re
 
     return templates, scales_v, scales_h, ref_mask
 
-def correct_single_epoch_v3(epoch, template, scale_v, scale_h, params=V3_PARAMS):
+def correct_single_epoch(epoch, template, scale_v, scale_h, params=CORRECTION_PARAMS):
     """
-    V3 核心自适应去噪：
+    双分量自适应校正：
     1. 从单试次中扣除对应的先验 ERP 模板，得到纯残差 residual
     2. 分离垂直眼电分量 V(t) 与水平扫视分量 H(t)
     3. 分别进行多尺度平滑与动态自适应软门控
@@ -449,11 +448,11 @@ def correct(epoch, tpl, sv, sh, candidate):
     strength, gate, max_h, protect = DIAGNOSTIC_CANDIDATES[candidate]
     if strength == 0:
         return epoch.copy()
-    params = dict(V3_PARAMS, gate_z_v=gate, gate_z_h=gate, max_beta_h=max_h)
+    params = dict(CORRECTION_PARAMS, gate_z_v=gate, gate_z_h=gate, max_beta_h=max_h)
     if candidate == '诊断_关闭垂直分量':
         params['max_beta_v'] = 0.
-    # 撤销 V3 最后的均值重定位，再统一使用中位数基线。
-    full = correct_single_epoch_v3(epoch, tpl, sv, sh, params)
+    # 撤销内部均值重定位，再统一使用中位数基线。
+    full = correct_single_epoch(epoch, tpl, sv, sh, params)
     full -= np.median(full[:, :N], axis=1, keepdims=True)
     delta = epoch - full
     if protect:
@@ -487,8 +486,6 @@ def inject(background, cues, seed, level):
 
 def apply_model(x, cues, model, candidate):
     tpl, sv, sh, _ = model
-    if candidate == 'V3':
-        return np.stack([correct_single_epoch_v3(e, tpl[c], sv[c], sh[c]) for e,c in zip(x,cues)])
     return np.stack([correct(e,tpl[c],sv[c],sh[c],candidate) for e,c in zip(x,cues)])
 
 def known_errors(target, recovered, cues):
@@ -578,20 +575,20 @@ def conservative_blend(output,input_epochs,fraction):
 
 
 def selected_policy(candidate):
-    """训练折选弱双分量时增强试次残差校正；其余候选沿用 V6。"""
+    """训练折选弱双分量时增强试次残差校正；其余候选采用较小比例。"""
     return '训练均值保护' if candidate == '保守双分量' else '保守比例'
 
 
 def training_mean_delta(x_train,cues_train,model,candidate):
-    delta=x_train-apply_v4(x_train,cues_train,model,candidate)
+    delta=x_train-apply_selected_candidate(x_train,cues_train,model,candidate)
     return {cue:delta[cues_train==cue].mean(axis=0) for cue in (-1,1)}
 
 
 def apply_v7(x,cues,model,candidate,mean_delta):
-    v4=apply_v4(x,cues,model,candidate)
+    candidate_output=apply_selected_candidate(x,cues,model,candidate)
     if selected_policy(candidate)=='保守比例':
-        return conservative_blend(v4,x,.15)
-    delta=x-v4
+        return conservative_blend(candidate_output,x,.15)
+    delta=x-candidate_output
     result=np.empty_like(x)
     for cue in (-1,1):
         mask=cues==cue
@@ -599,12 +596,7 @@ def apply_v7(x,cues,model,candidate,mean_delta):
     return result
 
 
-def apply_v3(x,cues,model):
-    tpl,sv,sh,_=model
-    return np.stack([correct_single_epoch_v3(e,tpl[c],sv[c],sh[c]) for e,c in zip(x,cues)])
-
-
-def apply_v4(x,cues,model,candidate):
+def apply_selected_candidate(x,cues,model,candidate):
     return apply_model(x,cues,model,candidate)
 
 
@@ -671,18 +663,17 @@ def bootstrap_metrics(methods,cues,reference,n_boot=400):
                     rows.append(dict(cue=condition,channel=channel,metric=metric,stage=stage,
                                      point=observed[stage][metric],low=lo,high=hi,
                                      n_trials=len(ids),n_boot=n_boot))
-                for baseline in ('预处理','V3','V4','V6'):
-                    arr=boot['V7'][metric]-boot[baseline][metric]
-                    lo,hi=np.quantile(arr,[.025,.975])
-                    rows.append(dict(cue=condition,channel=channel,metric=metric,stage='V7减'+baseline,
-                                     point=observed['V7'][metric]-observed[baseline][metric],
-                                     low=lo,high=hi,n_trials=len(ids),n_boot=n_boot))
+                arr=boot['V7'][metric]-boot['预处理'][metric]
+                lo,hi=np.quantile(arr,[.025,.975])
+                rows.append(dict(cue=condition,channel=channel,metric=metric,stage='V7减预处理',
+                                 point=observed['V7'][metric]-observed['预处理'][metric],
+                                 low=lo,high=hi,n_trials=len(ids),n_boot=n_boot))
     return rows
 
 
 def group_uncertainty(methods,cues,reference,n_boot=800,seed=20260924):
     """同试次分方向重采样的组均值区间；模型、剔除集及代理参考固定。"""
-    selected=('预处理','V6','V7')
+    selected=STAGES
     post=(TIMES>=0)&(TIMES<=500)
     rng=np.random.default_rng(seed)
     erps={s:{} for s in selected}
@@ -716,14 +707,14 @@ def group_uncertainty(methods,cues,reference,n_boot=800,seed=20260924):
     base_norm=np.linalg.norm(erps['预处理'][-1][:,:,WINDOW]-erps['预处理'][1][:,:,WINDOW],axis=2)
     observed_base_norm=np.linalg.norm(observed_erps['预处理'][-1][:,WINDOW]-
                                       observed_erps['预处理'][1][:,WINDOW],axis=1)
-    for stage in ('V6','V7'):
+    for stage in ('V7',):
         norm=np.linalg.norm(erps[stage][-1][:,:,WINDOW]-erps[stage][1][:,:,WINDOW],axis=2)
         retention[stage]=np.mean(norm/(base_norm+1e-12),axis=1)
         one=np.linalg.norm(observed_erps[stage][-1][:,WINDOW]-
                            observed_erps[stage][1][:,WINDOW],axis=1)
         observed_retention[stage]=float(np.mean(one/(observed_base_norm+1e-12)))
     rows=[]
-    for stage in ('V6','V7'):
+    for stage in ('V7',):
         values={
             'proxy_MAE_reduction_pct':(100*(mae['预处理']-mae[stage])/mae['预处理'],
                                        100*(observed_mae['预处理']-observed_mae[stage])/observed_mae['预处理']),
@@ -734,13 +725,6 @@ def group_uncertainty(methods,cues,reference,n_boot=800,seed=20260924):
             low,high=np.quantile(samples,[.025,.975])
             rows.append(dict(stage=stage,metric=metric,point=point,low=low,high=high,
                              n_trials=len(cues),n_boot=n_boot))
-    for metric,samples,point in (
-        ('V7_minus_V6_proxy_MAE',mae['V7']-mae['V6'],observed_mae['V7']-observed_mae['V6']),
-        ('V7_minus_V6_SNR_proxy_dB',snr['V7']-snr['V6'],observed_snr['V7']-observed_snr['V6']),
-    ):
-        low,high=np.quantile(samples,[.025,.975])
-        rows.append(dict(stage='V7减V6',metric=metric,point=point,low=low,high=high,
-                         n_trials=len(cues),n_boot=n_boot))
     return rows
 
 
@@ -834,7 +818,7 @@ def save_fig(fig,path):
 
 def plot_condition(name,methods,cues,refs,out,zoom=False):
     title=name+(' · 250–500 ms 正向响应窗' if zoom else ' · 左右刺激三通道 ERP')
-    subtitle='各图同一有效试次，同行左右共享纵轴；代理参考只作描述' if zoom else '三阶段同一试次；阴影是V7逐点95%试次重采样区间'
+    subtitle='各图同一有效试次，同行左右共享纵轴；代理参考只作描述' if zoom else '处理前后同一试次；阴影是V7逐点95%试次重采样区间'
     fig,axes=make_axes(title,subtitle)
     scale={k:[] for k in range(3)}
     for col,c in enumerate((-1,1)):
@@ -907,14 +891,14 @@ def plot_heatmap(name,methods,cues,trial_ids,out,focus=False):
             ax.set_xlabel('相对提示时间（ms）')
             ax.set_ylabel('原始试次编号')
     fig.colorbar(image,ax=axes,label='Fz 原始电位单位')
-    subtitle=(f'细节视图：图内各阶段共同98%绝对值分位 ±{limit:.1f}；{exceed:.2f}%像素截色' if focus
-              else f'完整色域：图内各阶段共用 ±{limit:.1f}，无截色')
+    subtitle=(f'细节视图：处理前后共用98%绝对值分位 ±{limit:.1f}；{exceed:.2f}%像素截色' if focus
+              else f'完整色域：处理前后共用 ±{limit:.1f}，无截色')
     fig.suptitle(name+' · Fz 试次时间热力图\n'+subtitle)
     save_fig(fig,out/('Fz热力图_细节视图.png' if focus else 'Fz热力图_完整色域.png'))
 
 
 def plot_spatial(name,methods,cues,out):
-    fig,axes=make_axes(name+' · 左右与额区差分','左列为左减右；右列为F3减F4及左右交互；各面板内三阶段同尺度；差分可能包含残余眼动')
+    fig,axes=make_axes(name+' · 左右与额区差分','左列为左减右；右列为F3减F4及左右交互；各面板内处理前后同尺度；差分可能包含残余眼动')
     scale={k:[] for k in range(3)}
     for ch,channel in enumerate(CHANNELS):
         signals={s:x[cues==-1,ch].mean(0)-x[cues==1,ch].mean(0) for s,x in methods.items()}
@@ -980,19 +964,19 @@ def write_report(out,datasets,summary,spatial,benchmark,fitrows,group_intervals,
     lines=['# 第一问：脑电预处理、伪影校正与有效视觉响应拟合（终稿实验报告）','',
     '## 赛题对应与结果定位','',
     '针对项目一与项目二、Fz/F3/F4原始记录，完成视觉提示事件提取、固定质量筛查、连续信号预处理、折外校正、左右方向分层响应估计及曲线拟合。刺激方向从VisCue读取，仅用于已知条件下的离线分析；本结果不是未知刺激解码器。',
-    '', '核心结论：V7按训练折选型控制校正强度；四组代理MAE点估计下降约5.4%–10.0%，同试次重采样的组均值区间均在零以上。SNR代理点估计略升，但四组增量区间均跨零，不能称稳定提高。左右差分幅度保留约0.81–0.95，却不能证明保留的是神经特征；四组1倍和2倍半合成恢复误差较V6略低，弱注入与零注入仍有背景改动。',
+    '', '核心结论：V7按训练折选型控制校正强度；四组代理MAE点估计下降约5.4%–10.0%，同试次重采样的组均值区间均在零以上。SNR代理点估计略升，但四组增量区间均跨零，不能称稳定提高。左右差分幅度保留约0.81–0.95，却不能证明保留的是神经特征；半合成验证显示校正对背景也有改动，弱注入时不保证优于未校正。',
     '', '## 数据与数学定义','',
     '- 四组输入各100个提示事件；只用原始Fz、F3、F4与VisCue，绝不使用机器处理后的FzDecon/F3Decon/F4Decon作为输入。采样率256 Hz；试次窗−250至796.875 ms，分析窗250–500 ms。幅度单位沿用“原始电位单位”，不假定µV。',
     '- 固定预处理：连续信号60 Hz陷波、0.1–30 Hz零相位带通、刺激前250 ms中位数基线校正。提高高通截止频率会改变慢ERP的幅值和潜伏期，因此未通过抬高截止频率强行消除项目二的慢变化。',
-    '- 严重坏试次规则沿用V3：原始跨通道采样绝对值≥999的总点数≥15，或滤波后峰峰值>1800，或相邻点跳变>600；这些是数据量纲下的工程阈值。没有证据表明“15点”是连续硬件饱和，指标解释按实际计算。',
+    '- 严重坏试次规则：原始跨通道采样绝对值≥999的总点数≥15，或滤波后峰峰值>1800，或相邻点跳变>600；这些是数据量纲下的工程阈值。没有证据表明“15点”是连续硬件饱和，指标解释按实际计算。',
     '- 五折外层分层划分、固定随机种子42。每折仅用训练试次估计方向条件模板、残差尺度和选型；当前折测试试次不进入自己的模板。被剔除试次不进入任何ERP、拟合或指标。',
-    '- V3为原双分量校正；V4为训练内半合成选型；V6为取V4校正量15%的保守基线。V7仍由外折训练试次选择V4候选。选到“保守双分量”时，采用训练均值保护策略；其他候选沿用V6。0.15/0.25等比例是在查看四组开发结果后确定，不是独立受试者验证出的最优值。',
-    '- 训练均值保护只从测试试次扣除25%的V4估计改动，再加回该方向训练试次平均V4改动的10%；这旨在更多抑制试次间波动，同时限制方向平均响应偏移。平均偏移仍可能改变真实视觉特征；它不是神经源分离。刺激前斜率仅作为诊断量保存，不进入V7修正。',
-    '- 代理参考为当前外折训练集中同方向低伪影半数试次的逐点中位数；每个评价试次对应训练模板按条件平均用于指标。它与校正模型相关，不是独立无噪声真值。预处理/V3/V4/V6/V7在相同试次、参考和窗口内比较，六个方向×通道行等权；缺失指标使用五阶段共同有效行配对，不补零。',
+    '- 每个外折训练集通过训练内半合成验证选择校正候选。选到“保守双分量”时采用训练均值保护策略；其他候选采用15%的校正量。0.15/0.25等比例是在查看四组开发结果后确定，不是独立受试者验证出的最优值。',
+    '- 训练均值保护只从测试试次扣除25%的候选校正改动，再加回该方向训练试次平均改动的10%；这旨在更多抑制试次间波动，同时限制方向平均响应偏移。平均偏移仍可能改变真实视觉特征；它不是神经源分离。刺激前斜率仅作为诊断量保存，不进入V7修正。',
+    '- 代理参考为当前外折训练集中同方向低伪影半数试次的逐点中位数；每个评价试次对应训练模板按条件平均用于指标。它与校正模型相关，不是独立无噪声真值。预处理与V7在相同试次、参考和窗口内比较，六个方向×通道行等权；缺失指标使用两阶段共同有效行配对，不补零。',
     '- 曲线拟合采用内部结点相隔50 ms的三次样条，固定自由度以避免逐点插值；输出50–750 ms和250–500 ms残差RMSE。只有250–500 ms内的局部正峰才报告峰时刻；正面积可在无局部峰时报告。它仅是额区正向响应表征，不能称已经在中央/顶区观察到典型P300。',
     '', '### 校正模型与选型目标','',
-    '对每个训练折和方向，以低伪影半数试次的逐点中位数构造三通道模板 T；单试次残差为 r_c(t)=x_c(t)−T_c(t)。垂直候选参考取三通道残差中位数，水平候选参考取 (r_F4−r_F3)/2；两者经平滑、相对于训练残差尺度的软门控后组成矩阵 A。对每通道求受系数边界约束的岭回归 β_c≈(AᵀA+λI)⁻¹Aᵀr_c，再从 x_c 中减去 Aβ_c。V4 候选还包括门控强度、水平分量上限、时域保护和不校正，具体参数保存在源码与逐折策略CSV。',
-    'V4 的训练内验证在0、1、2倍人工污染上选择候选：L=(RMSE_全窗+0.5×RMSE_左右差分+正向均值绝对误差)/背景RMS；三档权重依次为0.5、0.25、0.25。记δ_i=x_i−x_V4,i，m_y=同方向外折训练试次δ的均值。V6及V7保守分支为x_i−0.15δ_i；V7训练均值保护分支为x_i−0.25δ_i+0.10m_y。m_y仅由外折训练试次产生。分支规则和比例经过四组数据开发，外折数字是本数据集模型分析，不是独立泛化精度。',
+    '对每个训练折和方向，以低伪影半数试次的逐点中位数构造三通道模板 T；单试次残差为 r_c(t)=x_c(t)−T_c(t)。垂直候选参考取三通道残差中位数，水平候选参考取 (r_F4−r_F3)/2；两者经平滑、相对于训练残差尺度的软门控后组成矩阵 A。对每通道求受系数边界约束的岭回归 β_c≈(AᵀA+λI)⁻¹Aᵀr_c，再从 x_c 中减去 Aβ_c。候选还包括门控强度、水平分量上限、时域保护和不校正，具体参数保存在源码与逐折策略CSV。',
+    '训练内验证在0、1、2倍人工污染上选择候选：L=(RMSE_全窗+0.5×RMSE_左右差分+正向均值绝对误差)/背景RMS；三档权重依次为0.5、0.25、0.25。记δ_i=x_i−x_候选,i，m_y=同方向外折训练试次δ的均值。常规分支为x_i−0.15δ_i；训练均值保护分支为x_i−0.25δ_i+0.10m_y。m_y仅由外折训练试次产生。分支规则和比例经过四组数据开发，外折数字是本数据集模型分析，不是独立泛化精度。',
     '分方向 ERP 为同一方向有效试次的逐点算术均值。曲线用 f(t)=Σ_j θ_j B_j(t) 拟合，其中 B_j 为固定50 ms内部结点的三次B样条基函数，θ通过50–750 ms普通最小二乘估计；拟合残差 RMSE 用相同 ERP 点计算，是描述性拟合误差，不是独立预测误差。',
     '', '## 试次与训练参考对账','',
     '| 数据组 | 事件 | 边界剔除 | 质量剔除 | 可用并折外评价 | 左 / 右 | 每折训练参考数 |',
@@ -1002,22 +986,22 @@ def write_report(out,datasets,summary,spatial,benchmark,fitrows,group_intervals,
         refs=d['reference_counts']
         lines.append(f'| {d["name"]} | {len(a)} | {int((a.role=="边界剔除").sum())} | {int((a.role=="质量剔除").sum())} | {len(c)} | {int((c==-1).sum())} / {int((c==1).sum())} | '+', '.join(map(str,refs))+' |')
     lines += ['', '训练参考在不同外折可以重复出现，上表不能将每折参考数简单相加。各组“完整事件与试次审计.csv”“逐折训练参考评价清单.csv”“可复核波形.npz”保留原始试次编号、折号和每折训练校正均值。',
-             '', '## 五阶段同口径指标','',
-             '表中“V3”指按共同训练评分和参考流程重算的V3校正，数值不得与旧版不同评价口径CSV直接相减。MAE及相关针对代理参考；SNR为ERP功率/试次残差功率的代理值，残差也含真实试次差异。',
-             '', '| 数据组 | 指标 | 预处理 | V3 | V4 | V6 | V7 | 共同有效行数/6 |',
-             '|---|---|---:|---:|---:|---:|---:|---:|']
+             '', '## 预处理与V7同口径指标','',
+             'MAE及相关针对代理参考；SNR为ERP功率/试次残差功率的代理值，残差也含真实试次差异。',
+             '', '| 数据组 | 指标 | 预处理 | V7 | 共同有效行数/6 |',
+             '|---|---|---:|---:|---:|']
     for ds,d in datasets.items():
         for row in stage_summary_markdown(summary,ds):
             lines.append('| '+d['name']+' | '+row[2:])
     lines += ['', '### 视觉形状与空间差分','',
               '左减右、F3减F4均用相同有效试次计算。差分范数比以预处理差分为分母；接近1只说明幅度更接近处理前，不能区分保留神经信息与保留方向相关眼动。',
-              '', '| 数据组 | V3左右差分比 | V4左右差分比 | V6左右差分比 | V7左右差分比 | V7差分波形相关均值 |',
-              '|---|---:|---:|---:|---:|---:|']
+              '', '| 数据组 | V7左右差分比 | V7差分波形相关均值 |',
+              '|---|---:|---:|']
     for ds,d in datasets.items():
         g=spatial[(spatial.dataset==ds)&(spatial.quantity=='left_minus_right_ERP')]
-        vals=[g[g.stage==s].retention_ratio.mean() for s in ('V3','V4','V6','V7')]
+        ratio=g[g.stage=='V7'].retention_ratio.mean()
         corr=g[g.stage=='V7'].waveform_correlation.mean()
-        lines.append(f'| {d["name"]} | {vals[0]:.3f} | {vals[1]:.3f} | {vals[2]:.3f} | {vals[3]:.3f} | {corr:.3f} |')
+        lines.append(f'| {d["name"]} | {ratio:.3f} | {corr:.3f} |')
     lines += ['', '逐通道左右差分如下，避免三通道均值掩盖局部退步。比值和波形相关都是相对预处理，而不是相对无伪影真值。',
               '', '| 数据组 | 通道 | V7左右差分比 | V7波形相关 |', '|---|---|---:|---:|']
     for ds,d in datasets.items():
@@ -1027,7 +1011,7 @@ def write_report(out,datasets,summary,spatial,benchmark,fitrows,group_intervals,
             lines.append(f'| {d["name"]} | {ch} | {row.retention_ratio:.3f} | {row.waveform_correlation:.3f} |')
     lines += ['', 'F3/F4空间差分的完整数值见“左右刺激与额区空间差异指标.csv”。',
               '', '### 组均值区间与时段稳定性','',
-              '下表的95%区间按左右方向分别对同一批试次重采样，V6/V7和预处理共用索引；已选模型、试次剔除集与训练代理参考固定。它量化本组试次抽样波动，不覆盖跨时段相关性、开发调参或跨受试者不确定性。',
+              '下表的95%区间按左右方向分别对同一批试次重采样，V7和预处理共用索引；已选模型、试次剔除集与训练代理参考固定。它量化本组试次抽样波动，不覆盖跨时段相关性、开发调参或跨受试者不确定性。',
               '', '| 数据组 | V7代理MAE降幅% [95%区间] | V7 SNR代理增量dB [95%区间] | V7左右差分比 [95%区间] | 前后半段差分相关 |',
               '|---|---:|---:|---:|---:|']
     for ds,d in datasets.items():
@@ -1041,10 +1025,10 @@ def write_report(out,datasets,summary,spatial,benchmark,fitrows,group_intervals,
                      f'{cell("SNR_proxy_gain_dB","+.3f")} | '
                      f'{cell("left_right_retention_ratio",".3f")} | '
                      f'{t.contrast_correlation:.3f} |')
-    lines += ['', '四组SNR代理增量的组均值区间均跨零；它只支持“点估计略升”，不支持稳定增益。试次按原始事件编号前后对半，每半段分别计算左右ERP差分；A项目一与B项目二的三通道合并差分相关为负，说明方向差异的时间稳定性尚未确立。这个检查也不能将真实视觉响应与方向相关眼动分离。逐通道时段相关、每半段左右样本数及V7−V6差异区间见汇总CSV。',
+    lines += ['', '四组SNR代理增量的组均值区间均跨零；它只支持“点估计略升”，不支持稳定增益。试次按原始事件编号前后对半，每半段分别计算左右ERP差分；A项目一与B项目二的三通道合并差分相关为负，说明方向差异的时间稳定性尚未确立。这个检查也不能将真实视觉响应与方向相关眼动分离。逐通道时段相关及每半段左右样本数见汇总CSV。',
               '', '### 正峰缺失、样条拟合与不确定性','',
               '逐方向逐通道CSV列出每阶段`positive_peak_valid`、`reference_positive_peak_valid`与潜伏期有效性。无正峰不赋予零潜伏期。样条拟合全部可计算，但“可拟合”不等于“有可信生理P300”。',
-              '', '| 数据组 | V7有合格窗内局部正峰 / 6 | V7正峰检出行 / 6 | 五阶段峰误差共同配对行 / 6 |',
+              '', '| 数据组 | V7有合格窗内局部正峰 / 6 | V7正峰检出行 / 6 | 两阶段峰误差共同配对行 / 6 |',
               '|---|---:|---:|---:|']
     for ds,d in datasets.items():
         f=fit[fit.dataset==ds]
@@ -1054,21 +1038,22 @@ def write_report(out,datasets,summary,spatial,benchmark,fitrows,group_intervals,
     lines += ['', '逐方向逐通道区间文件进行400次试次重采样，组均值区间文件进行800次分方向配对重采样；均固定处理后的波形与代理参考。区间不能推断人群疗效或诊断能力，也不等于独立受试者验证。',
               '', '## 半合成闭环验证','',
               '在四组各外折测试试次上人工加入随机时刻、宽度、极性的眨眼样、扫视样和运动样扰动；污染前的预处理实测波形是可计算恢复目标，仍可能含原有伪影。固定三个测试随机种子和0/0.5/1/2倍注入；0倍只检验无新污染时算法改动背景的程度。每组每幅度、每算法另存原始单位RMSE、按背景RMS归一化RMSE、左右差分恢复误差和正向均值误差。',
-              '', '| 数据组 | 幅度 | 未校正归一化RMSE | V3 | V4 | V6 | V7 |',
-              '|---|---:|---:|---:|---:|---:|---:|']
+              '', '| 数据组 | 幅度 | 未校正归一化RMSE | V7归一化RMSE |',
+              '|---|---:|---:|---:|']
     for ds,d in datasets.items():
         for level in (0.,.5,1.,2.):
             g=benchmark[(benchmark.dataset==ds)&(benchmark.level==level)]
-            values=[g[g.stage==s].normalized_RMSE.mean() for s in STAGES]
+            values=[g[g.stage==s].normalized_RMSE.mean() for s in ('未校正','V7')]
             lines.append(f'| {d["name"]} | {level:g} | '+' | '.join(f'{x:.3f}' for x in values)+' |')
-    lines += ['', 'V7在四组1倍和2倍场景较V6均有小幅降低，但0倍背景改动通常略大。A项目一在0.5倍轻扰动时，V7恢复RMSE仍高于未校正；这说明分支规则不能保证所有伪影强度都获益。0倍注入的非零恢复误差是算法对背景本身的改动，不能解释为恢复收益。不能将半合成结果推广为真实无噪声脑电恢复精度；没有专门的眼电或独立真值。各试次重复注入也不能当作独立受试者。',
+    lines += ['', 'A项目一在0.5倍轻扰动时，V7恢复RMSE仍高于未校正；这说明分支规则不能保证所有伪影强度都获益。0倍注入的非零恢复误差是算法对背景本身的改动，不能解释为恢复收益。不能将半合成结果推广为真实无噪声脑电恢复精度；没有专门的眼电或独立真值。各试次重复注入也不能当作独立受试者。',
               '', '## 图表检查与解释','',
-              '- 所有五阶段指标共享试次；主图只展示预处理、V6、V7，以减少线条遮挡。左右面板同一通道共享纵轴。置信带来自试次重采样，注明为逐点区间。',
+              '- 预处理与V7指标共享试次；主图展示处理前后波形。左右面板同一通道共享纵轴。置信带来自试次重采样，注明为逐点区间。',
               '- 典型波形同时给50%与75%伪影评分试次，不把75%试次称普通典型；标注原始编号。两图都使用完整幅度，不截断原始大波形。',
+              '- 三栏图的处理差值是基线对齐原始波形减V7波形，含预处理和校正共同带来的变化；不能把它直接解释为独立分离出的纯伪影。',
               '- 热力图同时给完整共用色域与共用98%分位细节视图；细节图显式写出截色像素比例。不得凭细节图单独宣称大波形消失。',
-              '- 空间图右列依次为左刺激、右刺激的F3−F4及二者差；各面板内三阶段共享尺度，跨不同差分类型不强行共用纵轴。',
+              '- 空间图右列依次为左刺激、右刺激的F3−F4及二者差；各面板内处理前后共享尺度，跨不同差分类型不强行共用纵轴。',
               '- 跨项目图按左、右方向分别比较，各方向写明样本数；拟合图显示残差和窗内拟合RMSE。',
-              '- 汇总图以四组为行、三项指标为列，并加入V6/V7的组均值试次重采样区间；不同单位与意义的指标不合成单一综合分数。',
+              '- 汇总图以四组为行、三项指标为列，展示V7相对预处理的组均值试次重采样区间；不同单位与意义的指标不合成单一综合分数。',
               '', '## 结论边界和可复现性','',
               'V7是四组数据上经过开发调试的折外实验结果：操作层面测试试次未进入其折的模板或策略判断，但开发者已查看全部四组数据，故这些数字是开发集结果，不应称为全新受试者独立验证。三额区通道没有眼电通道，无法从这份数据单独证明前额共同缓慢变化是眼电还是神经慢电位；前后半段差分不稳定进一步限制“形状特征得到可靠保留”的结论。',
               '', '要把结果用于未知刺激分类，需要在完全独立数据上重新建立不使用测试Cue的校正和分类流程；当前曲线是已知条件下的视觉响应描述。数模论文可用本结果讨论可观测信号和方法取舍，不能声称神经源唯一识别、临床诊断准确率或人群泛化。',
@@ -1104,9 +1089,11 @@ def plot_benchmark(out,synthetic):
     frame=pd.DataFrame(synthetic)
     fig,axes=plt.subplots(2,2,figsize=(12.5,8),layout='constrained',sharex=True)
     for ax,(ds,g) in zip(axes.flat,frame.groupby('dataset',sort=False)):
-        for stage in PLOT_STAGES:
+        for stage in ('未校正','V7'):
             s=g[g.stage==stage].groupby('level').normalized_RMSE.mean()
-            ax.plot(s.index,s.values,color=COLORS[stage],ls=LINES[stage],marker='o',label=stage)
+            color=COLORS['预处理'] if stage=='未校正' else COLORS['V7']
+            style=LINES['预处理'] if stage=='未校正' else LINES['V7']
+            ax.plot(s.index,s.values,color=color,ls=style,marker='o',label=stage)
         ax.set_title(ds+' · 背景样本与外折固定')
         ax.set_xlabel('人工注入幅度倍数（0表示未注入）')
         ax.set_ylabel('恢复RMSE / 背景RMS')
@@ -1120,11 +1107,10 @@ def plot_benchmark(out,synthetic):
 # 单文件重建提交结果中的三栏伪影分解图；绘制规则沿用原独立脚本。
 DECOMPOSITION_COLORS = {
     'raw': '#455A64',       # 灰蓝色：原始未加工记录
-    'clean': '#00796B',     # 青绿色：V7 校正后纯净脑电
-    'artifact': '#C62828',  # 铁红色：提取出的伪影与噪声
+    'clean': '#00796B',     # 青绿色：V7 校正后波形
+    'artifact': '#C62828',  # 铁红色：原始基线对齐波形与 V7 的差值
     'p300_span': '#FFF3CD', # 淡黄色：250-500 ms 视觉响应分析窗
 }
-DECOMPOSITION_OUTPUT_DIR = ROOT / 'output/三栏伪影分解对比图'
 
 def plot_decomposition_for_dataset(results_dir, dataset_folder_name, quantile, quantile_label, filename):
     """为指定数据集生成三通道、左右方向的三栏分解图"""
@@ -1164,7 +1150,7 @@ def plot_decomposition_for_dataset(results_dir, dataset_folder_name, quantile, q
         # 基线对齐的原始信号
         raw_bc = raw[ix] - np.median(raw[ix, :, :N_PRE], axis=1, keepdims=True)
         clean = v7[ix]
-        artifact = raw_bc - clean
+        removed_component = raw_bc - clean
 
         # 逐通道绘制
         for ch, ch_name in enumerate(CHANNELS):
@@ -1183,27 +1169,27 @@ def plot_decomposition_for_dataset(results_dir, dataset_folder_name, quantile, q
             if row_offset == 0 and ch == 0:
                 ax_raw.legend(loc='upper right', fontsize=8, framealpha=0.9)
 
-            # --- Row 2: V7 去噪后 ---
+            # --- Row 2: V7 校正后 ---
             ax_clean = axes[row_offset + 1, ch]
-            ax_clean.plot(times, clean[ch], color=DECOMPOSITION_COLORS['clean'], lw=1.5, label='V7 校正后脑电')
+            ax_clean.plot(times, clean[ch], color=DECOMPOSITION_COLORS['clean'], lw=1.5, label='V7 校正后波形')
             ax_clean.axvline(0, color='black', lw=0.8, ls='--')
             ax_clean.axvspan(250, 500, color=DECOMPOSITION_COLORS['p300_span'], alpha=0.6)
-            ax_clean.set_title(f'{ch_name} · V7 去噪后信号', fontsize=10.5, fontweight='bold', pad=4)
+            ax_clean.set_title(f'{ch_name} · V7 校正后波形', fontsize=10.5, fontweight='bold', pad=4)
             ax_clean.grid(True, alpha=0.25, ls=':')
             if ch == 0:
-                ax_clean.set_ylabel('V7 纯净信号\n(电位单位)', fontsize=9.5, fontweight='bold')
+                ax_clean.set_ylabel('V7 校正后\n(电位单位)', fontsize=9.5, fontweight='bold')
             if row_offset == 0 and ch == 0:
                 ax_clean.legend(loc='upper right', fontsize=8, framealpha=0.9)
 
-            # --- Row 3: 剥离的纯伪影分量 ---
+            # --- Row 3: 原始基线对齐波形与 V7 的处理差值 ---
             ax_art = axes[row_offset + 2, ch]
-            ax_art.plot(times, artifact[ch], color=DECOMPOSITION_COLORS['artifact'], lw=1.1, label='提取伪影 (Raw - V7)')
+            ax_art.plot(times, removed_component[ch], color=DECOMPOSITION_COLORS['artifact'], lw=1.1, label='处理差值 (原始 - V7)')
             ax_art.axvline(0, color='black', lw=0.8, ls='--')
             ax_art.axvspan(250, 500, color=DECOMPOSITION_COLORS['p300_span'], alpha=0.6)
-            ax_art.set_title(f'{ch_name} · 剥离伪影成分 (Raw - V7)', fontsize=10.5, fontweight='bold', pad=4)
+            ax_art.set_title(f'{ch_name} · 处理差值 (原始 - V7)', fontsize=10.5, fontweight='bold', pad=4)
             ax_art.grid(True, alpha=0.25, ls=':')
             if ch == 0:
-                ax_art.set_ylabel('滤除伪影分量\n(电位单位)', fontsize=9.5, fontweight='bold')
+                ax_art.set_ylabel('处理差值\n(电位单位)', fontsize=9.5, fontweight='bold')
             if row_offset == 0 and ch == 0:
                 ax_art.legend(loc='upper right', fontsize=8, framealpha=0.9)
             if row_offset == 3:
@@ -1211,21 +1197,15 @@ def plot_decomposition_for_dataset(results_dir, dataset_folder_name, quantile, q
 
     # 主标题与副标题
     dataset_display = dataset_folder_name.replace('_', ' · ')
-    fig.suptitle(f'{dataset_display} · {quantile_label}三栏伪影分解图\n[顶刊标准：原始信号 = V7纯净脑电 + 提取伪影成分]',
+    fig.suptitle(f'{dataset_display} · {quantile_label}三栏处理前后与差值图\n原始基线对齐波形 = V7波形 + 处理差值；差值不等于纯伪影',
                  fontsize=13.5, fontweight='bold', y=0.995)
 
     fig.tight_layout(rect=[0, 0.01, 1, 0.985])
 
-    DECOMPOSITION_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     out_file = results_dir / dataset_folder_name / filename
     fig.savefig(out_file, dpi=200)
     print(f"成功生成并写入 eeg_v7_results: {out_file}")
 
-    # 同时在 output/三栏伪影分解对比图 保存带完整命名的副本以方便集中查阅
-    backup_dir = ROOT / 'output/三栏伪影分解对比图'
-    backup_dir.mkdir(parents=True, exist_ok=True)
-    backup_file = backup_dir / f"{dataset_folder_name}_{filename}"
-    fig.savefig(backup_file, dpi=200)
     plt.close(fig)
 
 
@@ -1240,12 +1220,10 @@ def plot_outcome_dashboard(out,datasets,group_intervals):
     for ax,(metric,title,xlabel,baseline,limits) in zip(axes,metrics):
         ax.axvline(baseline,color='#657480',ls='--',lw=1,zorder=0)
         for i,ds in enumerate(datasets):
-            for stage,offset,marker in (('V6',-.13,'s'),('V7',.13,'o')):
-                row=frame[(frame.dataset==ds)&(frame.stage==stage)&(frame.metric==metric)].iloc[0]
-                y=i+offset
-                ax.errorbar(row.point,y,xerr=[[row.point-row.low],[row.high-row.point]],
-                            fmt=marker,color=COLORS[stage],markersize=6,capsize=3,
-                            elinewidth=1.7,label=stage if i==0 else None,zorder=3)
+            row=frame[(frame.dataset==ds)&(frame.stage=='V7')&(frame.metric==metric)].iloc[0]
+            ax.errorbar(row.point,i,xerr=[[row.point-row.low],[row.high-row.point]],
+                        fmt='o',color=COLORS['V7'],markersize=6,capsize=3,
+                        elinewidth=1.7,label='V7' if i==0 else None,zorder=3)
         ax.set_title(title,fontsize=12,pad=10)
         ax.set_xlabel(xlabel,fontsize=10)
         ax.set_xlim(*limits)
@@ -1253,8 +1231,8 @@ def plot_outcome_dashboard(out,datasets,group_intervals):
         ax.invert_yaxis()
         ax.grid(axis='x',alpha=.17)
         ax.spines[['top','right']].set_visible(False)
-    axes[0].legend(loc='lower right',frameon=False,ncol=2,fontsize=9)
-    fig.suptitle('四组数据：V6 / V7 点估计与95%试次重采样区间\n'
+    axes[0].legend(loc='lower right',frameon=False,fontsize=9)
+    fig.suptitle('四组数据：V7 相对预处理的点估计与95%试次重采样区间\n'
                  '模型及训练代理参考固定；区间仅表示本组试次抽样波动',fontsize=13)
     save_fig(fig,out/'汇总与说明/去噪与特征保留联合评价.png')
 
@@ -1265,15 +1243,15 @@ def main():
     parser.add_argument('--no-plots',action='store_true',help='生成数值副本供重复性核验')
     args=parser.parse_args()
     out=args.output.resolve()
-    if out==ROOT or any(out.is_relative_to(p) for p in (ROOT/'data',ROOT/'eeg_v2_results',ROOT/'eeg_v3_results',ROOT/'eeg_v4_results',ROOT/'eeg_v5_results',ROOT/'eeg_v6_results')):
-        raise ValueError('输出路径不得覆盖原始数据与旧结果')
+    if out==ROOT or out.is_relative_to(ROOT/'data'):
+        raise ValueError('输出路径不得覆盖源码目录或原始数据')
     out.mkdir(parents=True,exist_ok=True)
     summary_dir=out/'汇总与说明';summary_dir.mkdir(exist_ok=True)
     synth_dir=out/'半合成验证';synth_dir.mkdir(exist_ok=True)
     manifest={'inputs':{},'source':{Path(__file__).name:sha(Path(__file__))},
               'python':platform.python_version(),'numpy':np.__version__,'fold_seed':42,'test_seeds':[2027,2039,2053],
               'unit':'原始电位单位','V7_policy':{'保守双分量':'训练均值保护', '其他候选':'保守比例'},
-              'fractions':{'V6':.15,'V7_protected_trial':.25,'V7_protected_train_mean':.10}}
+              'fractions':{'default_trial':.15,'protected_trial':.25,'protected_train_mean':.10}}
     datasets={};summary=[];spatial=[];synthetic=[];fits=[];strategies=[];slope_diagnostics=[]
     group_intervals=[];stability=[]
     for subject in 'AB':
@@ -1285,16 +1263,16 @@ def main():
             dest=out/name;dest.mkdir(exist_ok=True)
             raw,x,cues,scores,audit,sensitivity=read_dataset(input_path)
             trial_ids=audit.loc[audit.role=='折外评价','trial_id'].to_numpy(int)
-            n=len(x);v3=np.empty_like(x);v4=np.empty_like(x);v6=np.empty_like(x);v7=np.empty_like(x);refs_trial=np.empty_like(x)
+            n=len(x);candidate_outputs=np.empty_like(x);v7=np.empty_like(x);refs_trial=np.empty_like(x)
             folds=np.zeros(n,dtype=int);reference_counts=[];fold_roles=[]
             fold_mean_deltas=np.empty((5,2,3,len(TIMES)),dtype=float)
             cv=StratifiedKFold(n_splits=5,shuffle=True,random_state=42)
             for fold,(train,test) in enumerate(cv.split(x,cues),1):
                 train_scores=detect_bad_trials(raw[train],x[train])[1]
                 model=build_clean_reference_model(x[train],cues[train],np.zeros(len(train),bool),train_scores)
-                v4_choice,_=select_candidate(x[train],cues[train],100+fold)
-                mean_delta=training_mean_delta(x[train],cues[train],model,v4_choice)
-                policy=selected_policy(v4_choice)
+                choice,_=select_candidate(x[train],cues[train],100+fold)
+                mean_delta=training_mean_delta(x[train],cues[train],model,choice)
+                policy=selected_policy(choice)
                 median_slope=float(np.median(prestim_slopes(x[train])))
                 fold_mean_deltas[fold-1,0]=mean_delta[-1]
                 fold_mean_deltas[fold-1,1]=mean_delta[1]
@@ -1306,13 +1284,11 @@ def main():
                 reference_counts.append(len(reference_ids))
                 for j in train:
                     fold_roles.append(dict(fold=fold,trial_id=int(trial_ids[j]),role='训练参考' if trial_ids[j] in reference_ids else '训练非参考'))
-                v3[test]=apply_v3(x[test],cues[test],model)
-                v4[test]=apply_v4(x[test],cues[test],model,v4_choice)
-                v6[test]=conservative_blend(v4[test],x[test],.15)
-                v7[test]=apply_v7(x[test],cues[test],model,v4_choice,mean_delta)
+                candidate_outputs[test]=apply_selected_candidate(x[test],cues[test],model,choice)
+                v7[test]=apply_v7(x[test],cues[test],model,choice,mean_delta)
                 folds[test]=fold
                 strategies.append(dict(dataset=ds,fold=fold,train_n=len(train),test_n=len(test),
-                                       train_median_pre_slope=median_slope,V4_candidate=v4_choice,
+                                       train_median_pre_slope=median_slope,selected_candidate=choice,
                                        V7_policy=policy,trial_fraction=.25 if policy=='训练均值保护' else .15,
                                        mean_fraction=.10 if policy=='训练均值保护' else 0.,
                                        reference_count=len(reference_ids)))
@@ -1320,11 +1296,8 @@ def main():
                 for seed in (2027,2039,2053):
                     for level in (0.,.5,1.,2.):
                         contaminated=inject(x[test],cues[test],seed+fold,level)
-                        s3=apply_v3(contaminated,cues[test],model)
-                        s4=apply_v4(contaminated,cues[test],model,v4_choice)
-                        s6=conservative_blend(s4,contaminated,.15)
-                        s7=apply_v7(contaminated,cues[test],model,v4_choice,mean_delta)
-                        for stage,recovered in zip(STAGES,(contaminated,s3,s4,s6,s7)):
+                        s7=apply_v7(contaminated,cues[test],model,choice,mean_delta)
+                        for stage,recovered in (('未校正',contaminated),('V7',s7)):
                             result=known_errors(x[test],recovered,cues[test])
                             synthetic.append(dict(dataset=ds,fold=fold,seed=seed,level=level,stage=stage,
                                                   n_trials=len(test),V7_policy=policy,**result))
@@ -1334,7 +1307,7 @@ def main():
             save_csv(fold_roles,dest/'逐折训练参考评价清单.csv')
             save_csv(sensitivity,dest/'坏试次阈值敏感性.csv')
             refs={c:refs_trial[cues==c].mean(axis=0) for c in (-1,1)}
-            stages=dict(zip(STAGES,(x,v3,v4,v6,v7)))
+            stages=dict(zip(STAGES,(x,v7)))
             metrics=extended_metrics(x,stages,cues,refs)
             save_csv(metrics,dest/'逐方向逐通道评价指标.csv')
             summary.extend(summarize_metrics(metrics,ds))
@@ -1352,14 +1325,14 @@ def main():
                         slope_diagnostics.append(dict(dataset=ds,stage=stage,cue=c,channel=channel,
                                                       n_trials=int((cues==c).sum()),late_minus_early=late-early,
                                                       mean_pre_slope=float(prestim_slopes(y)[cues==c,ch].mean())))
-            np.savez_compressed(dest/'可复核波形.npz',raw=raw,before=x,v3=v3,v4=v4,v6=v6,v7=v7,cues=cues,
+            np.savez_compressed(dest/'可复核波形.npz',raw=raw,before=x,candidate_output=candidate_outputs,v7=v7,cues=cues,
                                 trial_ids=trial_ids,folds=folds,fold_mean_deltas=fold_mean_deltas,
                                 reference_per_trial=refs_trial,times_ms=TIMES)
             save_csv(fixed_example_ids(cues,scores,trial_ids),dest/'固定示例试次编号.csv')
             dataset=dict(name=name,audit=audit,cues=cues,stages=stages,metrics=metrics,reference_counts=reference_counts)
             datasets[ds]=dataset
             if not args.no_plots:
-                shown={stage:stages[stage] for stage in PLOT_STAGES}
+                shown=stages
                 plot_condition(name,shown,cues,refs,dest)
                 plot_condition(name,shown,cues,refs,dest,zoom=True)
                 plot_examples(name,raw,shown,cues,scores,trial_ids,dest,.50,'中位伪影试次_全幅对照.png')
@@ -1377,7 +1350,7 @@ def main():
                 save_csv(local_fits,dest/'分方向样条拟合参数.csv')
                 fits.extend([dict(dataset=ds,**z) for z in local_fits])
             print(f'{name}：{len(audit)}事件，{n}可用；V7各折策略 '+', '.join(r['V7_policy'] for r in strategies[-5:]),flush=True)
-    save_csv(summary,summary_dir/'五阶段共同配对指标汇总.csv')
+    save_csv(summary,summary_dir/'预处理与V7共同配对指标汇总.csv')
     save_csv(spatial,summary_dir/'左右刺激与额区空间差异指标.csv')
     save_csv(strategies,summary_dir/'逐折V7策略与参考数量.csv')
     save_csv(slope_diagnostics,summary_dir/'刺激前斜率与刺激后慢变化.csv')
