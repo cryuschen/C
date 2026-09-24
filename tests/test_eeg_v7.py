@@ -72,7 +72,7 @@ class FinalOutputTests(unittest.TestCase):
                          final.sha(Path(final.__file__)))
         for relative, digest in manifest['csv_sha256'].items():
             self.assertEqual(final.sha(self.root / relative), digest)
-        self.assertEqual(len(list(self.root.rglob('*.png'))), 36)
+        self.assertEqual(len(list(self.root.rglob('*.png'))), 44)
 
     def test_group_intervals_and_temporal_contrast_recompute_from_saved_trials(self):
         intervals = pd.read_csv(self.root / '汇总与说明/四组核心指标重采样区间.csv')
