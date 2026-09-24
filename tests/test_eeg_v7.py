@@ -1,7 +1,11 @@
 """第一问终版：折外来源、计算口径和关键取舍的回归检查。"""
 import json
+import shutil
+import subprocess
+import sys
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 import pandas as pd
@@ -15,6 +19,14 @@ class FinalOutputTests(unittest.TestCase):
         cls.root = Path(__file__).resolve().parents[1] / 'eeg_v7_results'
         if not (cls.root / '汇总与说明/运行清单.json').exists():
             raise unittest.SkipTest('请先完整运行 V7 流水线')
+
+    def test_v7_imports_without_legacy_modules(self):
+        with TemporaryDirectory() as directory:
+            script = Path(directory) / 'EEG_P300_artifact_correction_v7.py'
+            shutil.copyfile(final.__file__, script)
+            process = subprocess.run([sys.executable, '-I', str(script), '--help'],
+                                     cwd=directory, capture_output=True, text=True)
+            self.assertEqual(process.returncode, 0, process.stderr)
 
     def test_all_saved_trials_reconstruct_v7_from_fold_policy(self):
         decisions = pd.read_csv(self.root / '汇总与说明/逐折V7策略与参考数量.csv')
@@ -68,6 +80,7 @@ class FinalOutputTests(unittest.TestCase):
         ratios = spatial[(spatial.stage == 'V7') & (spatial.quantity == 'left_minus_right_ERP')]
         self.assertTrue((ratios.groupby('dataset').retention_ratio.mean() > .8).all())
         manifest = json.loads((self.root / '汇总与说明/运行清单.json').read_text())
+        self.assertEqual(set(manifest['source']), {'EEG_P300_artifact_correction_v7.py'})
         self.assertEqual(manifest['source']['EEG_P300_artifact_correction_v7.py'],
                          final.sha(Path(final.__file__)))
         for relative, digest in manifest['csv_sha256'].items():
@@ -94,7 +107,7 @@ class FinalOutputTests(unittest.TestCase):
                     erps[stage][cue] = trials.mean(axis=0)
                     per_row_mae.extend(np.abs(erps[stage][cue][:, final.WINDOW] -
                                               reference[cue][:, final.WINDOW]).mean(axis=1))
-                    per_row_snr.extend(final.core.snr_proxy_db(trials[:, ch]) for ch in range(3))
+                    per_row_snr.extend(final.snr_proxy_db(trials[:, ch]) for ch in range(3))
                 mae[stage] = np.mean(per_row_mae)
                 snr[stage] = np.mean(per_row_snr)
             rows = intervals[(intervals.dataset == dataset) & (intervals.stage == 'V7')].set_index('metric')

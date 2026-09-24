@@ -15,24 +15,545 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from scipy.interpolate import LSQUnivariateSpline
-from scipy.signal import find_peaks
+import scipy.io as sio
+from scipy.stats import median_abs_deviation
+from scipy.signal import find_peaks, butter, sosfiltfilt, iirnotch, filtfilt, savgol_filter, welch
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from sklearn.model_selection import StratifiedKFold
-
-import EEG_P300_artifact_correction_v3 as core
-import EEG_P300_artifact_correction_v4 as old
+from sklearn.model_selection import StratifiedKFold, train_test_split
 
 ROOT=Path(__file__).resolve().parent
-TIMES=core.TIMES_MS
-WINDOW=core.P300_MASK
-N_PRE=core.N_PRE
-CHANNELS=core.CHANNEL_NAMES
+
+# 与原 V3 相同的时间轴、校正参数和绘图设置。
+FS_EXPECTED = 256
+PRE_SEC = 0.25      # 刺激前 250 ms 基线
+POST_SEC = 0.80     # 刺激后 800 ms 分析窗
+
+N_PRE = round(PRE_SEC * FS_EXPECTED)
+N_POST = round(POST_SEC * FS_EXPECTED)
+TIMES = np.arange(-N_PRE, N_POST) / FS_EXPECTED
+TIMES_MS = TIMES * 1000.0
+
+P300_MASK = (TIMES >= 0.25) & (TIMES <= 0.50)
+CHANNEL_NAMES = ["Fz", "F3", "F4"]
+
+# V3 核心去噪参数
+V3_PARAMS = {
+    "win_blink": 41,        # 垂直眼电平滑窗长 (约 160 ms)
+    "win_saccade": 31,      # 水平扫视平滑窗长 (约 120 ms)
+    "gate_z_v": 2.2,        # 垂直软门控阈值
+    "gate_z_h": 2.2,        # 水平软门控阈值
+    "gate_width": 1.2,      # 软门控过渡带宽度
+    "reg_lambda": 0.05,     # 岭回归正则化系数，防止过减
+    "max_beta_v": 1.8,      # 垂直通道最大增益
+    "max_beta_h": 1.5,      # 水平通道最大增益
+}
+
+plt.rcParams['font.sans-serif'] = ['Noto Sans CJK SC', 'SimHei', 'WenQuanYi Zen Hei', 'DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False
+plt.rcParams['font.size'] = 10
+plt.rcParams['axes.labelsize'] = 11
+plt.rcParams['axes.titlesize'] = 12
+plt.rcParams['legend.fontsize'] = 9
+
+# V7 原有时间轴为毫秒；V4 内部别名保持原值。
+TIMES=TIMES_MS
+WINDOW=P300_MASK
+CHANNELS=CHANNEL_NAMES
+T=TIMES_MS
+P=P300_MASK
+N=N_PRE
+
+# 原 V4 训练内候选集与诊断候选集。
+CANDIDATES = {
+    '不校正': (0., 2.2, 1.5, False),
+    '中位数基线': (1., 2.2, 1.5, False),
+    '保守双分量': (.5, 3.5, .5, False),
+    '仅垂直分量': (.5, 3.5, 0., False),
+    '时域保护': (.75, 3.5, .5, True),
+}
+
+DIAGNOSTIC_CANDIDATES = {
+    **CANDIDATES,
+    '诊断_仅提高门控': (1., 3.5, 1.5, False),
+    '诊断_仅减弱校正': (.5, 2.2, 1.5, False),
+    '诊断_仅限制水平上限': (1., 2.2, .5, False),
+    '诊断_关闭水平分量': (1., 2.2, 0., False),
+    '诊断_关闭垂直分量': (1., 2.2, 1.5, False),
+}
+
 STAGES=('预处理','V3','V4','V6','V7')
 PLOT_STAGES=('预处理','V6','V7')
 COLORS={'原始':'#a8adb4','预处理':'#596e83','V3':'#c87927','V4':'#6b61a8','V6':'#8b89b4','V7':'#007f89','代理参考':'#30343a'}
 LINES={'原始':':','预处理':'--','V3':'-.','V4':':','V6':':','V7':'-','代理参考':':'}
+
+
+
+# 从 V3/V4 精确整合的运行时实现；阶段名称继续用于同口径比较。
+def load_mat_file(filepath):
+    """读取赛题 .mat 文件"""
+    mat = sio.loadmat(filepath, squeeze_me=True, struct_as_record=False)
+    fs = int(mat["SampleRate"])
+    labels = list(mat["DataLabel"])
+    data = mat["data"]
+    return fs, labels, data
+
+def extract_viscue_events(viscue):
+    """根据 VisCue 通道提取事件上升沿与方向标签 (-1: 左三角, +1: 右三角)"""
+    nonzero = (viscue != 0)
+    onset_mask = nonzero & np.r_[True, ~nonzero[:-1]]
+    onsets = np.where(onset_mask)[0]
+    cue_values = viscue[onsets].astype(int)
+    return onsets, cue_values
+
+def segment_epochs(signal, onsets, n_pre=N_PRE, n_post=N_POST):
+    """截取 [-N_PRE, N_POST] 试次片段，shape: (trials, channels, time)"""
+    epochs = []
+    n_samples = signal.shape[-1]
+    for onset in onsets:
+        start = onset - n_pre
+        end = onset + n_post
+        if start < 0 or end > n_samples:
+            continue
+        epochs.append(signal[..., start:end])
+    return np.stack(epochs, axis=0)
+
+def preprocess_continuous_eeg(data_3ch, fs=FS_EXPECTED):
+    """
+    对连续 3 通道 EEG 进行预处理：
+    1. 60 Hz 陷波滤波（抑制实测强工频干扰）
+    2. 0.1–30 Hz 四阶 Butterworth 零相位带通
+    """
+    # 60 Hz 陷波
+    b_notch, a_notch = iirnotch(w0=60.0, Q=30.0, fs=fs)
+    notched = filtfilt(b_notch, a_notch, data_3ch, axis=-1)
+
+    # 0.1-30 Hz 带通 (4阶 Butterworth, 前后双向零相位)
+    sos = butter(4, [0.1, 30.0], btype="bandpass", fs=fs, output="sos")
+    filtered = sosfiltfilt(sos, notched, axis=-1)
+    return filtered
+
+def robust_baseline_correct(epochs, n_pre=N_PRE):
+    """
+    使用刺激前 [-250, 0] ms 的稳健中位数/截断均值作为基线，扣除慢漂移偏置
+    """
+    baseline = np.median(epochs[:, :, :n_pre], axis=2, keepdims=True)
+    return epochs - baseline
+
+def robust_zscore(x):
+    """基于 Median 与 MAD 的稳健 Z-score 标准化"""
+    med = np.median(x)
+    mad = median_abs_deviation(x, scale="normal")
+    if mad < 1e-12:
+        mad = np.std(x) + 1e-12
+    return (x - med) / mad
+
+def detect_bad_trials(raw_epochs, filtered_epochs):
+    """
+    识别不可恢复严重坏试次：
+    1. 原始采样点发生 ±1000 硬件饱和截幅连续超过 15 个点
+    2. 峰峰值超过 1800 原始幅值单位
+    3. 相邻点发生物理不可能的跳跃
+    """
+    n_trials = len(raw_epochs)
+    peak_to_peak = np.ptp(filtered_epochs, axis=2).max(axis=1)
+
+    # 硬件饱和检测 (|raw| >= 999.0)
+    sat_points = np.sum(np.abs(raw_epochs) >= 999.0, axis=(1, 2))
+
+    # 最大跳跃与最大绝对值
+    max_jump = np.max(np.abs(np.diff(filtered_epochs, axis=2)), axis=(1, 2))
+    max_abs = np.max(np.abs(filtered_epochs), axis=(1, 2))
+
+    # 综合伪影得分
+    z_ptp = robust_zscore(np.log1p(peak_to_peak))
+    z_jump = robust_zscore(np.log1p(max_jump))
+    z_abs = robust_zscore(np.log1p(max_abs))
+    artifact_score = np.maximum(z_ptp, 0) + np.maximum(z_jump, 0) + np.maximum(z_abs, 0)
+
+    irrecoverable = (sat_points >= 15) | (peak_to_peak > 1800) | (max_jump > 600)
+    return irrecoverable, artifact_score, peak_to_peak
+
+def build_clean_reference_model(epochs, cues, irrecoverable, artifact_scores, ref_ratio=0.50):
+    """
+    在训练试次中为左(-1)与右(+1)刺激分别构建低伪影 ERP 模板及动态残差尺度
+    """
+    templates = {}
+    scales_v = {}
+    scales_h = {}
+    ref_mask = np.zeros(len(epochs), dtype=bool)
+
+    for cond in (-1, 1):
+        valid_idx = np.where((cues == cond) & (~irrecoverable))[0]
+        if len(valid_idx) == 0:
+            continue
+        # 按伪影得分排序，选取最干净的前 ref_ratio 试次
+        sorted_idx = valid_idx[np.argsort(artifact_scores[valid_idx])]
+        k = max(8, int(np.ceil(ref_ratio * len(sorted_idx))))
+        chosen = sorted_idx[:k]
+        ref_mask[chosen] = True
+
+        # 稳健中位数模板 (shape: 3, time)
+        tpl = np.median(epochs[chosen], axis=0)
+        templates[cond] = tpl
+
+        # 计算纯净试次的残差与伪影参考
+        res = epochs[chosen] - tpl[None, :, :]
+        # 垂直分量: 三通道中位数
+        res_v = np.median(res, axis=1)
+        # 水平分量: (F4 - F3) 偶极差分
+        res_h = 0.5 * (res[:, 2, :] - res[:, 1, :])
+
+        scale_v = median_abs_deviation(res_v, axis=0, scale="normal")
+        scale_h = median_abs_deviation(res_h, axis=0, scale="normal")
+
+        scale_v = np.maximum(scale_v, 0.5 * np.median(scale_v) + 1e-6)
+        scale_h = np.maximum(scale_h, 0.5 * np.median(scale_h) + 1e-6)
+
+        scales_v[cond] = scale_v
+        scales_h[cond] = scale_h
+
+    return templates, scales_v, scales_h, ref_mask
+
+def correct_single_epoch_v3(epoch, template, scale_v, scale_h, params=V3_PARAMS):
+    """
+    V3 核心自适应去噪：
+    1. 从单试次中扣除对应的先验 ERP 模板，得到纯残差 residual
+    2. 分离垂直眼电分量 V(t) 与水平扫视分量 H(t)
+    3. 分别进行多尺度平滑与动态自适应软门控
+    4. 采用带约束岭回归自适应估计各通道的消除系数
+    5. 重构无伪影信号并恢复基线
+    """
+    residual = epoch - template  # shape: (3, time)
+
+    # 1. 垂直同相分量参考 (眨眼/头动)
+    ref_v = np.median(residual, axis=0)
+    ref_v_smooth = savgol_filter(ref_v, window_length=params["win_blink"], polyorder=3)
+
+    # 2. 水平反相偶极分量参考 (左右扫视 eye movement)
+    ref_h = 0.5 * (residual[2] - residual[1])
+    ref_h_smooth = savgol_filter(ref_h, window_length=params["win_saccade"], polyorder=3)
+
+    # 3. 动态软门控
+    z_v = np.abs(ref_v_smooth) / (scale_v + 1e-6)
+    gate_v = np.clip((z_v - params["gate_z_v"]) / params["gate_width"], 0, 1)
+    gate_v = savgol_filter(gate_v, window_length=15, polyorder=2)
+    gate_v = np.clip(gate_v, 0, 1)
+    art_v = ref_v_smooth * gate_v
+
+    z_h = np.abs(ref_h_smooth) / (scale_h + 1e-6)
+    gate_h = np.clip((z_h - params["gate_z_h"]) / params["gate_width"], 0, 1)
+    gate_h = savgol_filter(gate_h, window_length=15, polyorder=2)
+    gate_h = np.clip(gate_h, 0, 1)
+    art_h = ref_h_smooth * gate_h
+
+    corrected = epoch.copy()
+
+    # 4. 通道自适应岭回归消除
+    X = np.column_stack([art_v, art_h])  # shape: (T, 2)
+    lambda_eye = params["reg_lambda"] * np.eye(2)
+    XtX = X.T @ X + lambda_eye
+
+    for ch in range(3):
+        y = residual[ch]
+        # 解岭回归系数: beta = (X^T X + lambda I)^(-1) X^T y
+        beta = np.linalg.solve(XtX, X.T @ y)
+
+        # 垂直分量在额叶均为正偏转
+        beta_v = float(np.clip(beta[0], 0, params["max_beta_v"]))
+        # 水平分量允许正负（F3 为负，F4 为正）
+        beta_h = float(np.clip(beta[1], -params["max_beta_h"], params["max_beta_h"]))
+
+        # 若是 Fz（中线），水平扫视分量理论为 0，抑制 beta_h
+        if ch == 0:
+            beta_h = float(np.clip(beta_h, -0.3, 0.3))
+
+        corrected[ch] = epoch[ch] - (beta_v * art_v + beta_h * art_h)
+
+    # 5. 重新校正刺激前基线
+    corrected -= np.mean(corrected[:, :N_PRE], axis=1, keepdims=True)
+    return corrected
+
+def compute_bootstrap_ci(epochs_matrix, n_boot=500, ci=95):
+    """
+    对试次集合进行 Bootstrap 重采样，计算逐时间点的 95% 置信区间
+    shape: (trials, time) -> (time,), (time,)
+    """
+    n_trials = len(epochs_matrix)
+    if n_trials < 5:
+        mean_sig = np.mean(epochs_matrix, axis=0)
+        return mean_sig, mean_sig
+
+    rng = np.random.default_rng(42)
+    boot_means = np.zeros((n_boot, epochs_matrix.shape[1]))
+    for b in range(n_boot):
+        sample_idx = rng.choice(n_trials, size=n_trials, replace=True)
+        boot_means[b] = np.mean(epochs_matrix[sample_idx], axis=0)
+
+    alpha = (100 - ci) / 2.0
+    lower = np.percentile(boot_means, alpha, axis=0)
+    upper = np.percentile(boot_means, 100 - alpha, axis=0)
+    return lower, upper
+
+def evaluate_spatial_metrics(ep_before, ep_after, cues, dataset_name):
+    """左右条件差分与 F3−F4 不对称性；保留率以去噪前为分母。"""
+    rows = []
+    erps = {}
+    for stage, epochs in (('before', ep_before), ('after', ep_after)):
+        erps[stage] = {cond: np.mean(epochs[cues == cond], axis=0) for cond in (-1, 1)}
+    for ch, name in enumerate(CHANNEL_NAMES):
+        before = erps['before'][-1][ch, P300_MASK] - erps['before'][1][ch, P300_MASK]
+        after = erps['after'][-1][ch, P300_MASK] - erps['after'][1][ch, P300_MASK]
+        rows.append({'dataset': dataset_name, 'quantity': 'left_minus_right_ERP', 'channel_or_cue': name,
+                     'RMS_before': float(np.sqrt(np.mean(before ** 2))),
+                     'RMS_after': float(np.sqrt(np.mean(after ** 2))),
+                     'retention_ratio': float(np.linalg.norm(after) / (np.linalg.norm(before) + 1e-12)),
+                     'waveform_correlation': safe_corr(before, after)})
+    for cond in (-1, 1):
+        before = erps['before'][cond][1, P300_MASK] - erps['before'][cond][2, P300_MASK]
+        after = erps['after'][cond][1, P300_MASK] - erps['after'][cond][2, P300_MASK]
+        rows.append({'dataset': dataset_name, 'quantity': 'F3_minus_F4',
+                     'channel_or_cue': 'left' if cond == -1 else 'right',
+                     'RMS_before': float(np.sqrt(np.mean(before ** 2))),
+                     'RMS_after': float(np.sqrt(np.mean(after ** 2))),
+                     'retention_ratio': float(np.linalg.norm(after) / (np.linalg.norm(before) + 1e-12)),
+                     'waveform_correlation': safe_corr(before, after),
+                     'P300_positive_mean_difference_before': positive_p300_features(erps['before'][cond][1])[0]
+                     - positive_p300_features(erps['before'][cond][2])[0],
+                     'P300_positive_mean_difference_after': positive_p300_features(erps['after'][cond][1])[0]
+                     - positive_p300_features(erps['after'][cond][2])[0]})
+    return rows
+
+def positive_p300_features(erp):
+    """250–500 ms 正向均值、正面积、正峰值和峰潜伏期。幅值沿用数据原始单位。"""
+    segment = np.asarray(erp)[P300_MASK]
+    positive = np.maximum(segment, 0.0)
+    peak_index = int(np.argmax(segment))
+    peak = float(segment[peak_index])
+    # 窗内无正峰时，不给负波指定 P300 峰值或潜伏期。
+    positive_peak = peak if peak > 0 else np.nan
+    peak_latency = float(TIMES_MS[P300_MASK][peak_index]) if peak > 0 else np.nan
+    return (
+        float(np.mean(positive)),
+        float(np.trapezoid(positive, TIMES_MS[P300_MASK])),
+        positive_peak,
+        peak_latency,
+    )
+
+def safe_corr(a, b):
+    if np.std(a) < 1e-12 or np.std(b) < 1e-12:
+        return np.nan
+    return float(np.corrcoef(a, b)[0, 1])
+
+def shape_distance(a, b):
+    """P300 窗内 z 标准化后的平均绝对距离。"""
+    if np.std(a) < 1e-12 or np.std(b) < 1e-12:
+        return np.nan
+    return float(np.mean(np.abs((a - np.mean(a)) / np.std(a) -
+                                (b - np.mean(b)) / np.std(b))))
+
+def snr_proxy_db(trials):
+    """ERP 功率 / 试次相对 ERP 的残差功率；残差包含真实试次变异。"""
+    post_mask = (TIMES_MS >= 0) & (TIMES_MS <= 500)
+    x = trials[:, post_mask]
+    erp = np.mean(x, axis=0)
+    signal_power = np.mean(erp ** 2)
+    residual_power = np.mean((x - erp[None, :]) ** 2)
+    return float(10 * np.log10((signal_power + 1e-12) / (residual_power + 1e-12)))
+
+def edge_band_power_ratio(trials):
+    """1–3 Hz 和 20–30 Hz 占 1–30 Hz 功率比；仅为频谱描述量。"""
+    freq, psd = welch(trials, fs=FS_EXPECTED, axis=-1,
+                      nperseg=trials.shape[-1], detrend='linear')
+    mean_psd = np.mean(psd, axis=0)
+    def power(lo, hi):
+        mask = (freq >= lo) & (freq <= hi)
+        return float(np.trapezoid(mean_psd[mask], freq[mask]))
+    total = power(1, 30)
+    return (power(1, 3) + power(20, 30)) / (total + 1e-12)
+
+def evaluate_metrics(ep_before, ep_after, cues, ref_templates):
+    """按刺激方向及通道计算真实数据的描述量与低伪影模板代理误差。"""
+    records = []
+    for cond in (-1, 1):
+        idx = np.where(cues == cond)[0]
+        if len(idx) == 0:
+            continue
+        avg_before = np.mean(ep_before[idx], axis=0)
+        avg_after = np.mean(ep_after[idx], axis=0)
+        ref = ref_templates[cond]
+
+        for ch_idx, ch_name in enumerate(CHANNEL_NAMES):
+            trials_before = ep_before[idx, ch_idx, :]
+            trials_after = ep_after[idx, ch_idx, :]
+            ref_p3 = ref[ch_idx, P300_MASK]
+            bef_p3 = avg_before[ch_idx, P300_MASK]
+            aft_p3 = avg_after[ch_idx, P300_MASK]
+
+            mae_before = float(np.mean(np.abs(bef_p3 - ref_p3)))
+            mae_after = float(np.mean(np.abs(aft_p3 - ref_p3)))
+
+            corr_before = safe_corr(bef_p3, ref_p3)
+            corr_after = safe_corr(aft_p3, ref_p3)
+
+            rmse_before = float(np.sqrt(np.mean((bef_p3 - ref_p3) ** 2)))
+            rmse_after = float(np.sqrt(np.mean((aft_p3 - ref_p3) ** 2)))
+
+            pos_ref, auc_ref, _, _ = positive_p300_features(ref[ch_idx])
+            pos_bef, auc_bef, amp_bef, lat_bef = positive_p300_features(avg_before[ch_idx])
+            pos_aft, auc_aft, amp_aft, lat_aft = positive_p300_features(avg_after[ch_idx])
+            _, _, amp_ref, lat_ref = positive_p300_features(ref[ch_idx])
+
+            records.append({
+                "cue": cond,
+                "channel": ch_name,
+                "MAE_before": mae_before,
+                "MAE_after": mae_after,
+                "RMSE_before": rmse_before,
+                "RMSE_after": rmse_after,
+                "corr_before": corr_before,
+                "corr_after": corr_after,
+                "shape_distance_before": shape_distance(bef_p3, ref_p3),
+                "shape_distance_after": shape_distance(aft_p3, ref_p3),
+                "baseline_RMS_before": float(np.mean(np.sqrt(np.mean(trials_before[:, :N_PRE] ** 2, axis=1)))),
+                "baseline_RMS_after": float(np.mean(np.sqrt(np.mean(trials_after[:, :N_PRE] ** 2, axis=1)))),
+                "trial_PTP_median_before": float(np.median(np.ptp(trials_before, axis=1))),
+                "trial_PTP_median_after": float(np.median(np.ptp(trials_after, axis=1))),
+                "SNR_proxy_dB_before": snr_proxy_db(trials_before),
+                "SNR_proxy_dB_after": snr_proxy_db(trials_after),
+                "edge_band_ratio_before": edge_band_power_ratio(trials_before),
+                "edge_band_ratio_after": edge_band_power_ratio(trials_after),
+                "amp_error_before": abs(amp_bef - amp_ref),
+                "amp_error_after": abs(amp_aft - amp_ref),
+                "latency_error_before_ms": abs(lat_bef - lat_ref),
+                "latency_error_after_ms": abs(lat_aft - lat_ref),
+                "P300_positive_mean_before": pos_bef,
+                "P300_positive_mean_after": pos_aft,
+                "P300_positive_mean_ref": pos_ref,
+                "P300_positive_mean_error_before": abs(pos_bef - pos_ref),
+                "P300_positive_mean_error_after": abs(pos_aft - pos_ref),
+                "P300_AUC_before_unit_ms": auc_bef,
+                "P300_AUC_after_unit_ms": auc_aft,
+                "P300_AUC_ref_unit_ms": auc_ref,
+                "P300_AUC_error_before_unit_ms": abs(auc_bef - auc_ref),
+                "P300_AUC_error_after_unit_ms": abs(auc_aft - auc_ref),
+                "P300_amp_before": amp_bef,
+                "P300_amp_after": amp_aft,
+                "P300_lat_before_ms": lat_bef,
+                "P300_lat_after_ms": lat_aft
+            })
+    return pd.DataFrame(records)
+
+def correct(epoch, tpl, sv, sh, candidate):
+    strength, gate, max_h, protect = DIAGNOSTIC_CANDIDATES[candidate]
+    if strength == 0:
+        return epoch.copy()
+    params = dict(V3_PARAMS, gate_z_v=gate, gate_z_h=gate, max_beta_h=max_h)
+    if candidate == '诊断_关闭垂直分量':
+        params['max_beta_v'] = 0.
+    # 撤销 V3 最后的均值重定位，再统一使用中位数基线。
+    full = correct_single_epoch_v3(epoch, tpl, sv, sh, params)
+    full -= np.median(full[:, :N], axis=1, keepdims=True)
+    delta = epoch - full
+    if protect:
+        # 仅保护训练模板的时间形状；不将测试条件 ERP 人为恢复到原幅度。
+        taper = np.clip((T - 0) / 80, 0, 1) * np.clip((750 - T) / 120, 0, 1)
+        basis = savgol_filter(tpl, 25, 3, axis=-1) * taper
+        u, s, _ = np.linalg.svd(basis.T, full_matrices=False)
+        keep = s > max(s[0] * .10, 1e-9)
+        q = u[:, keep]
+        delta -= (delta @ q) @ q.T
+    result = epoch - strength * delta
+    return result - np.median(result[:, :N], axis=1, keepdims=True)
+
+def inject(background, cues, seed, level):
+    """已知加性污染，正负眨眼、扫视和短暂运动；保留真实背景原波形为恢复目标。"""
+    rng = np.random.default_rng(seed)
+    t = T / 1000
+    out = background.copy()
+    scale = max(float(np.median(np.std(background, axis=-1))), 1.)
+    for i in range(len(out)):
+        center = rng.uniform(-.12, .65)
+        width = rng.uniform(.025, .13)
+        amp = level * scale * rng.uniform(2, 6)
+        blink = amp * rng.choice([-1, 1]) * np.exp(-.5*((t-center)/width)**2)
+        saccade = amp * .7 * cues[i] * (np.tanh((t-center)/.035)-np.tanh((t-center-.18)/.045))/2
+        motion = amp*.3*np.sin(2*np.pi*rng.uniform(7,15)*t)*np.exp(-.5*((t-center)/.035)**2)
+        artifact = np.array([1.1,1.,.9])[:,None]*blink + np.array([.05,-1,1])[:,None]*saccade + motion
+        # 污染与基线操作作为已知变换；level=0 时精确返回背景。
+        out[i] += artifact
+    return robust_baseline_correct(out)
+
+def apply_model(x, cues, model, candidate):
+    tpl, sv, sh, _ = model
+    if candidate == 'V3':
+        return np.stack([correct_single_epoch_v3(e, tpl[c], sv[c], sh[c]) for e,c in zip(x,cues)])
+    return np.stack([correct(e,tpl[c],sv[c],sh[c],candidate) for e,c in zip(x,cues)])
+
+def known_errors(target, recovered, cues):
+    scale = max(float(np.sqrt(np.mean(target**2))), 1e-9)
+    rmse = float(np.sqrt(np.mean((target-recovered)**2)))
+    truth_diff = target[cues==-1].mean(0)-target[cues==1].mean(0)
+    rec_diff = recovered[cues==-1].mean(0)-recovered[cues==1].mean(0)
+    contrast = float(np.sqrt(np.mean((truth_diff[:,P]-rec_diff[:,P])**2)))
+    pos = []
+    lat = []
+    for c in (-1,1):
+        for ch in range(3):
+            a=positive_p300_features(target[cues==c,ch].mean(0))
+            b=positive_p300_features(recovered[cues==c,ch].mean(0))
+            pos.append(abs(a[0]-b[0]))
+            if np.isfinite(a[3]) and np.isfinite(b[3]): lat.append(abs(a[3]-b[3]))
+    return dict(RMSE=rmse, normalized_RMSE=rmse/scale, contrast_RMSE=contrast,
+                positive_mean_error=np.mean(pos), latency_error_ms=np.mean(lat) if lat else np.nan,
+                latency_pairs=len(lat), objective=(rmse+.5*contrast+np.mean(pos))/scale)
+
+def select_candidate(x, cues, seed):
+    train, val = train_test_split(np.arange(len(x)), test_size=.35, stratify=cues, random_state=seed)
+    # MAD/评分的归一化也仅在内层训练中估计，不能沿用全数据的归一化。
+    train_scores = detect_bad_trials(np.zeros_like(x[train]), x[train])[1]
+    val_scores = detect_bad_trials(np.zeros_like(x[val]), x[val])[1]
+    model = build_clean_reference_model(x[train],cues[train],np.zeros(len(train),bool),train_scores)
+    # 内层验证背景也固定为相对低伪影试次，但不进入模板。
+    idx = np.concatenate([val[cues[val]==c][np.argsort(val_scores[cues[val]==c],kind='stable')[:max(4,len(val[cues[val]==c])//2)]] for c in (-1,1)])
+    bg, cs=x[idx], cues[idx]
+    rows=[]
+    for level in (0.,1.,2.):
+        noisy=inject(bg,cs,seed+1000,level)
+        for cand in CANDIDATES:
+            r=known_errors(bg,apply_model(noisy,cs,model,cand),cs)
+            rows.append(dict(candidate=cand,level=level,**r))
+    df=pd.DataFrame(rows)
+    # 清洁背景失真占 50%，两种污染各 25%；候选相同时偏向更弱校正。
+    means=df.assign(weight=np.where(df.level==0,.5,.25))
+    values=means.assign(loss=means.objective*means.weight).groupby('candidate',sort=False).loss.sum()
+    return values.idxmin(),rows
+
+def read_dataset(path):
+    fs,labels,data=load_mat_file(path)
+    if fs!=256 or list(labels[:3])!=CHANNELS or not str(labels[7]).startswith('VisCue'):
+        raise ValueError(f'输入采样率或标签不匹配：{path}')
+    if not np.all(np.isfinite(data[:3])): raise ValueError('EEG 包含非有限数值')
+    onsets,cues=extract_viscue_events(data[7])
+    if not np.isin(cues,[-1,1]).all(): raise ValueError('未知刺激方向')
+    bounded=(onsets>=N)&(onsets+N_POST<=data.shape[1])
+    event_ids=np.arange(1,len(onsets)+1)
+    raw=segment_epochs(data[:3],onsets[bounded])
+    x=robust_baseline_correct(segment_epochs(preprocess_continuous_eeg(data[:3],fs),onsets[bounded]))
+    bad,scores,ptp=detect_bad_trials(raw,x)
+    sat=(np.abs(raw)>=999).sum(axis=(1,2))
+    jump=np.abs(np.diff(x,axis=-1)).max(axis=(1,2))
+    audit=pd.DataFrame(dict(trial_id=event_ids, onset_sample=onsets, cue=cues,boundary_ok=bounded))
+    for key,vals in dict(rejected=bad,artifact_score=scores,PTP=ptp,saturated_samples=sat,max_jump=jump).items():
+        audit.loc[bounded,key]=vals
+    audit['role']=np.where(~bounded,'边界剔除',np.where(audit.rejected.fillna(True),'质量剔除','折外评价'))
+    # 不调整当前剔除集；只报告固定阈值 ±10% 的敏感性。
+    sensitivity=[]
+    for factor in (.9,1.,1.1):
+        rejected=(sat>=max(1,round(15*factor)))|(ptp>1800*factor)|(jump>600*factor)
+        sensitivity.append(dict(threshold_factor=factor,rejected=int(rejected.sum()),usable=int((~rejected).sum())))
+    return raw[~bad],x[~bad],cues[bounded][~bad],scores[~bad],audit,sensitivity
 
 
 def sha(path):
@@ -80,21 +601,21 @@ def apply_v7(x,cues,model,candidate,mean_delta):
 
 def apply_v3(x,cues,model):
     tpl,sv,sh,_=model
-    return np.stack([core.correct_single_epoch_v3(e,tpl[c],sv[c],sh[c]) for e,c in zip(x,cues)])
+    return np.stack([correct_single_epoch_v3(e,tpl[c],sv[c],sh[c]) for e,c in zip(x,cues)])
 
 
 def apply_v4(x,cues,model,candidate):
-    return old.apply_model(x,cues,model,candidate)
+    return apply_model(x,cues,model,candidate)
 
 
 def positive_presence(erp):
-    return np.isfinite(core.positive_p300_features(erp)[2])
+    return np.isfinite(positive_p300_features(erp)[2])
 
 
 def extended_metrics(before,methods,cues,reference):
     frames=[]
     for name,x in methods.items():
-        df=core.evaluate_metrics(before,x,cues,reference)
+        df=evaluate_metrics(before,x,cues,reference)
         df.insert(0,'stage',name)
         df['n_trials']=[int((cues==c).sum()) for c in df.cue]
         df['positive_peak_valid']=np.isfinite(df.P300_amp_after)
@@ -186,7 +707,7 @@ def group_uncertainty(methods,cues,reference,n_boot=800,seed=20260924):
             full=trials.mean(axis=0)
             observed_erps[stage][cue]=full
             observed_mae[stage].extend(np.mean(np.abs(full[:,WINDOW]-reference[cue][:,WINDOW]),axis=1))
-            observed_snr[stage].extend(core.snr_proxy_db(trials[:,ch]) for ch in range(3))
+            observed_snr[stage].extend(snr_proxy_db(trials[:,ch]) for ch in range(3))
     mae={s:np.concatenate(mae[s],axis=1).mean(axis=1) for s in selected}
     snr={s:np.concatenate(snr[s],axis=1).mean(axis=1) for s in selected}
     observed_mae={s:float(np.mean(observed_mae[s])) for s in selected}
@@ -244,7 +765,7 @@ def temporal_contrast_stability(methods,cues,trial_ids):
             rows.append(dict(stage=stage,channel=channel,
                              first_left_n=counts[(0,-1)],first_right_n=counts[(0,1)],
                              second_left_n=counts[(1,-1)],second_right_n=counts[(1,1)],
-                             contrast_correlation=core.safe_corr(one,two),
+                             contrast_correlation=safe_corr(one,two),
                              second_first_norm_ratio=float(np.linalg.norm(two)/(np.linalg.norm(one)+1e-12))))
     return rows
 
@@ -324,7 +845,7 @@ def plot_condition(name,methods,cues,refs,out,zoom=False):
             if zoom:curves['代理参考']=refs[c][ch]
             draw_lines(ax,curves,WINDOW if zoom else None)
             if not zoom:
-                lower,upper=core.compute_bootstrap_ci(methods['V7'][cues==c,ch],n_boot=400)
+                lower,upper=compute_bootstrap_ci(methods['V7'][cues==c,ch],n_boot=400)
                 ax.fill_between(TIMES,lower,upper,color=COLORS['V7'],alpha=.14,label='V7逐点95%试次区间')
                 ax.legend(loc='upper left',fontsize=8,ncol=2)
                 scale[ch].extend([*curves.values(),lower,upper])
@@ -595,6 +1116,119 @@ def plot_benchmark(out,synthetic):
     save_fig(fig,folder/'四组多幅度半合成验证.png')
 
 
+
+# 单文件重建提交结果中的三栏伪影分解图；绘制规则沿用原独立脚本。
+DECOMPOSITION_COLORS = {
+    'raw': '#455A64',       # 灰蓝色：原始未加工记录
+    'clean': '#00796B',     # 青绿色：V7 校正后纯净脑电
+    'artifact': '#C62828',  # 铁红色：提取出的伪影与噪声
+    'p300_span': '#FFF3CD', # 淡黄色：250-500 ms 视觉响应分析窗
+}
+DECOMPOSITION_OUTPUT_DIR = ROOT / 'output/三栏伪影分解对比图'
+
+def plot_decomposition_for_dataset(results_dir, dataset_folder_name, quantile, quantile_label, filename):
+    """为指定数据集生成三通道、左右方向的三栏分解图"""
+    data_path = results_dir / dataset_folder_name / '可复核波形.npz'
+    if not data_path.exists():
+        raise FileNotFoundError(f"未找到数据文件: {data_path}")
+
+    npz_data = np.load(data_path)
+    raw = npz_data['raw']
+    v7 = npz_data['v7']
+    cues = npz_data['cues']
+    trial_ids = npz_data['trial_ids']
+    times = npz_data['times_ms']
+
+    # 读取预先指定的固定示例试次编号
+    fixed_csv = results_dir / dataset_folder_name / '固定示例试次编号.csv'
+    fixed_df = pd.read_csv(fixed_csv)
+
+    # 查找该分位数下的左侧(-1)与右侧(+1)试次
+    left_trial_id = int(fixed_df[(fixed_df['quantile'] == quantile) & (fixed_df['cue'] == -1)]['trial_id'].iloc[0])
+    right_trial_id = int(fixed_df[(fixed_df['quantile'] == quantile) & (fixed_df['cue'] == 1)]['trial_id'].iloc[0])
+
+    ix_left = int(np.where(trial_ids == left_trial_id)[0][0])
+    ix_right = int(np.where(trial_ids == right_trial_id)[0][0])
+
+    # 创建 6 行 × 3 列的画布
+    # 上 3 行：左侧视觉刺激 (Fz, F3, F4)
+    # 下 3 行：右侧视觉刺激 (Fz, F3, F4)
+    fig, axes = plt.subplots(6, 3, figsize=(15, 16.5), sharex=True)
+
+    blocks = [
+        ('左侧视觉提示 (VisCue = -1, 左视野)', ix_left, left_trial_id, 0),
+        ('右侧视觉提示 (VisCue = +1, 右视野)', ix_right, right_trial_id, 3)
+    ]
+
+    for cue_title, ix, tid, row_offset in blocks:
+        # 基线对齐的原始信号
+        raw_bc = raw[ix] - np.median(raw[ix, :, :N_PRE], axis=1, keepdims=True)
+        clean = v7[ix]
+        artifact = raw_bc - clean
+
+        # 逐通道绘制
+        for ch, ch_name in enumerate(CHANNELS):
+            # 确定当前通道在处理前后的纵坐标范围，保持对比客观
+            y_max = max(np.max(np.abs(raw_bc[ch])), np.max(np.abs(clean[ch]))) * 1.15
+
+            # --- Row 1: 原始记录 ---
+            ax_raw = axes[row_offset, ch]
+            ax_raw.plot(times, raw_bc[ch], color=DECOMPOSITION_COLORS['raw'], lw=1.2, label='原始通道 (基线对齐)')
+            ax_raw.axvline(0, color='black', lw=0.8, ls='--')
+            ax_raw.axvspan(250, 500, color=DECOMPOSITION_COLORS['p300_span'], alpha=0.6, label='P300 分析窗 (250–500 ms)')
+            ax_raw.set_title(f'{cue_title} · {ch_name} · 试次 #{tid} [原始]', fontsize=10.5, fontweight='bold', pad=4)
+            ax_raw.grid(True, alpha=0.25, ls=':')
+            if ch == 0:
+                ax_raw.set_ylabel('原始记录\n(电位单位)', fontsize=9.5, fontweight='bold')
+            if row_offset == 0 and ch == 0:
+                ax_raw.legend(loc='upper right', fontsize=8, framealpha=0.9)
+
+            # --- Row 2: V7 去噪后 ---
+            ax_clean = axes[row_offset + 1, ch]
+            ax_clean.plot(times, clean[ch], color=DECOMPOSITION_COLORS['clean'], lw=1.5, label='V7 校正后脑电')
+            ax_clean.axvline(0, color='black', lw=0.8, ls='--')
+            ax_clean.axvspan(250, 500, color=DECOMPOSITION_COLORS['p300_span'], alpha=0.6)
+            ax_clean.set_title(f'{ch_name} · V7 去噪后信号', fontsize=10.5, fontweight='bold', pad=4)
+            ax_clean.grid(True, alpha=0.25, ls=':')
+            if ch == 0:
+                ax_clean.set_ylabel('V7 纯净信号\n(电位单位)', fontsize=9.5, fontweight='bold')
+            if row_offset == 0 and ch == 0:
+                ax_clean.legend(loc='upper right', fontsize=8, framealpha=0.9)
+
+            # --- Row 3: 剥离的纯伪影分量 ---
+            ax_art = axes[row_offset + 2, ch]
+            ax_art.plot(times, artifact[ch], color=DECOMPOSITION_COLORS['artifact'], lw=1.1, label='提取伪影 (Raw - V7)')
+            ax_art.axvline(0, color='black', lw=0.8, ls='--')
+            ax_art.axvspan(250, 500, color=DECOMPOSITION_COLORS['p300_span'], alpha=0.6)
+            ax_art.set_title(f'{ch_name} · 剥离伪影成分 (Raw - V7)', fontsize=10.5, fontweight='bold', pad=4)
+            ax_art.grid(True, alpha=0.25, ls=':')
+            if ch == 0:
+                ax_art.set_ylabel('滤除伪影分量\n(电位单位)', fontsize=9.5, fontweight='bold')
+            if row_offset == 0 and ch == 0:
+                ax_art.legend(loc='upper right', fontsize=8, framealpha=0.9)
+            if row_offset == 3:
+                ax_art.set_xlabel('相对刺激提示时间 (ms)', fontsize=10, fontweight='bold')
+
+    # 主标题与副标题
+    dataset_display = dataset_folder_name.replace('_', ' · ')
+    fig.suptitle(f'{dataset_display} · {quantile_label}三栏伪影分解图\n[顶刊标准：原始信号 = V7纯净脑电 + 提取伪影成分]',
+                 fontsize=13.5, fontweight='bold', y=0.995)
+
+    fig.tight_layout(rect=[0, 0.01, 1, 0.985])
+
+    DECOMPOSITION_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    out_file = results_dir / dataset_folder_name / filename
+    fig.savefig(out_file, dpi=200)
+    print(f"成功生成并写入 eeg_v7_results: {out_file}")
+
+    # 同时在 output/三栏伪影分解对比图 保存带完整命名的副本以方便集中查阅
+    backup_dir = ROOT / 'output/三栏伪影分解对比图'
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    backup_file = backup_dir / f"{dataset_folder_name}_{filename}"
+    fig.savefig(backup_file, dpi=200)
+    plt.close(fig)
+
+
 def plot_outcome_dashboard(out,datasets,group_intervals):
     """三个独立坐标上的点与分方向试次重采样区间，便于在A4页面阅读。"""
     frame=pd.DataFrame(group_intervals)
@@ -636,7 +1270,7 @@ def main():
     out.mkdir(parents=True,exist_ok=True)
     summary_dir=out/'汇总与说明';summary_dir.mkdir(exist_ok=True)
     synth_dir=out/'半合成验证';synth_dir.mkdir(exist_ok=True)
-    manifest={'inputs':{},'source':{p.name:sha(p) for p in (Path(__file__),ROOT/'EEG_P300_artifact_correction_v3.py',ROOT/'EEG_P300_artifact_correction_v4.py')},
+    manifest={'inputs':{},'source':{Path(__file__).name:sha(Path(__file__))},
               'python':platform.python_version(),'numpy':np.__version__,'fold_seed':42,'test_seeds':[2027,2039,2053],
               'unit':'原始电位单位','V7_policy':{'保守双分量':'训练均值保护', '其他候选':'保守比例'},
               'fractions':{'V6':.15,'V7_protected_trial':.25,'V7_protected_train_mean':.10}}
@@ -649,16 +1283,16 @@ def main():
             input_path=ROOT/'data'/(ds+'.mat')
             manifest['inputs'][input_path.name]=sha(input_path)
             dest=out/name;dest.mkdir(exist_ok=True)
-            raw,x,cues,scores,audit,sensitivity=old.read_dataset(input_path)
+            raw,x,cues,scores,audit,sensitivity=read_dataset(input_path)
             trial_ids=audit.loc[audit.role=='折外评价','trial_id'].to_numpy(int)
             n=len(x);v3=np.empty_like(x);v4=np.empty_like(x);v6=np.empty_like(x);v7=np.empty_like(x);refs_trial=np.empty_like(x)
             folds=np.zeros(n,dtype=int);reference_counts=[];fold_roles=[]
             fold_mean_deltas=np.empty((5,2,3,len(TIMES)),dtype=float)
             cv=StratifiedKFold(n_splits=5,shuffle=True,random_state=42)
             for fold,(train,test) in enumerate(cv.split(x,cues),1):
-                train_scores=core.detect_bad_trials(raw[train],x[train])[1]
-                model=core.build_clean_reference_model(x[train],cues[train],np.zeros(len(train),bool),train_scores)
-                v4_choice,_=old.select_candidate(x[train],cues[train],100+fold)
+                train_scores=detect_bad_trials(raw[train],x[train])[1]
+                model=build_clean_reference_model(x[train],cues[train],np.zeros(len(train),bool),train_scores)
+                v4_choice,_=select_candidate(x[train],cues[train],100+fold)
                 mean_delta=training_mean_delta(x[train],cues[train],model,v4_choice)
                 policy=selected_policy(v4_choice)
                 median_slope=float(np.median(prestim_slopes(x[train])))
@@ -685,13 +1319,13 @@ def main():
                 # 同试次、同注入、同训练折，复用训练折均值修正，不拟合测试试次ERP。
                 for seed in (2027,2039,2053):
                     for level in (0.,.5,1.,2.):
-                        contaminated=old.inject(x[test],cues[test],seed+fold,level)
+                        contaminated=inject(x[test],cues[test],seed+fold,level)
                         s3=apply_v3(contaminated,cues[test],model)
                         s4=apply_v4(contaminated,cues[test],model,v4_choice)
                         s6=conservative_blend(s4,contaminated,.15)
                         s7=apply_v7(contaminated,cues[test],model,v4_choice,mean_delta)
                         for stage,recovered in zip(STAGES,(contaminated,s3,s4,s6,s7)):
-                            result=old.known_errors(x[test],recovered,cues[test])
+                            result=known_errors(x[test],recovered,cues[test])
                             synthetic.append(dict(dataset=ds,fold=fold,seed=seed,level=level,stage=stage,
                                                   n_trials=len(test),V7_policy=policy,**result))
             assert (folds>0).all()
@@ -710,7 +1344,7 @@ def main():
             stability.extend(dict(dataset=ds,**row) for row in
                              temporal_contrast_stability(stages,cues,trial_ids))
             for stage,y in stages.items():
-                spatial.extend([dict(stage=stage,**z) for z in core.evaluate_spatial_metrics(x,y,cues,ds)])
+                spatial.extend([dict(stage=stage,**z) for z in evaluate_spatial_metrics(x,y,cues,ds)])
                 for c in (-1,1):
                     for ch,channel in enumerate(CHANNELS):
                         early=y[cues==c,ch][:,(TIMES>=0)&(TIMES<200)].mean()
@@ -758,6 +1392,13 @@ def main():
         plot_cross_task(out,datasets)
         plot_benchmark(out,synthetic)
         plot_outcome_dashboard(out,datasets,group_intervals)
+        with plt.rc_context({'font.sans-serif': ['Noto Sans CJK SC', 'WenQuanYi Zen Hei', 'Noto Sans SC', 'SimHei', 'DejaVu Sans'],
+                             'axes.unicode_minus': False}):
+            for item in datasets.values():
+                plot_decomposition_for_dataset(out,item['name'],.75,'典型较高伪影试次 (75% 分位)',
+                                               '较高伪影试次_三栏分解图.png')
+                plot_decomposition_for_dataset(out,item['name'],.50,'中位伪影试次 (50% 分位)',
+                                               '中位伪影试次_三栏分解图.png')
     write_report(out,datasets,summary,spatial,synthetic,fits,group_intervals,stability)
     manifest['csv_sha256']={str(p.relative_to(out)):sha(p) for p in sorted(out.rglob('*.csv'))}
     (summary_dir/'运行清单.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')

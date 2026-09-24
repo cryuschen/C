@@ -223,7 +223,7 @@ def build():
     )
     add(Spacer(1, 5 * mm))
     add(p('提交与复核文件', H2))
-    add(p('源码：EEG_P300_artifact_correction_v7.py；依赖：V3、V4 模块与 requirements-v4.txt；四份 MAT：data/；实验报告：eeg_v7_results/第一问终稿实验报告.md；指标定义：指标字典_V7.md。每组有试次审计、逐折参考清单、逐方向指标与可复核波形；汇总目录有核心区间及时段稳定性，运行清单保存源码、输入和 CSV 的 SHA256。'))
+    add(p('源码：EEG_P300_artifact_correction_v7.py，已整合所需的 V3/V4 方法；第三方库见 requirements-v4.txt；四份 MAT：data/；实验报告：eeg_v7_results/第一问终稿实验报告.md；指标定义：指标字典_V7.md。每组有试次审计、逐折参考清单、逐方向指标与可复核波形；汇总目录有核心区间及时段稳定性，运行清单保存 V7 源码、输入和 CSV 的 SHA256。'))
     add(p('完整运行：python EEG_P300_artifact_correction_v7.py --output eeg_v7_results。复算测试：python -m unittest discover -s tests -v。建议以仓库 README_V7.md 指定的 Python 环境为准。', SMALL))
     add(p('方法依据', H2))
     add(p('Tanner 等关于不恰当高通滤波对认知 ERP 的影响：PMC4506207。Luck 等关于 ERP 伪影校正和剔除的评价框架：PMC11021170。此处引用用于说明滤波和评价边界，不作为本数据集有效性的外部验证。', SMALL))

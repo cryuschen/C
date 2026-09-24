@@ -6,9 +6,7 @@
     "VisualCogB_Task-2.mat": "c58c998880682027119548029ba92240604b9ecf4138e6c4ea3efe4522212e9d"
   },
   "source": {
-    "EEG_P300_artifact_correction_v7.py": "ab05dac28731e0965e9d2afbbb1d4bdb96ac7ea600a173557638fdec7b327d22",
-    "EEG_P300_artifact_correction_v3.py": "d98aafb106ba7f26d25fd45a3e71eabfe530e5fcfe822b421c0d7973b9c65379",
-    "EEG_P300_artifact_correction_v4.py": "89c90f250013f3985270966f859db1ada1eaefab598044c0bb97459639cd4315"
+    "EEG_P300_artifact_correction_v7.py": "3b15860f5cfc2f2d97590ab46a82f4e4494861572d379fd0e685bd4398cc390c"
   },
   "python": "3.14.4",
   "numpy": "2.5.2",
