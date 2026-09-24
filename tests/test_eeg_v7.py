@@ -74,6 +74,55 @@ class FinalOutputTests(unittest.TestCase):
             self.assertEqual(final.sha(self.root / relative), digest)
         self.assertEqual(len(list(self.root.rglob('*.png'))), 36)
 
+    def test_group_intervals_and_temporal_contrast_recompute_from_saved_trials(self):
+        intervals = pd.read_csv(self.root / '汇总与说明/四组核心指标重采样区间.csv')
+        stability = pd.read_csv(self.root / '汇总与说明/左右差分前后时段稳定性.csv')
+        for folder in sorted(self.root.glob('受试者*')):
+            dataset = 'VisualCog' + folder.name[3] + '_Task-' + ('1' if folder.name.endswith('一') else '2')
+            w = np.load(folder / '可复核波形.npz')
+            cues = w['cues']
+            reference = {cue: w['reference_per_trial'][cues == cue].mean(axis=0) for cue in (-1, 1)}
+            mae = {}
+            snr = {}
+            erps = {}
+            for stage, key in [('预处理', 'before'), ('V7', 'v7')]:
+                per_row_mae = []
+                per_row_snr = []
+                erps[stage] = {}
+                for cue in (-1, 1):
+                    trials = w[key][cues == cue]
+                    erps[stage][cue] = trials.mean(axis=0)
+                    per_row_mae.extend(np.abs(erps[stage][cue][:, final.WINDOW] -
+                                              reference[cue][:, final.WINDOW]).mean(axis=1))
+                    per_row_snr.extend(final.core.snr_proxy_db(trials[:, ch]) for ch in range(3))
+                mae[stage] = np.mean(per_row_mae)
+                snr[stage] = np.mean(per_row_snr)
+            rows = intervals[(intervals.dataset == dataset) & (intervals.stage == 'V7')].set_index('metric')
+            self.assertAlmostEqual(rows.loc['proxy_MAE_reduction_pct', 'point'],
+                                   100 * (mae['预处理'] - mae['V7']) / mae['预处理'], places=9)
+            self.assertAlmostEqual(rows.loc['SNR_proxy_gain_dB', 'point'],
+                                   snr['V7'] - snr['预处理'], places=9)
+            self.assertLess(rows.loc['proxy_MAE_reduction_pct', 'low'],
+                            rows.loc['proxy_MAE_reduction_pct', 'point'])
+            self.assertGreater(rows.loc['proxy_MAE_reduction_pct', 'low'], 0)
+            self.assertLess(rows.loc['SNR_proxy_gain_dB', 'low'], 0)
+            self.assertGreater(rows.loc['SNR_proxy_gain_dB', 'high'], 0)
+            self.assertEqual(set(rows.n_boot), {800})
+            order = np.argsort(w['trial_ids'])
+            first = np.zeros(len(cues), dtype=bool)
+            first[order[:len(cues)//2]] = True
+            differences = []
+            for mask in (first, ~first):
+                left = w['v7'][mask & (cues == -1)].mean(axis=0)
+                right = w['v7'][mask & (cues == 1)].mean(axis=0)
+                differences.append((left - right)[:, final.WINDOW].ravel())
+            row = stability[(stability.dataset == dataset) & (stability.stage == 'V7') &
+                            (stability.channel == '三通道合并')].iloc[0]
+            self.assertAlmostEqual(row.contrast_correlation,
+                                   np.corrcoef(*differences)[0, 1], places=9)
+            self.assertEqual(row.first_left_n, int(np.sum(first & (cues == -1))))
+            self.assertEqual(row.second_right_n, int(np.sum(~first & (cues == 1))))
+
 
 if __name__ == '__main__':
     unittest.main()

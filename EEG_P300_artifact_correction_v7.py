@@ -139,17 +139,113 @@ def bootstrap_metrics(methods,cues,reference,n_boot=400):
                     'proxy_MAE':np.mean(np.abs(w-reference_window),axis=1),
                     'positive_mean':np.maximum(w,0).mean(axis=1),
                 }
+            observed={stage:{
+                'proxy_MAE':float(np.mean(np.abs(x[ids,ch].mean(axis=0)[WINDOW]-reference_window))),
+                'positive_mean':float(np.maximum(x[ids,ch].mean(axis=0)[WINDOW],0).mean()),
+            } for stage,x in methods.items()}
             for metric in ('proxy_MAE','positive_mean'):
                 for stage in STAGES:
                     arr=boot[stage][metric]
                     lo,hi=np.quantile(arr,[.025,.975])
                     rows.append(dict(cue=condition,channel=channel,metric=metric,stage=stage,
-                                     low=lo,high=hi,n_trials=len(ids),n_boot=n_boot))
+                                     point=observed[stage][metric],low=lo,high=hi,
+                                     n_trials=len(ids),n_boot=n_boot))
                 for baseline in ('预处理','V3','V4','V6'):
                     arr=boot['V7'][metric]-boot[baseline][metric]
                     lo,hi=np.quantile(arr,[.025,.975])
                     rows.append(dict(cue=condition,channel=channel,metric=metric,stage='V7减'+baseline,
+                                     point=observed['V7'][metric]-observed[baseline][metric],
                                      low=lo,high=hi,n_trials=len(ids),n_boot=n_boot))
+    return rows
+
+
+def group_uncertainty(methods,cues,reference,n_boot=800,seed=20260924):
+    """同试次分方向重采样的组均值区间；模型、剔除集及代理参考固定。"""
+    selected=('预处理','V6','V7')
+    post=(TIMES>=0)&(TIMES<=500)
+    rng=np.random.default_rng(seed)
+    erps={s:{} for s in selected}
+    mae={s:[] for s in selected}
+    snr={s:[] for s in selected}
+    observed_erps={s:{} for s in selected}
+    observed_mae={s:[] for s in selected}
+    observed_snr={s:[] for s in selected}
+    for cue in (-1,1):
+        ids=np.flatnonzero(cues==cue)
+        counts=rng.multinomial(len(ids),np.full(len(ids),1/len(ids)),size=n_boot)
+        weights=counts/len(ids)
+        for stage in selected:
+            trials=methods[stage][ids]
+            mean=np.einsum('bn,nct->bct',weights,trials,optimize=True)
+            second=np.einsum('bn,nct->bct',weights,trials[:,:,post]**2,optimize=True)
+            erps[stage][cue]=mean
+            mae[stage].append(np.mean(np.abs(mean[:,:,WINDOW]-reference[cue][:,WINDOW][None,:,:]),axis=2))
+            signal=np.mean(mean[:,:,post]**2,axis=2)
+            residual=np.maximum(np.mean(second-mean[:,:,post]**2,axis=2),0)
+            snr[stage].append(10*np.log10((signal+1e-12)/(residual+1e-12)))
+            full=trials.mean(axis=0)
+            observed_erps[stage][cue]=full
+            observed_mae[stage].extend(np.mean(np.abs(full[:,WINDOW]-reference[cue][:,WINDOW]),axis=1))
+            observed_snr[stage].extend(core.snr_proxy_db(trials[:,ch]) for ch in range(3))
+    mae={s:np.concatenate(mae[s],axis=1).mean(axis=1) for s in selected}
+    snr={s:np.concatenate(snr[s],axis=1).mean(axis=1) for s in selected}
+    observed_mae={s:float(np.mean(observed_mae[s])) for s in selected}
+    observed_snr={s:float(np.mean(observed_snr[s])) for s in selected}
+    retention={};observed_retention={}
+    base_norm=np.linalg.norm(erps['预处理'][-1][:,:,WINDOW]-erps['预处理'][1][:,:,WINDOW],axis=2)
+    observed_base_norm=np.linalg.norm(observed_erps['预处理'][-1][:,WINDOW]-
+                                      observed_erps['预处理'][1][:,WINDOW],axis=1)
+    for stage in ('V6','V7'):
+        norm=np.linalg.norm(erps[stage][-1][:,:,WINDOW]-erps[stage][1][:,:,WINDOW],axis=2)
+        retention[stage]=np.mean(norm/(base_norm+1e-12),axis=1)
+        one=np.linalg.norm(observed_erps[stage][-1][:,WINDOW]-
+                           observed_erps[stage][1][:,WINDOW],axis=1)
+        observed_retention[stage]=float(np.mean(one/(observed_base_norm+1e-12)))
+    rows=[]
+    for stage in ('V6','V7'):
+        values={
+            'proxy_MAE_reduction_pct':(100*(mae['预处理']-mae[stage])/mae['预处理'],
+                                       100*(observed_mae['预处理']-observed_mae[stage])/observed_mae['预处理']),
+            'SNR_proxy_gain_dB':(snr[stage]-snr['预处理'],observed_snr[stage]-observed_snr['预处理']),
+            'left_right_retention_ratio':(retention[stage],observed_retention[stage]),
+        }
+        for metric,(samples,point) in values.items():
+            low,high=np.quantile(samples,[.025,.975])
+            rows.append(dict(stage=stage,metric=metric,point=point,low=low,high=high,
+                             n_trials=len(cues),n_boot=n_boot))
+    for metric,samples,point in (
+        ('V7_minus_V6_proxy_MAE',mae['V7']-mae['V6'],observed_mae['V7']-observed_mae['V6']),
+        ('V7_minus_V6_SNR_proxy_dB',snr['V7']-snr['V6'],observed_snr['V7']-observed_snr['V6']),
+    ):
+        low,high=np.quantile(samples,[.025,.975])
+        rows.append(dict(stage='V7减V6',metric=metric,point=point,low=low,high=high,
+                         n_trials=len(cues),n_boot=n_boot))
+    return rows
+
+
+def temporal_contrast_stability(methods,cues,trial_ids):
+    """按原始事件顺序前后对半，检验左减右差分是否在时段间重复。"""
+    order=np.argsort(trial_ids)
+    first=np.zeros(len(cues),bool);first[order[:len(order)//2]]=True
+    halves=(first,~first)
+    counts={(part,cue):int(np.sum(mask&(cues==cue)))
+            for part,mask in enumerate(halves) for cue in (-1,1)}
+    if min(counts.values())<2:
+        raise ValueError('时段稳定性分析需要每半段至少两个左右刺激试次')
+    rows=[]
+    for stage,x in methods.items():
+        diff=[]
+        for mask in halves:
+            left=x[mask&(cues==-1)].mean(axis=0)
+            right=x[mask&(cues==1)].mean(axis=0)
+            diff.append((left-right)[:,WINDOW])
+        for channel,one,two in [('三通道合并',diff[0].ravel(),diff[1].ravel())]+[
+                (name,diff[0][ch],diff[1][ch]) for ch,name in enumerate(CHANNELS)]:
+            rows.append(dict(stage=stage,channel=channel,
+                             first_left_n=counts[(0,-1)],first_right_n=counts[(0,1)],
+                             second_left_n=counts[(1,-1)],second_right_n=counts[(1,1)],
+                             contrast_correlation=core.safe_corr(one,two),
+                             second_first_norm_ratio=float(np.linalg.norm(two)/(np.linalg.norm(one)+1e-12))))
     return rows
 
 
@@ -353,15 +449,17 @@ def stage_summary_markdown(data,dataset):
     return result
 
 
-def write_report(out,datasets,summary,spatial,benchmark,fitrows):
+def write_report(out,datasets,summary,spatial,benchmark,fitrows,group_intervals,stability):
     summary=pd.DataFrame(summary)
     spatial=pd.DataFrame(spatial)
     benchmark=pd.DataFrame(benchmark)
     fit=pd.DataFrame(fitrows)
+    intervals=pd.DataFrame(group_intervals)
+    stability=pd.DataFrame(stability)
     lines=['# 第一问：脑电预处理、伪影校正与有效视觉响应拟合（终稿实验报告）','',
     '## 赛题对应与结果定位','',
     '针对项目一与项目二、Fz/F3/F4原始记录，完成视觉提示事件提取、固定质量筛查、连续信号预处理、折外校正、左右方向分层响应估计及曲线拟合。刺激方向从VisCue读取，仅用于已知条件下的离线分析；本结果不是未知刺激解码器。',
-    '', '核心结论：V7按训练折选型控制校正强度，相比预处理四组代理MAE降低、SNR代理值提高，左右差分幅度平均保留约0.81–0.95；相比V6，四组1倍和2倍半合成注入的恢复误差均略低。弱注入与零注入存在背景改动，所保留的差分可能仍含方向相关眼动，不能宣称已无损恢复神经信号。',
+    '', '核心结论：V7按训练折选型控制校正强度；四组代理MAE点估计下降约5.4%–10.0%，同试次重采样的组均值区间均在零以上。SNR代理点估计略升，但四组增量区间均跨零，不能称稳定提高。左右差分幅度保留约0.81–0.95，却不能证明保留的是神经特征；四组1倍和2倍半合成恢复误差较V6略低，弱注入与零注入仍有背景改动。',
     '', '## 数据与数学定义','',
     '- 四组输入各100个提示事件；只用原始Fz、F3、F4与VisCue，绝不使用机器处理后的FzDecon/F3Decon/F4Decon作为输入。采样率256 Hz；试次窗−250至796.875 ms，分析窗250–500 ms。幅度单位沿用“原始电位单位”，不假定µV。',
     '- 固定预处理：连续信号60 Hz陷波、0.1–30 Hz零相位带通、刺激前250 ms中位数基线校正。提高高通截止频率会改变慢ERP的幅值和潜伏期，因此未通过抬高截止频率强行消除项目二的慢变化。',
@@ -407,6 +505,22 @@ def write_report(out,datasets,summary,spatial,benchmark,fitrows):
             row=g[g.channel_or_cue==ch].iloc[0]
             lines.append(f'| {d["name"]} | {ch} | {row.retention_ratio:.3f} | {row.waveform_correlation:.3f} |')
     lines += ['', 'F3/F4空间差分的完整数值见“左右刺激与额区空间差异指标.csv”。',
+              '', '### 组均值区间与时段稳定性','',
+              '下表的95%区间按左右方向分别对同一批试次重采样，V6/V7和预处理共用索引；已选模型、试次剔除集与训练代理参考固定。它量化本组试次抽样波动，不覆盖跨时段相关性、开发调参或跨受试者不确定性。',
+              '', '| 数据组 | V7代理MAE降幅% [95%区间] | V7 SNR代理增量dB [95%区间] | V7左右差分比 [95%区间] | 前后半段差分相关 |',
+              '|---|---:|---:|---:|---:|']
+    for ds,d in datasets.items():
+        g=intervals[(intervals.dataset==ds)&(intervals.stage=='V7')].set_index('metric')
+        t=stability[(stability.dataset==ds)&(stability.stage=='V7')&
+                    (stability.channel=='三通道合并')].iloc[0]
+        def cell(metric,fmt):
+            row=g.loc[metric]
+            return f'{row.point:{fmt}} [{row.low:{fmt}}, {row.high:{fmt}}]'
+        lines.append(f'| {d["name"]} | {cell("proxy_MAE_reduction_pct",".1f")} | '
+                     f'{cell("SNR_proxy_gain_dB","+.3f")} | '
+                     f'{cell("left_right_retention_ratio",".3f")} | '
+                     f'{t.contrast_correlation:.3f} |')
+    lines += ['', '四组SNR代理增量的组均值区间均跨零；它只支持“点估计略升”，不支持稳定增益。试次按原始事件编号前后对半，每半段分别计算左右ERP差分；A项目一与B项目二的三通道合并差分相关为负，说明方向差异的时间稳定性尚未确立。这个检查也不能将真实视觉响应与方向相关眼动分离。逐通道时段相关、每半段左右样本数及V7−V6差异区间见汇总CSV。',
               '', '### 正峰缺失、样条拟合与不确定性','',
               '逐方向逐通道CSV列出每阶段`positive_peak_valid`、`reference_positive_peak_valid`与潜伏期有效性。无正峰不赋予零潜伏期。样条拟合全部可计算，但“可拟合”不等于“有可信生理P300”。',
               '', '| 数据组 | V7有合格窗内局部正峰 / 6 | V7正峰检出行 / 6 | 五阶段峰误差共同配对行 / 6 |',
@@ -416,7 +530,7 @@ def write_report(out,datasets,summary,spatial,benchmark,fitrows):
         m=d['metrics'];v=m[m.stage=='V7']
         paired=summary[(summary.dataset==ds)&(summary.metric=='amp_error')&(summary.stage=='V7')]
         lines.append(f'| {d["name"]} | {int((f.peak_status=="窗内局部正峰，非生理确认").sum())} | {int(v.positive_peak_valid.sum())} | {int(paired.paired_rows.iloc[0]) if len(paired) else 0} |')
-    lines += ['', '区间文件对每组每方向每通道进行400次试次重采样，固定处理后的波形与参考，提供95%逐指标区间和V7−基线配对差的区间。它仅量化本组试次有限样本波动，不能推断人群疗效或诊断能力。',
+    lines += ['', '逐方向逐通道区间文件进行400次试次重采样，组均值区间文件进行800次分方向配对重采样；均固定处理后的波形与代理参考。区间不能推断人群疗效或诊断能力，也不等于独立受试者验证。',
               '', '## 半合成闭环验证','',
               '在四组各外折测试试次上人工加入随机时刻、宽度、极性的眨眼样、扫视样和运动样扰动；污染前的预处理实测波形是可计算恢复目标，仍可能含原有伪影。固定三个测试随机种子和0/0.5/1/2倍注入；0倍只检验无新污染时算法改动背景的程度。每组每幅度、每算法另存原始单位RMSE、按背景RMS归一化RMSE、左右差分恢复误差和正向均值误差。',
               '', '| 数据组 | 幅度 | 未校正归一化RMSE | V3 | V4 | V6 | V7 |',
@@ -433,9 +547,9 @@ def write_report(out,datasets,summary,spatial,benchmark,fitrows):
               '- 热力图同时给完整共用色域与共用98%分位细节视图；细节图显式写出截色像素比例。不得凭细节图单独宣称大波形消失。',
               '- 空间图右列依次为左刺激、右刺激的F3−F4及二者差；各面板内三阶段共享尺度，跨不同差分类型不强行共用纵轴。',
               '- 跨项目图按左、右方向分别比较，各方向写明样本数；拟合图显示残差和窗内拟合RMSE。',
-              '- 汇总图分别展示代理MAE降幅、代理SNR增量、左右差分幅度比，不把单位和意义不同的指标拼成单一综合分数。',
+              '- 汇总图以四组为行、三项指标为列，并加入V6/V7的组均值试次重采样区间；不同单位与意义的指标不合成单一综合分数。',
               '', '## 结论边界和可复现性','',
-              'V7是四组数据上经过开发调试的折外实验结果：操作层面测试试次未进入其折的模板或策略判断，但开发者已查看全部四组数据，故这些数字是开发集结果，不应称为全新受试者独立验证。三额区通道没有眼电通道，无法从这份数据单独证明前额共同缓慢变化是眼电还是神经慢电位。',
+              'V7是四组数据上经过开发调试的折外实验结果：操作层面测试试次未进入其折的模板或策略判断，但开发者已查看全部四组数据，故这些数字是开发集结果，不应称为全新受试者独立验证。三额区通道没有眼电通道，无法从这份数据单独证明前额共同缓慢变化是眼电还是神经慢电位；前后半段差分不稳定进一步限制“形状特征得到可靠保留”的结论。',
               '', '要把结果用于未知刺激分类，需要在完全独立数据上重新建立不使用测试Cue的校正和分类流程；当前曲线是已知条件下的视觉响应描述。数模论文可用本结果讨论可观测信号和方法取舍，不能声称神经源唯一识别、临床诊断准确率或人群泛化。',
               '', '运行 `python EEG_P300_artifact_correction_v7.py --output eeg_v7_results`，读取各组“可复核波形.npz”和运行清单JSON重算。源程序、四份.mat文件以及数值结果的SHA256均保存。',
               '', '## 方法出处','',
@@ -481,40 +595,33 @@ def plot_benchmark(out,synthetic):
     save_fig(fig,folder/'四组多幅度半合成验证.png')
 
 
-def plot_outcome_dashboard(out,datasets,summary,spatial):
-    """噪声代理与条件差异分列，避免双轴暗示一个综合最优分数。"""
-    frame=pd.DataFrame(summary)
-    space=pd.DataFrame(spatial)
-    fig,axes=plt.subplots(4,3,figsize=(15,12),layout='constrained')
-    for row,(ds,item) in enumerate(datasets.items()):
-        def metric(stage,name):
-            return float(frame[(frame.dataset==ds)&(frame.stage==stage)&(frame.metric==name)].iloc[0]['mean'])
-        base_mae=metric('预处理','MAE')
-        base_snr=metric('预处理','SNR_proxy_dB')
-        values=[[(base_mae-metric(s,'MAE'))/base_mae*100 for s in ('V6','V7')],
-                [metric(s,'SNR_proxy_dB')-base_snr for s in ('V6','V7')],
-                [float(space[(space.dataset==ds)&(space.stage==s)&
-                             (space.quantity=='left_minus_right_ERP')].retention_ratio.mean()) for s in ('V6','V7')]]
-        for col,vals in enumerate(values):
-            ax=axes[row,col]
-            ax.barh(['V6','V7'],vals,color=[COLORS['V6'],COLORS['V7']],height=.55)
-            ax.axvline(0,color='#596e83',lw=.8)
-            if col==2:ax.axvline(1,color='#7b868d',ls=':',lw=1)
-            for i,value in enumerate(vals):
-                ax.text(value+(0.2 if col==0 else .012),i,
-                        f'{value:.1f}%' if col==0 else f'{value:+.3f}' if col==1 else f'{value:.3f}',
-                        va='center',fontsize=9)
-            ax.invert_yaxis()
-            ax.set_title(item['name']+' · '+('代理MAE降幅' if col==0 else '代理SNR增量' if col==1 else '左右差分幅度比'),fontsize=10)
-            ax.set_xlabel('% 相对预处理' if col==0 else 'dB 相对预处理' if col==1 else '比值，相对预处理')
-            ax.spines[['top','right']].set_visible(False)
-            ax.grid(axis='x',alpha=.15)
-    for row in range(4):
-        axes[row,0].set_xlim(0,20)
-        axes[row,1].set_xlim(-.2,.65)
-        axes[row,2].set_xlim(0,1.12)
-    fig.suptitle('四组数据：代理误差、试次突出度与方向差异保留\n'
-                 '同一折外试次；MAE依赖训练模板，SNR残差含真实变异；差分比接近1不等于神经特征真值',fontsize=14)
+def plot_outcome_dashboard(out,datasets,group_intervals):
+    """三个独立坐标上的点与分方向试次重采样区间，便于在A4页面阅读。"""
+    frame=pd.DataFrame(group_intervals)
+    names=[item['name'] for item in datasets.values()]
+    metrics=(('proxy_MAE_reduction_pct','代理 MAE 降幅','% 相对预处理',0,(-8,24)),
+             ('SNR_proxy_gain_dB','SNR 代理增量','dB 相对预处理',0,(-1.2,1.8)),
+             ('left_right_retention_ratio','左右差分幅度比','比值，相对预处理',1,(0,1.45)))
+    fig,axes=plt.subplots(3,1,figsize=(8.5,8.2),layout='constrained')
+    for ax,(metric,title,xlabel,baseline,limits) in zip(axes,metrics):
+        ax.axvline(baseline,color='#657480',ls='--',lw=1,zorder=0)
+        for i,ds in enumerate(datasets):
+            for stage,offset,marker in (('V6',-.13,'s'),('V7',.13,'o')):
+                row=frame[(frame.dataset==ds)&(frame.stage==stage)&(frame.metric==metric)].iloc[0]
+                y=i+offset
+                ax.errorbar(row.point,y,xerr=[[row.point-row.low],[row.high-row.point]],
+                            fmt=marker,color=COLORS[stage],markersize=6,capsize=3,
+                            elinewidth=1.7,label=stage if i==0 else None,zorder=3)
+        ax.set_title(title,fontsize=12,pad=10)
+        ax.set_xlabel(xlabel,fontsize=10)
+        ax.set_xlim(*limits)
+        ax.set_yticks(range(len(names)),names)
+        ax.invert_yaxis()
+        ax.grid(axis='x',alpha=.17)
+        ax.spines[['top','right']].set_visible(False)
+    axes[0].legend(loc='lower right',frameon=False,ncol=2,fontsize=9)
+    fig.suptitle('四组数据：V6 / V7 点估计与95%试次重采样区间\n'
+                 '模型及训练代理参考固定；区间仅表示本组试次抽样波动',fontsize=13)
     save_fig(fig,out/'汇总与说明/去噪与特征保留联合评价.png')
 
 
@@ -534,6 +641,7 @@ def main():
               'unit':'原始电位单位','V7_policy':{'保守双分量':'训练均值保护', '其他候选':'保守比例'},
               'fractions':{'V6':.15,'V7_protected_trial':.25,'V7_protected_train_mean':.10}}
     datasets={};summary=[];spatial=[];synthetic=[];fits=[];strategies=[];slope_diagnostics=[]
+    group_intervals=[];stability=[]
     for subject in 'AB':
         for task in (1,2):
             ds=f'VisualCog{subject}_Task-{task}'
@@ -597,6 +705,10 @@ def main():
             save_csv(metrics,dest/'逐方向逐通道评价指标.csv')
             summary.extend(summarize_metrics(metrics,ds))
             save_csv(bootstrap_metrics(stages,cues,refs),dest/'试次重采样区间.csv')
+            group_intervals.extend(dict(dataset=ds,**row) for row in
+                                   group_uncertainty(stages,cues,refs,seed=20260924+len(datasets)))
+            stability.extend(dict(dataset=ds,**row) for row in
+                             temporal_contrast_stability(stages,cues,trial_ids))
             for stage,y in stages.items():
                 spatial.extend([dict(stage=stage,**z) for z in core.evaluate_spatial_metrics(x,y,cues,ds)])
                 for c in (-1,1):
@@ -635,6 +747,8 @@ def main():
     save_csv(spatial,summary_dir/'左右刺激与额区空间差异指标.csv')
     save_csv(strategies,summary_dir/'逐折V7策略与参考数量.csv')
     save_csv(slope_diagnostics,summary_dir/'刺激前斜率与刺激后慢变化.csv')
+    save_csv(group_intervals,summary_dir/'四组核心指标重采样区间.csv')
+    save_csv(stability,summary_dir/'左右差分前后时段稳定性.csv')
     save_csv(synthetic,synth_dir/'多场景逐折配对验证.csv')
     bench=pd.DataFrame(synthetic)
     save_csv(bench.groupby(['dataset','level','stage'],sort=False)[['RMSE','normalized_RMSE','contrast_RMSE','positive_mean_error','latency_error_ms']].mean().reset_index(),
@@ -643,8 +757,8 @@ def main():
     if not args.no_plots:
         plot_cross_task(out,datasets)
         plot_benchmark(out,synthetic)
-        plot_outcome_dashboard(out,datasets,summary,spatial)
-    write_report(out,datasets,summary,spatial,synthetic,fits)
+        plot_outcome_dashboard(out,datasets,group_intervals)
+    write_report(out,datasets,summary,spatial,synthetic,fits,group_intervals,stability)
     manifest['csv_sha256']={str(p.relative_to(out)):sha(p) for p in sorted(out.rglob('*.csv'))}
     (summary_dir/'运行清单.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
     print('完成：'+str(out),flush=True)
