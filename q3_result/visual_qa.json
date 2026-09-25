@@ -1,0 +1,16 @@
+{
+  "png_visual_inspection": "all nine final PNGs opened and inspected",
+  "pdf_scope": "exported from same figures; not separately rendered",
+  "issues_remaining": [],
+  "png_sha256": {
+    "01_事件时间轴.png": "da4711719c09c75ac3c89702e5ecaf678fd268def97c81a11072f7acf67c2f4c",
+    "02_宏观模型与内部活动.png": "c43618a8ebf1d9f9025c5a4b0f5a71ea1497ce5ded910bc53d72868e3910a507",
+    "03_三阶段EEG留出预测.png": "b7fc82d6b3379395b02641eecc6096ff5a6a48a39835b484755d07b3077f15e3",
+    "04_左右差分留出预测.png": "367e9d48dccf3a7192b1bcf9bba321a61f49331cb315ff4eaba2cc99341d0d63",
+    "05_认知增量与对照.png": "e20704752e4458147bce2ccc172d8abe1e67067d3ba7df82f2835bc488ea526b",
+    "06_反应时预测与增量.png": "fa70887133a875908d5cea9149e872888cd10a2f4119858ece35f3afbe509d08",
+    "07_正确错误与超时仿真.png": "a9f51f3886f92112760a707b85e205807bb26e98096575eb4444acefe2c1a4d0",
+    "08_半合成恢复与可辨识性.png": "01bfc6e625f1dc7be3ff778e24682bd3f2ac751da59065d1b466705d54f4eaa1",
+    "09_截断与滤波敏感性.png": "7a254670b15ac1663274371c783a38ba6819f2df79dce800d03231be95ca3120"
+  }
+}

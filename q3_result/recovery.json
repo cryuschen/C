@@ -1,0 +1,116 @@
+[
+  {
+    "noise_level": 0.0,
+    "true_parameters": {
+      "model": "M2",
+      "tau_m": 1.0,
+      "tau_p": 0.3,
+      "delay": 0.05,
+      "feedback": 0.1,
+      "beta": 1.0,
+      "trend_tau": 1.0
+    },
+    "selected": {
+      "model": "M2",
+      "tau_m": 1.0,
+      "tau_p": 0.3,
+      "delay": 0.0,
+      "feedback": 0.3,
+      "beta": 1.0,
+      "trend_tau": 1.0
+    },
+    "signal_RMSE": 0.20153464350422337,
+    "signal_RMS": 28.56273677751479,
+    "NRMSE": 0.007055859005180338,
+    "exact_dynamic_recovery": false,
+    "near_equivalent_candidates": 1,
+    "design_singular_values": [
+      2.1788850487464417,
+      1.2602277757893927,
+      1.160755309327617,
+      0.717176380668641,
+      0.6567597747198254,
+      0.455097457042901,
+      0.32151848599737337,
+      0.23952466160027194,
+      0.05829022994632222
+    ],
+    "caveat": "backgrounds_are_real_EEG_not_clean_ground_truth"
+  },
+  {
+    "noise_level": 0.5,
+    "true_parameters": {
+      "model": "M2",
+      "tau_m": 1.0,
+      "tau_p": 0.3,
+      "delay": 0.05,
+      "feedback": 0.1,
+      "beta": 1.0,
+      "trend_tau": 1.0
+    },
+    "selected": {
+      "model": "M2",
+      "tau_m": 1.0,
+      "tau_p": 0.3,
+      "delay": 0.1,
+      "feedback": 0.0,
+      "beta": 1.0,
+      "trend_tau": 1.0
+    },
+    "signal_RMSE": 0.8335784099953896,
+    "signal_RMS": 28.56273677751479,
+    "NRMSE": 0.02918412253309006,
+    "exact_dynamic_recovery": false,
+    "near_equivalent_candidates": 41,
+    "design_singular_values": [
+      2.2300033093888225,
+      1.1999372442078828,
+      1.1826381650719069,
+      0.6888864475830321,
+      0.6275822808328761,
+      0.4371075260690474,
+      0.29107050697537695,
+      0.20860537737035867,
+      0.029623147523029098
+    ],
+    "caveat": "backgrounds_are_real_EEG_not_clean_ground_truth"
+  },
+  {
+    "noise_level": 1.0,
+    "true_parameters": {
+      "model": "M2",
+      "tau_m": 1.0,
+      "tau_p": 0.3,
+      "delay": 0.05,
+      "feedback": 0.1,
+      "beta": 1.0,
+      "trend_tau": 1.0
+    },
+    "selected": {
+      "model": "M2",
+      "tau_m": 2.0,
+      "tau_p": 0.3,
+      "delay": 0.1,
+      "feedback": 0.0,
+      "beta": 1.0,
+      "trend_tau": 1.0
+    },
+    "signal_RMSE": 2.1358072665212884,
+    "signal_RMS": 28.56273677751479,
+    "NRMSE": 0.0747760021442568,
+    "exact_dynamic_recovery": false,
+    "near_equivalent_candidates": 159,
+    "design_singular_values": [
+      2.1641816100015703,
+      1.2834382804998912,
+      1.1425604660099145,
+      0.694646229780916,
+      0.6748280135450402,
+      0.4840382024261531,
+      0.3314880881438011,
+      0.27537876814668133,
+      0.07564845167308726
+    ],
+    "caveat": "backgrounds_are_real_EEG_not_clean_ground_truth"
+  }
+]
