@@ -1,0 +1,81 @@
+{
+  "reviewed_at": "2026-09-25T01:08:05.581990+00:00",
+  "status": "passed",
+  "method": "Direct visual inspection of all 17 final PNGs; pdfinfo readability and one-page checks of all matching PDFs",
+  "checks": [
+    "Chinese text and titles readable",
+    "Axes, units, legends and clipping checked",
+    "Interval interpretation stated",
+    "Observed numerical results retained, including negative findings"
+  ],
+  "figures": [
+    {
+      "file": "figures/01_空间组合选择性.png",
+      "sha256": "99525d6bc02a081352a977f3443fa9a4239f9c849f71a77ad965f3780b9b04f7"
+    },
+    {
+      "file": "figures/02_神经群体前向响应.png",
+      "sha256": "4b6a405be95dbaeebad81a459094aa9da25da5067f3c22efb2987600459e8f79"
+    },
+    {
+      "file": "figures/03_A1_条件拟合.png",
+      "sha256": "7fc08b0f18a504358024bbd6d83767b1020c2b96a6491a1bc748218c8f450a20"
+    },
+    {
+      "file": "figures/03_A2_条件拟合.png",
+      "sha256": "3b1a742454624d9645ae36696c211244829abc3627025cb358dedb19567bda6e"
+    },
+    {
+      "file": "figures/03_B1_条件拟合.png",
+      "sha256": "1437126f3e010120110be53ab3ecdabb605a0884293173802dfe4b85c088f486"
+    },
+    {
+      "file": "figures/03_B2_条件拟合.png",
+      "sha256": "1df341f895249dd6972dbfd89a6032430405f256bd1d590cced6e2064b3c382c"
+    },
+    {
+      "file": "figures/04_A1_留出空间差分.png",
+      "sha256": "d0c27d174b54a7031f2d980d8372907e6a274f9019233c8b754d4a17a2ab3fe6"
+    },
+    {
+      "file": "figures/04_A2_留出空间差分.png",
+      "sha256": "c17575e2483b3842c4cf704b151ef356358074e4b8ffd834070ddf973d64296e"
+    },
+    {
+      "file": "figures/04_B1_留出空间差分.png",
+      "sha256": "67daa0f5c2e628148e2ca7f98dc1c04146804cfd253f229f6bb7a50222bbaa9e"
+    },
+    {
+      "file": "figures/04_B2_留出空间差分.png",
+      "sha256": "61f2614a79d91a8f0f3ad08b4770227a4e171b9dd12e111d3d31e7a668eff69d"
+    },
+    {
+      "file": "figures/05_识别与负对照.png",
+      "sha256": "93f0a319a63028b1c6035f57336962431cabb8d9a453aa9324057a410b8283f5"
+    },
+    {
+      "file": "figures/06_混淆矩阵.png",
+      "sha256": "892cc34330684d74a4ce68e086b294ad9e79f77df779929954a219b2845f6825"
+    },
+    {
+      "file": "figures/07_置换检验.png",
+      "sha256": "3b29027f1548870d464659589bab72fecb461bfb553e831e1b40d73131d3c72c"
+    },
+    {
+      "file": "figures/08_九维特征效应.png",
+      "sha256": "f02c671347fbcda2fea4dd0bcb1a77f4328f689fedba7e3c8832db9991599f52"
+    },
+    {
+      "file": "figures/09_补充验证.png",
+      "sha256": "da6186b1a301ed17e0e4c6f8eee1db95e613550bc6ff1ca25a0787a0f4a17ca0"
+    },
+    {
+      "file": "figures/10_合成检验.png",
+      "sha256": "9fdcf066b177d63cd5bbc7ed5323935d9a8630f888d46c489a7278a2a8fe256e"
+    },
+    {
+      "file": "figures/11_参数重估区间.png",
+      "sha256": "6450cd9fcd9dfbed88812b504b531eac872945fe3e63c468ac995735a7635256"
+    }
+  ]
+}

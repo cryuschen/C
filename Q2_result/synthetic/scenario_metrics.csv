@@ -1,0 +1,5 @@
+﻿scenario,n,BA,AUC,recall_left,recall_right,TN,FP,FN,TP
+model_assumed,100,1.0,1.0,1.0,1.0,50,0,0,50
+eye_only_no_neural_direction,100,1.0,1.0,1.0,1.0,50,0,0,50
+background_drift,100,1.0,1.0,1.0,1.0,50,0,0,50
+time_parameter_drift,100,1.0,1.0,1.0,1.0,50,0,0,50

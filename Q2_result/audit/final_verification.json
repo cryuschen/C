@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "source": {
+    "Q2/audit_q2_results.py": "6ec2500709e33144b28ba0a9b7c7940d5d5f9971f8fd8a435a46e0d279540a68"
+  },
+  "checks": [
+    {
+      "dataset": "A1",
+      "p_integer_reference": 0.658,
+      "p_reported": 0.658,
+      "p_matches": true,
+      "permutations_checked": 999
+    },
+    {
+      "dataset": "A2",
+      "p_integer_reference": 0.157,
+      "p_reported": 0.157,
+      "p_matches": true,
+      "permutations_checked": 999
+    },
+    {
+      "dataset": "B1",
+      "p_integer_reference": 0.415,
+      "p_reported": 0.415,
+      "p_matches": true,
+      "permutations_checked": 999
+    },
+    {
+      "dataset": "B2",
+      "p_integer_reference": 0.713,
+      "p_reported": 0.713,
+      "p_matches": true,
+      "permutations_checked": 999
+    }
+  ],
+  "checked_permutations": 3996,
+  "checked_parameter_refits": 800,
+  "notes": "Integer-statistic permutation ties independently verified"
+}

@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "checks": [
+    "frozen_primary_sources_and_outputs_unchanged",
+    "original_OOF_predictions_reproduced",
+    "same_trials_for_all_classification_counterfactuals",
+    "independent_coefficient_solution_agrees",
+    "orthogonal_error_decomposition_closes",
+    "three_PNGs_visually_reviewed_and_PDFs_readable",
+    "SQL_aggregation_agrees_with_pandas"
+  ],
+  "comparison": [
+    {
+      "dataset": "A1",
+      "original_prediction_max_error": 9.992007221626409e-16,
+      "n": 67
+    },
+    {
+      "dataset": "A2",
+      "original_prediction_max_error": 1.5543122344752192e-15,
+      "n": 70
+    },
+    {
+      "dataset": "B1",
+      "original_prediction_max_error": 6.661338147750939e-16,
+      "n": 69
+    },
+    {
+      "dataset": "B2",
+      "original_prediction_max_error": 1.27675647831893e-15,
+      "n": 69
+    }
+  ],
+  "html_verification": "structural_only",
+  "html_limitation": "No compatible Chromium found; browser rendering and source interaction not verified."
+}

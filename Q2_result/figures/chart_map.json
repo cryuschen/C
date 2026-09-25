@@ -1,0 +1,121 @@
+[
+  {
+    "figure": "01_空间组合选择性",
+    "question": "镜像和局部结构是否改变选择性响应",
+    "source": "mechanism/spatial_encoding.npz",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "02_神经群体前向响应",
+    "question": "各机制阶段如何形成电位",
+    "source": "mechanism/neural_forward.npz",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "03_A1_条件拟合",
+    "question": "模型解释各通道条件均值的程度",
+    "source": "fits/A1/before and v7/waveforms.npz",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "03_A2_条件拟合",
+    "question": "模型解释各通道条件均值的程度",
+    "source": "fits/A2/before and v7/waveforms.npz",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "03_B1_条件拟合",
+    "question": "模型解释各通道条件均值的程度",
+    "source": "fits/B1/before and v7/waveforms.npz",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "03_B2_条件拟合",
+    "question": "模型解释各通道条件均值的程度",
+    "source": "fits/B2/before and v7/waveforms.npz",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "04_A1_留出空间差分",
+    "question": "训练差分能否复现在留出时段",
+    "source": "validation/blocked/A1/fold_*.npz",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "04_A2_留出空间差分",
+    "question": "训练差分能否复现在留出时段",
+    "source": "validation/blocked/A2/fold_*.npz",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "04_B1_留出空间差分",
+    "question": "训练差分能否复现在留出时段",
+    "source": "validation/blocked/B1/fold_*.npz",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "04_B2_留出空间差分",
+    "question": "训练差分能否复现在留出时段",
+    "source": "validation/blocked/B2/fold_*.npz",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "05_识别与负对照",
+    "question": "机制特征与透明基准相比是否有益",
+    "source": "validation/classification_summary.csv",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "06_混淆矩阵",
+    "question": "左右召回是否均衡",
+    "source": "validation/classification_summary.csv",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "07_置换检验",
+    "question": "观测识别效果是否超过块内置换参考",
+    "source": "validation/permutations/*.csv",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "08_九维特征效应",
+    "question": "方向差异位于哪些空间时间成分",
+    "source": "features/effect_sizes.csv",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "09_补充验证",
+    "question": "模型在更严格场景中的表现",
+    "source": "validation/supplemental_metrics.csv",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "10_合成检验",
+    "question": "方向相关伪影是否也会被特征识别",
+    "source": "synthetic/scenario_metrics.csv",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral; solid/dashed distinction"
+  },
+  {
+    "figure": "11_参数重估区间",
+    "question": "参数完整重估的波动与边界",
+    "source": "stability/parameter_intervals_by_rank.csv",
+    "renderer": "matplotlib static",
+    "palette": "blue orange and neutral"
+  }
+]

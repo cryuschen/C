@@ -1,0 +1,21 @@
+test_all_saved_trials_reconstruct_v7_from_fold_policy (test_eeg_v7.FinalOutputTests.test_all_saved_trials_reconstruct_v7_from_fold_policy) ... ok
+test_benchmark_baseline_and_replay_manifest (test_eeg_v7.FinalOutputTests.test_benchmark_baseline_and_replay_manifest) ... ok
+test_group_intervals_and_temporal_contrast_recompute_from_saved_trials (test_eeg_v7.FinalOutputTests.test_group_intervals_and_temporal_contrast_recompute_from_saved_trials) ... ok
+test_metrics_and_trial_lineage (test_eeg_v7.FinalOutputTests.test_metrics_and_trial_lineage) ... ok
+test_v7_imports_without_legacy_modules (test_eeg_v7.FinalOutputTests.test_v7_imports_without_legacy_modules) ... ok
+test_all_nested_lineages_and_figure_pairs (test_q2.Q2CompletedOutputTests.test_all_nested_lineages_and_figure_pairs) ... ok
+test_full_counts_and_every_saved_hash (test_q2.Q2CompletedOutputTests.test_full_counts_and_every_saved_hash) ... ok
+test_metrics_and_corrected_significance_recomputed (test_q2.Q2CompletedOutputTests.test_metrics_and_corrected_significance_recomputed) ... ok
+test_kernel_scaling_projection_closure_and_padding (test_q2.Q2Tests.test_kernel_scaling_projection_closure_and_padding) ... ok
+test_mechanism_mirror_and_stable_equilibrium (test_q2.Q2Tests.test_mechanism_mirror_and_stable_equilibrium) ... ok
+test_missing_class_and_multiple_comparisons (test_q2.Q2Tests.test_missing_class_and_multiple_comparisons) ... ok
+test_model_fit_refines_grid_and_respects_constraints (test_q2.Q2Tests.test_model_fit_refines_grid_and_respects_constraints) ... ok
+test_permutation_retrains_five_outer_models_and_resumes_identically (test_q2.Q2Tests.test_permutation_retrains_five_outer_models_and_resumes_identically) ... ok
+test_raw_blocks_have_disjoint_filter_support_and_exact_counts (test_q2.Q2Tests.test_raw_blocks_have_disjoint_filter_support_and_exact_counts) ... ok
+test_spatial_coordinates_reversible (test_q2.Q2Tests.test_spatial_coordinates_reversible) ... ok
+test_testing_directions_do_not_affect_predictions (test_q2.Q2Tests.test_testing_directions_do_not_affect_predictions) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 16.088s
+
+OK

@@ -1,0 +1,690 @@
+{
+  "A1_before": {
+    "theta": [
+      1.3341765693141964e-15,
+      10.000000000000007,
+      528.63952941333
+    ],
+    "starts": [
+      {
+        "success": true,
+        "loss": 15.099770143573464,
+        "theta": [
+          3.923461330085775e-15,
+          10.0,
+          528.6391397052978
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 15.099770170928437,
+        "theta": [
+          8.876023902453746e-15,
+          10.0,
+          528.6291485593591
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 15.09977015513194,
+        "theta": [
+          0.0,
+          10.000000000000002,
+          528.6337826287221
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 15.099770143013087,
+        "theta": [
+          1.3341765693141964e-15,
+          10.000000000000007,
+          528.63952941333
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 15.099770144397986,
+        "theta": [
+          8.880705025534241e-15,
+          10.0,
+          528.6386088802246
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 15.099770143316883,
+        "theta": [
+          0.0,
+          10.000000000000004,
+          528.6393148742818
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 15.099770143151558,
+        "theta": [
+          3.320166926311435e-15,
+          10.0,
+          528.6394306115787
+        ],
+        "message": "Optimization terminated successfully"
+      }
+    ],
+    "any_converged": true,
+    "status": "converged",
+    "condition": 1.175229793392721
+  },
+  "A1_v7": {
+    "theta": [
+      5.251865523786595e-15,
+      10.0,
+      504.74300057964683
+    ],
+    "starts": [
+      {
+        "success": true,
+        "loss": 13.616334067345413,
+        "theta": [
+          5.251865523786595e-15,
+          10.0,
+          504.74300057964683
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 13.616334073698974,
+        "theta": [
+          0.0,
+          10.000000000000014,
+          504.7336517854923
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 13.616334069075263,
+        "theta": [
+          1.4396450971722314e-14,
+          10.0,
+          504.7369487341555
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 13.61633407043199,
+        "theta": [
+          0.0,
+          10.000000000000004,
+          504.7357685597087
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 13.616334069939938,
+        "theta": [
+          9.13057513589741e-15,
+          10.0,
+          504.73616431715084
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 13.616334070471936,
+        "theta": [
+          2.141598120682676e-15,
+          10.0,
+          504.7357376915746
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 13.616334086154547,
+        "theta": [
+          1.4513820569410695e-15,
+          10.000000000000007,
+          504.72848954771416
+        ],
+        "message": "Optimization terminated successfully"
+      }
+    ],
+    "any_converged": true,
+    "status": "converged",
+    "condition": 1.1812085889532256
+  },
+  "A2_before": {
+    "theta": [
+      0.00022846812176851512,
+      135.45213871660627,
+      172.53781933099341,
+      198.14033955363286
+    ],
+    "starts": [
+      {
+        "success": true,
+        "loss": 59.707571528065834,
+        "theta": [
+          0.00022846812176851512,
+          135.45213871660627,
+          172.53781933099341,
+          198.14033955363286
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": false,
+        "loss": 14.893664546808814,
+        "theta": [
+          200.0,
+          145.95240496863565,
+          331.90223932925414,
+          602.8868759453874
+        ],
+        "message": "Iteration limit reached"
+      },
+      {
+        "success": false,
+        "loss": 14.738601229766715,
+        "theta": [
+          200.0,
+          157.89830791223758,
+          325.52727190600075,
+          536.1952087480495
+        ],
+        "message": "Iteration limit reached"
+      },
+      {
+        "success": false,
+        "loss": 14.788225278346573,
+        "theta": [
+          199.99999999999997,
+          152.81780914378257,
+          328.19159868585865,
+          562.4701692580642
+        ],
+        "message": "Iteration limit reached"
+      },
+      {
+        "success": false,
+        "loss": 61.56551705832464,
+        "theta": [
+          3.3960587125785234e-11,
+          168.8823606785161,
+          200.3631819530912,
+          221.66461195633389
+        ],
+        "message": "Iteration limit reached"
+      },
+      {
+        "success": false,
+        "loss": 60.24418054882758,
+        "theta": [
+          1.3017204813349468e-14,
+          113.22508260927862,
+          168.0775346179882,
+          212.7744471214961
+        ],
+        "message": "Iteration limit reached"
+      },
+      {
+        "success": false,
+        "loss": 14.871182707984635,
+        "theta": [
+          200.0,
+          151.9682990097914,
+          326.14863962680863,
+          557.9143938924536
+        ],
+        "message": "Iteration limit reached"
+      }
+    ],
+    "any_converged": true,
+    "status": "converged",
+    "condition": 2642.267256457693
+  },
+  "A2_v7": {
+    "theta": [
+      150.0,
+      25.88879128590944,
+      81.14413458073838,
+      600.0
+    ],
+    "starts": [
+      {
+        "success": false,
+        "loss": 15.895512834911713,
+        "theta": [
+          200.0,
+          149.81906241620234,
+          323.74566753458714,
+          556.3860763983489
+        ],
+        "message": "Iteration limit reached"
+      },
+      {
+        "success": false,
+        "loss": 15.852209380199094,
+        "theta": [
+          200.0,
+          148.83681684476423,
+          326.07097709045803,
+          568.5855200719626
+        ],
+        "message": "Iteration limit reached"
+      },
+      {
+        "success": false,
+        "loss": 15.85534008482032,
+        "theta": [
+          199.99999999999997,
+          148.90771128085836,
+          325.8689690420733,
+          567.5587882766977
+        ],
+        "message": "Iteration limit reached"
+      },
+      {
+        "success": false,
+        "loss": 15.878669081025393,
+        "theta": [
+          199.99999999999997,
+          150.6863939659016,
+          323.63823938538997,
+          552.9425584576074
+        ],
+        "message": "Iteration limit reached"
+      },
+      {
+        "success": false,
+        "loss": 16.138023547146165,
+        "theta": [
+          199.9999999999999,
+          177.48139653476235,
+          305.8729944046605,
+          430.64091907324735
+        ],
+        "message": "Iteration limit reached"
+      },
+      {
+        "success": false,
+        "loss": 57.63901114481763,
+        "theta": [
+          3.375935404933266e-05,
+          105.86684233262378,
+          168.38006978944009,
+          223.85718629216402
+        ],
+        "message": "Iteration limit reached"
+      },
+      {
+        "success": false,
+        "loss": 15.825294244012916,
+        "theta": [
+          200.0,
+          149.61190303911388,
+          326.7635850029468,
+          568.3730834426347
+        ],
+        "message": "Iteration limit reached"
+      }
+    ],
+    "any_converged": false,
+    "status": "all_failed_original_theta_retained",
+    "condition": 7.389248057693007
+  },
+  "B1_before": {
+    "theta": [
+      0.0,
+      299.99999999999994,
+      1019.8424702972392
+    ],
+    "starts": [
+      {
+        "success": true,
+        "loss": 46.88284758497188,
+        "theta": [
+          0.0,
+          299.99999999999994,
+          1019.8378255023783
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 46.882847585575114,
+        "theta": [
+          1.786062062727602e-14,
+          300.0,
+          1019.8347638297209
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 46.882847584409454,
+        "theta": [
+          0.0,
+          299.99999999999994,
+          1019.8424702972392
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 46.882847585110206,
+        "theta": [
+          6.406426743001363e-15,
+          300.0,
+          1019.8370337175521
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 46.88284759207778,
+        "theta": [
+          1.1424011987621725e-14,
+          300.0,
+          1019.8181413372362
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 46.882847587878054,
+        "theta": [
+          0.0,
+          300.0,
+          1019.8271480666087
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 46.882847596619314,
+        "theta": [
+          0.0,
+          300.0,
+          1019.810893235939
+        ],
+        "message": "Optimization terminated successfully"
+      }
+    ],
+    "any_converged": true,
+    "status": "converged",
+    "condition": 5.834989864750465
+  },
+  "B1_v7": {
+    "theta": [
+      6.332074442319214e-15,
+      299.99999999999994,
+      1018.7717653693462
+    ],
+    "starts": [
+      {
+        "success": true,
+        "loss": 45.246539925935,
+        "theta": [
+          7.376850577043362e-15,
+          299.99999999999994,
+          1018.7681406428078
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 45.24653992741383,
+        "theta": [
+          0.0,
+          300.0,
+          1018.7614898164251
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 45.24653992546916,
+        "theta": [
+          6.332074442319214e-15,
+          299.99999999999994,
+          1018.7717653693462
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 45.246539926074526,
+        "theta": [
+          0.0,
+          300.0,
+          1018.7673160706464
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 45.24653993190349,
+        "theta": [
+          0.0,
+          299.99999999999994,
+          1018.7499361811692
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 45.246539930829066,
+        "theta": [
+          9.26310296841684e-16,
+          299.99999999999994,
+          1018.7522056768476
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 45.246539927749716,
+        "theta": [
+          0.0,
+          300.0,
+          1018.7603454915392
+        ],
+        "message": "Optimization terminated successfully"
+      }
+    ],
+    "any_converged": true,
+    "status": "converged",
+    "condition": 5.837948194001779
+  },
+  "B2_before": {
+    "theta": [
+      200.0,
+      68.63178788336394,
+      354.65932503599794,
+      2327.0671429414097
+    ],
+    "starts": [
+      {
+        "success": true,
+        "loss": 15.397570107967132,
+        "theta": [
+          200.0,
+          68.6262083564788,
+          354.657446054566,
+          2327.318967794038
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 15.399149134858872,
+        "theta": [
+          200.0,
+          69.53240462309785,
+          354.2316949541024,
+          2248.976599240364
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 15.397848851940273,
+        "theta": [
+          200.0,
+          68.33137189499435,
+          354.8656731157008,
+          2356.1147814001456
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 15.397644436657622,
+        "theta": [
+          200.0,
+          68.48856459371812,
+          354.74321845906576,
+          2340.3950241503217
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 73.92936365793155,
+        "theta": [
+          5.982951247870602e-09,
+          185.64723807278378,
+          204.86639415176236,
+          217.3763947699463
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": false,
+        "loss": 71.8853181691736,
+        "theta": [
+          1.8153611491899503e-14,
+          124.92504898894381,
+          170.9325056400158,
+          205.42718000817015
+        ],
+        "message": "Iteration limit reached"
+      },
+      {
+        "success": true,
+        "loss": 15.397564675001895,
+        "theta": [
+          200.0,
+          68.63178788336394,
+          354.65932503599794,
+          2327.0671429414097
+        ],
+        "message": "Optimization terminated successfully"
+      }
+    ],
+    "any_converged": true,
+    "status": "converged",
+    "condition": 73.02021452270553
+  },
+  "B2_v7": {
+    "theta": [
+      200.0,
+      71.68473149908094,
+      341.47745163054896,
+      1771.2209702362866
+    ],
+    "starts": [
+      {
+        "success": true,
+        "loss": 13.599309650053778,
+        "theta": [
+          200.0,
+          71.63901354089174,
+          341.45762772043196,
+          1772.986940074116
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 13.599321559206812,
+        "theta": [
+          200.0,
+          71.60444150100332,
+          341.4672896360786,
+          1774.8533207644489
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 13.599276754445802,
+        "theta": [
+          200.0,
+          71.68473149908094,
+          341.47745163054896,
+          1771.2209702362866
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 73.96606187362737,
+        "theta": [
+          1.7137738212491327e-06,
+          183.11561292043007,
+          201.31608092393046,
+          213.39189591552724
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 45.390070581269214,
+        "theta": [
+          199.99999999999994,
+          300.0,
+          1199.9999999999998,
+          1737.887544043305
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 69.76911108889026,
+        "theta": [
+          3.267148057462595e-05,
+          122.80384852250417,
+          158.93099633025327,
+          183.75519088131222
+        ],
+        "message": "Optimization terminated successfully"
+      },
+      {
+        "success": true,
+        "loss": 13.599324173401941,
+        "theta": [
+          200.0,
+          71.60358891352871,
+          341.4659287720245,
+          1774.8615606602527
+        ],
+        "message": "Optimization terminated successfully"
+      }
+    ],
+    "any_converged": true,
+    "status": "converged",
+    "condition": 95.9962046123571
+  }
+}
