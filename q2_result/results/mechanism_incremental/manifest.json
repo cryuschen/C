@@ -1,0 +1,5 @@
+{
+  "status": "exploratory_after_primary_V3_results",
+  "source_base": "/home/cryus/code-project/C/q2_result/results/mechanism",
+  "note": "same outer folds, added basis has six temporal components and an inner-selected shared ridge"
+}

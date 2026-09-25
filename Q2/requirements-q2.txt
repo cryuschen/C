@@ -1,2 +1,0 @@
--r ../requirements-v7.txt
-joblib>=1.3

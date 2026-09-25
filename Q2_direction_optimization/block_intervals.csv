@@ -1,5 +1,0 @@
-﻿dataset,BA_low,BA_high,method,n_boot
-A1,0.47017543859649125,0.60014423076923,fixed_OOF_time_block_bootstrap,2000
-A2,0.5374762808349146,0.6543160439851611,fixed_OOF_time_block_bootstrap,2000
-B1,0.44930875576036866,0.6015693112467306,fixed_OOF_time_block_bootstrap,2000
-B2,0.4246212121212121,0.6217948717948718,fixed_OOF_time_block_bootstrap,2000
