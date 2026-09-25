@@ -1,24 +1,24 @@
-# 第二问 V3 代码
+# 第二问：采用 Q1 结果的新模型
 
-本目录仅保留 V3 的原始数据审计、图像驱动机制留出检验、探索性增量对照和 ERP 判别代码。四份 MAT 位于项目根目录 `data/`；原题 DOCX 位于项目根目录。输出与报告统一位于 [`q2_result`](../q2_result/README.md)。
+当前主模型读取第一问 V7 结果包中的四组 `可复核波形.npz`，建立“视觉边缘对比→LGN 中继→V1 方向选择→皮层复发与情境更新→Fz/F3/F4”的固定级联模型，并导出可用于左右方向判别的 24 维头皮空间协方差特征。
 
-运行环境包含 `requirements.txt` 中的科学计算库。在项目根目录使用 `.venv/bin/python` 执行：
-
-```bash
-.venv/bin/python q2/audit_sequence.py
-.venv/bin/python q2/mechanism_v3_transfer.py --output /tmp/q2-mechanism-v3-new
-.venv/bin/python q2/mechanism_v3_incremental.py --base /tmp/q2-mechanism-v3-new --output /tmp/q2-incremental-v3-new
-.venv/bin/python q2/decoder_v3_erp.py --output /tmp/q2-decoder-v3-new --permutations 1999 --bootstraps 2000
-.venv/bin/python q2/decoder_v3_incremental_audit.py /tmp/q2-decoder-v3-new --bootstraps 5000
-```
-
-三个 `--output` 目标须为空。默认目标分别为 `q2_result/results/mechanism`、`mechanism_incremental` 和 `decoder`；复算已有结果时请先选新的输出目录，核对后再替换。为减少 CPU 线程竞争，可设置 `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1`。
-
-检查数据流：
+在项目根目录只需运行一个入口：
 
 ```bash
-.venv/bin/python -m unittest discover -s q2/tests -p 'test_q2_decoder_v3_erp.py' -v
-.venv/bin/python -c "import sys; sys.path.insert(0, 'q2/tests'); import test_q2_mechanism_v3_transfer as t; t.test_shape_driven_neural_basis_and_ridge_limit(); t.test_held_block_labels_do_not_change_its_predictions()"
+.venv/bin/python q2/main.py
 ```
 
-结果的统计含义与局限以[最终复核](../q2_result/docs/第二问V3完整复核与可提交结论.md)为准。
+结果统一写入 `q2_result/q1_model/`，不会再为每个计算步骤建立单独结果文件夹。主要报告是 [`q2_result/第二问_Q1数据级联机制与判别模型.md`](../q2_result/第二问_Q1数据级联机制与判别模型.md)。
+
+数据使用分为两个口径：
+
+- 机制拟合和已知左右条件 ERP 使用 Q1 的 `v7` 波形。
+- 未知方向判别使用同一 Q1 结果包中的 `before` 波形，即 Q1 的滤波、基线校正和坏试次筛选结果。Q1 V7 校正需要真实方向来选择条件模板，因此不能直接作为未知方向分类器的主输入。
+
+主入口默认使用 200 棵树和 199 次块内置换。重新运行时会覆盖 `q2_result/q1_model/` 中同名结果文件。原 V3 文件保留为历史复核材料，不再由 `q2/main.py` 调用。
+
+快速检查：
+
+```bash
+.venv/bin/python -m unittest discover -s q2/tests -v
+```

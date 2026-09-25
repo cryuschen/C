@@ -1,0 +1,21 @@
+{
+  "input": "Q1/eeg_v7_results auditable waveform bundles",
+  "input_sha256": {
+    "eeg_v7_results/受试者A_项目一/可复核波形.npz": "6fd29b15860a18c06f0e5b33fa6b6fae1a8ee6a46b9c6025c643355d579b7d93",
+    "eeg_v7_results/受试者A_项目二/可复核波形.npz": "87902ffc4f24e15d014d48958c95cc678387067e775f2de8cd8f4151d6416943",
+    "eeg_v7_results/受试者B_项目一/可复核波形.npz": "5c30c35445f39e7eb4b53d37e67ebc0960913dcef207754855da283f33c3a047",
+    "eeg_v7_results/受试者B_项目二/可复核波形.npz": "4bb36bc2f0462b5a731d5e3ce0082c3f647eaaf8f6dad33c5480f85f702dd030"
+  },
+  "mechanism_stage": "v7; known-condition descriptive and held-block fit",
+  "decoder_stage": "before; Q1 filtering, baseline and trial rejection without cue-aware V7 correction",
+  "decoder": "24 fixed scalp-mode covariance features + ExtraTrees",
+  "validation": "hold the same one of five chronological blocks out from every recording",
+  "n_trials": 371,
+  "trees": 200,
+  "permutations": 199,
+  "permutation_p": 0.05,
+  "observed_BA": 0.5453315881326353,
+  "v7_warning": "Q1 V7 uses the true cue to select a direction-specific reference; its decoder row is sensitivity analysis only.",
+  "development_warning": "The feature/model family was examined on these four recordings; validation is internal and exploratory.",
+  "script_sha256": "2a26b66f7d79f63b14905717e126d522985e5c7ab939fc76a14733655e9721b0"
+}
