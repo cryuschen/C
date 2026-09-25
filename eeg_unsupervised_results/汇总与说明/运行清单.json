@@ -1,0 +1,68 @@
+{
+  "inputs": {
+    "VisualCogA_Task-1.mat": "02a8167b243815c3d048763528641f002eeef3b3903a31ea130b1f4e0cfc6b33",
+    "VisualCogA_Task-2.mat": "c120ef16ed6bd1a2f1e86e0ab030c6306d08e555a71359cf455744a9904cb748",
+    "VisualCogB_Task-1.mat": "e6fb2684bddeed0f43e541a52928ce73c690a9b1f91e23a6404e0537f0ef0fc9",
+    "VisualCogB_Task-2.mat": "c58c998880682027119548029ba92240604b9ecf4138e6c4ea3efe4522212e9d"
+  },
+  "source": {
+    "EEG_P300_artifact_correction_unsupervised.py": "20770cefa2d11d05e5be2395e8422efdf95777e567c5ad0f507ba2c5008015b2"
+  },
+  "python": "3.14.4",
+  "numpy": "2.5.2",
+  "fold_seed": 42,
+  "test_seeds": [
+    2027,
+    2039,
+    2053
+  ],
+  "unit": "原始电位单位",
+  "V7_policy": {
+    "保守双分量": "训练均值保护",
+    "其他候选": "保守比例"
+  },
+  "fractions": {
+    "default_trial": 0.15,
+    "protected_trial": 0.25,
+    "protected_train_mean": 0.1
+  },
+  "csv_sha256": {
+    "半合成验证/多场景逐折配对验证.csv": "53cf6e9a0e9c81f1e004c5f1d70f05fb33d0548224165141ed6c4b9668901d64",
+    "半合成验证/按数据组和幅度汇总.csv": "0599280b429e00f72b64941fad96b2803f975e46ed77d80a3d77dd18cb36d855",
+    "受试者A_项目一/分方向样条拟合参数.csv": "f3bd29530f293848f295497e6dbeced410db63002b5d0492e137b92d034b4002",
+    "受试者A_项目一/固定示例试次编号.csv": "4a2db1ada791b50b55bcefdcb7fc5f6b3a947957abaa0f14f8ba4336a67f43da",
+    "受试者A_项目一/坏试次阈值敏感性.csv": "95eaa099649a4dc6db6c6c8da6ec0a3978f346b1399cf3d52dd33f3360eb5702",
+    "受试者A_项目一/完整事件与试次审计.csv": "3b027d8c442c4935e4faedb22833ce2b51fd73b341ca17c3299d05433371e19b",
+    "受试者A_项目一/试次重采样区间.csv": "0182e440983b50aa7f555c18855197ac4ce6205b04cf201271a218080744a1ed",
+    "受试者A_项目一/逐折训练参考评价清单.csv": "965f5c4e3662163d80f40ad3069236f6db74fad0749b3b5c8dc6823043d4862a",
+    "受试者A_项目一/逐方向逐通道评价指标.csv": "ea2f658397c36060cdb543285506d234dff0f3706f3642a06c64556a93430138",
+    "受试者A_项目二/分方向样条拟合参数.csv": "17703aad6692eca70041763a28088a6dbd0763fd5dcdc9df449a7d4ccad41e46",
+    "受试者A_项目二/固定示例试次编号.csv": "2cbb786befbdc2859f957ff4164b5375289a29383963adc68037829430dba4d1",
+    "受试者A_项目二/坏试次阈值敏感性.csv": "c72bb1588ec10e7e0585f9cc93acaecc94c79eacdf175a5a8ce222a5dadde2c5",
+    "受试者A_项目二/完整事件与试次审计.csv": "f7477b6ff8f58213a5ab012d554607fe50a913cfd3e1c0f0fce3689d20cc40bb",
+    "受试者A_项目二/试次重采样区间.csv": "c89045df1d36017612062280dd059f6b65e9ec517750ada50bed4498614f748b",
+    "受试者A_项目二/逐折训练参考评价清单.csv": "70f911fda46b3aeb3c424af1600fdb77fa4a65678804cb1b918d5d013f37cc6d",
+    "受试者A_项目二/逐方向逐通道评价指标.csv": "33775b10022c0a72d0825d0df8bebb785bcabfed19a9fa77fcfa8bbe57adfd2f",
+    "受试者B_项目一/分方向样条拟合参数.csv": "8c6c69f89353fedce932c0a2adecb3b4cd1baf6c3a9db1a946add5d69070d826",
+    "受试者B_项目一/固定示例试次编号.csv": "a1a60ac74c47fa2ed391aa9c201acb57651af8e8b5b2c80fab9979d55ddc5798",
+    "受试者B_项目一/坏试次阈值敏感性.csv": "65ba2f0a66ba81a873f6f7cf0873281ce095582b1981347e6ec68772c4788539",
+    "受试者B_项目一/完整事件与试次审计.csv": "4746ec96ba5801948c94050ec86d6c5efee40e7787d1223740a8a9d17758e523",
+    "受试者B_项目一/试次重采样区间.csv": "eea94702721b3eddca9d4b7c4fc05d55eadf8459366f9296601f68f7be512a30",
+    "受试者B_项目一/逐折训练参考评价清单.csv": "4a0ead2b9e09b06ab7d51c8ed2dea5eb21193e66d511008a205154bba89c683b",
+    "受试者B_项目一/逐方向逐通道评价指标.csv": "48ec4dfa485c3febab9d074f8f073be8f872efaede1b3c1608479786b6c79ba6",
+    "受试者B_项目二/分方向样条拟合参数.csv": "baf8cc0855d6bd879087a65b76fa8cdbde3651fc070a04bbc2553115894a3f4f",
+    "受试者B_项目二/固定示例试次编号.csv": "16e2a7022a9804c8b16ed26ab88c0a2ac5afe5430047b7792aab70e04507638b",
+    "受试者B_项目二/坏试次阈值敏感性.csv": "dca23cc916d051abe2ce1c198f9292b816ff1ef9ad63789760de302ca5d9445b",
+    "受试者B_项目二/完整事件与试次审计.csv": "62ca58b9713034375cd8796ce8da0ddc95a25d9722000c7621c0d5388c9c7314",
+    "受试者B_项目二/试次重采样区间.csv": "3f2726af2bb6a5b63939a4bb4f59ff72937bd7ab2eb3c61ac899debe3f6af6bb",
+    "受试者B_项目二/逐折训练参考评价清单.csv": "063af8aeac6e720ec5e3e87eeef5a39ffc2b171f387c2f4a211c3e2b0d521d59",
+    "受试者B_项目二/逐方向逐通道评价指标.csv": "748b3ee4af629fec0760bd27029942ac2d75c2280c23d1093be83b12d969bd1c",
+    "汇总与说明/分方向样条拟合参数汇总.csv": "fb4cfc3d4607b9dc245f24000f05ef2fffc3b89cf2701c19f068dc64abc064ba",
+    "汇总与说明/刺激前斜率与刺激后慢变化.csv": "da0c2888ad2db7b3e6fe3cafeefe9805538ed4c897e0f1462e1ae6358c2b58b6",
+    "汇总与说明/四组核心指标重采样区间.csv": "b7fcd88b501858b2d060b60dd9f75a9fae521c9c4cd859c433db5257f998f667",
+    "汇总与说明/左右刺激与额区空间差异指标.csv": "e7a4f0681ff675129afaafa3cc6993c1aee32d16d457060a617d56a2ce51458d",
+    "汇总与说明/左右差分前后时段稳定性.csv": "16b23401e6367c764486fb74bbec861c764bf6395e483f003f9a52a0d0ebb38d",
+    "汇总与说明/逐折V7策略与参考数量.csv": "b9e412dba38201577d7b9d27c2400f6e9c6a2c9e82b5ce07389d24a78b266fa6",
+    "汇总与说明/预处理与V7共同配对指标汇总.csv": "1e5199a2b54a5216157af2e9ce36745fd8742b2a0bf76cf21b17aecb1cc12b23"
+  }
+}

@@ -1,0 +1,17 @@
+﻿scenario,model,n,BA,AUC,recall_left,recall_right,balanced_logloss
+model_assumed,kernel_all9,100,1.0,1.0,1.0,1.0,8.836416227605898e-14
+model_assumed,kernel_lateral3,100,1.0,1.0,1.0,1.0,1.9376597913338015e-07
+model_assumed,nested_selected,100,1.0,1.0,1.0,1.0,8.836416227605898e-14
+model_assumed,window_all9,100,1.0,1.0,1.0,1.0,5.1270466493115964e-12
+eye_only_no_neural_direction,kernel_all9,100,1.0,1.0,1.0,1.0,5.1888809182115595e-12
+eye_only_no_neural_direction,kernel_lateral3,100,1.0,1.0,1.0,1.0,6.375362344367095e-11
+eye_only_no_neural_direction,nested_selected,100,1.0,1.0,1.0,1.0,4.9216208192057154e-11
+eye_only_no_neural_direction,window_all9,100,1.0,1.0,1.0,1.0,3.9758915418967485e-11
+background_drift,kernel_all9,100,1.0,1.0,1.0,1.0,1.125783950289902e-09
+background_drift,kernel_lateral3,100,1.0,1.0,1.0,1.0,1.9376597913338042e-07
+background_drift,nested_selected,100,1.0,1.0,1.0,1.0,1.125783950289902e-09
+background_drift,window_all9,100,1.0,1.0,1.0,1.0,4.661809573469147e-05
+time_parameter_drift,kernel_all9,100,1.0,1.0,1.0,1.0,1.3215898032090586e-13
+time_parameter_drift,kernel_lateral3,100,1.0,1.0,1.0,1.0,1.9844811841707604e-07
+time_parameter_drift,nested_selected,100,1.0,1.0,1.0,1.0,1.3215898032090586e-13
+time_parameter_drift,window_all9,100,1.0,1.0,1.0,1.0,4.364513297325169e-12

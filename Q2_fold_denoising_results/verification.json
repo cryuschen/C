@@ -1,0 +1,344 @@
+{
+  "status": "passed",
+  "folds": [
+    {
+      "dataset": "A1",
+      "branch": "baseline",
+      "fold": 0,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A1",
+      "branch": "denoised",
+      "fold": 0,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A1",
+      "branch": "baseline",
+      "fold": 1,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A1",
+      "branch": "denoised",
+      "fold": 1,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A1",
+      "branch": "baseline",
+      "fold": 2,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A1",
+      "branch": "denoised",
+      "fold": 2,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A1",
+      "branch": "baseline",
+      "fold": 3,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A1",
+      "branch": "denoised",
+      "fold": 3,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A1",
+      "branch": "baseline",
+      "fold": 4,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A1",
+      "branch": "denoised",
+      "fold": 4,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A2",
+      "branch": "baseline",
+      "fold": 0,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A2",
+      "branch": "denoised",
+      "fold": 0,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A2",
+      "branch": "baseline",
+      "fold": 1,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A2",
+      "branch": "denoised",
+      "fold": 1,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A2",
+      "branch": "baseline",
+      "fold": 2,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A2",
+      "branch": "denoised",
+      "fold": 2,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A2",
+      "branch": "baseline",
+      "fold": 3,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A2",
+      "branch": "denoised",
+      "fold": 3,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A2",
+      "branch": "baseline",
+      "fold": 4,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "A2",
+      "branch": "denoised",
+      "fold": 4,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B1",
+      "branch": "baseline",
+      "fold": 0,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B1",
+      "branch": "denoised",
+      "fold": 0,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B1",
+      "branch": "baseline",
+      "fold": 1,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B1",
+      "branch": "denoised",
+      "fold": 1,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B1",
+      "branch": "baseline",
+      "fold": 2,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B1",
+      "branch": "denoised",
+      "fold": 2,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B1",
+      "branch": "baseline",
+      "fold": 3,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B1",
+      "branch": "denoised",
+      "fold": 3,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B1",
+      "branch": "baseline",
+      "fold": 4,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B1",
+      "branch": "denoised",
+      "fold": 4,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B2",
+      "branch": "baseline",
+      "fold": 0,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B2",
+      "branch": "denoised",
+      "fold": 0,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B2",
+      "branch": "baseline",
+      "fold": 1,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B2",
+      "branch": "denoised",
+      "fold": 1,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B2",
+      "branch": "baseline",
+      "fold": 2,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B2",
+      "branch": "denoised",
+      "fold": 2,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B2",
+      "branch": "baseline",
+      "fold": 3,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B2",
+      "branch": "denoised",
+      "fold": 3,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B2",
+      "branch": "baseline",
+      "fold": 4,
+      "isolation": true,
+      "prediction_recomputed": true
+    },
+    {
+      "dataset": "B2",
+      "branch": "denoised",
+      "fold": 4,
+      "isolation": true,
+      "prediction_recomputed": true
+    }
+  ],
+  "fold_count": 40,
+  "source_and_output_hashes": true,
+  "same_test_trials": true,
+  "classification_recomputed": true,
+  "saved_model_probability_recomputed": true,
+  "reporting_source_sha256": "db77468689a9db7825104c3a6589d6641cd9b8f3bb9ecbfa902be46cb2e5ff99",
+  "visual_QA": {
+    "status": "passed",
+    "figures": [
+      "classification_comparison.png",
+      "waveform_and_features.png"
+    ],
+    "notes": "Both final images inspected: shared axes, paired intervals, no clipped points or legends covering data."
+  },
+  "baseline_regression": [
+    {
+      "dataset": "A1",
+      "same_trials": true,
+      "same_predictions": true,
+      "score_max_difference": 0.0
+    },
+    {
+      "dataset": "A2",
+      "same_trials": true,
+      "same_predictions": true,
+      "score_max_difference": 0.0
+    },
+    {
+      "dataset": "B1",
+      "same_trials": true,
+      "same_predictions": true,
+      "score_max_difference": 0.0
+    },
+    {
+      "dataset": "B2",
+      "same_trials": true,
+      "same_predictions": true,
+      "score_max_difference": 0.0
+    }
+  ],
+  "tests_passed": 19,
+  "test_breakdown": {
+    "new_pipeline": 6,
+    "q1": 5,
+    "q2_core": 8
+  },
+  "report_output_hashes": {
+    "waveform_and_features.png": "15050f4263bcf2e5064a900a3951afa764646c33b9e4f317d80d2cf1545ebc0f",
+    "classification_comparison.png": "b4c04c7c1e17c0df30f5b96b552a0f7fb81a95a09b8c62a8395b56021ce4d60e",
+    "第二问去噪对照报告.md": "429f0af5a427a24fdffe0df14c66303536553972dcbdf7fda849aa9a6f173190",
+    "waveform_and_features.pdf": "09875a7cf102020f6ec193b4df4a44947338bb58eeec68da93812ccddf73e82e",
+    "classification_comparison.pdf": "89f280bdaa60fb8bb5dfde308e5263327580d73e3c0f91775440dd8f27b4518e"
+  },
+  "test_log_hashes": {
+    "new_pipeline_tests.txt": "dcdf1e8c97dd74fd7a584c4f66cc78d3373341a6c345b2b9723692b0bbfc4580",
+    "q1_regression_tests.txt": "4501e70f8d7b0de8de732204cb44f9beca2bae79d5bd79c5114b1c4509afe006",
+    "q2_regression_tests.txt": "428098efd9bc22d62d674ee263def1f44ad9c6e347a4e2664d7218772611d922",
+    "run_log.txt": "80eea4f8ab7691f19b46b9e5c6420d36dbee1e190ce8b358edfadc004b06b326"
+  }
+}

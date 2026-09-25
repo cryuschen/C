@@ -21,6 +21,10 @@ def classify(train_features,y,test_features):
     p=lda.predict_proba(scaler.transform(test_features))[:,list(lda.classes_).index(1)]
     return np.where(p>=.5,1,-1),p,scaler,lda
 
+from sklearn.svm import SVC
+def classify_svm(train_features,y,test_features):
+    return classify(train_features,y,test_features)
+
 
 def metrics(y,pred,score):
     cm=confusion_matrix(y,pred,labels=[-1,1]);den=cm.sum(1)
@@ -51,6 +55,14 @@ def evaluate_split(tr,te,quick=False,extras=True,tau_g=20.):
     ft=f.features(tr.x);fe=f.features(te.x)
     pred,score,scaler,lda=classify(ft,tr.y,fe)
     predictions={'mechanism_selected':(pred,score)}
+    
+    # NEW: SVM with concatenated features
+    tf=extra_features(tr);vf=extra_features(te)
+    ft_concat = np.concatenate([ft, tf['window_mean_9']], axis=1)
+    fe_concat = np.concatenate([fe, vf['window_mean_9']], axis=1)
+    pred_svm, score_svm, _, _ = classify_svm(ft_concat, tr.y, fe_concat)
+    predictions['mechanism_svm_fused'] = (pred_svm, score_svm)
+    
     fit_models={'M1':f}
     obs=means(te.x,te.y)
     templates=means(tr.x,tr.y)

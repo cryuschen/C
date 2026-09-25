@@ -1,0 +1,11 @@
+test_adapter_matches_new_q1_and_batch_independence (test_q2_fold_denoising.FoldDenoisingTests.test_adapter_matches_new_q1_and_batch_independence) ... ok
+test_all_nested_reference_ids_are_training_only (test_q2_fold_denoising.FoldDenoisingTests.test_all_nested_reference_ids_are_training_only) ... ok
+test_baseline_matches_existing_nested_selection (test_q2_fold_denoising.FoldDenoisingTests.test_baseline_matches_existing_nested_selection) ... ok
+test_identical_methods_have_zero_paired_difference (test_q2_fold_denoising.FoldDenoisingTests.test_identical_methods_have_zero_paired_difference) ... ok
+test_test_eeg_cannot_change_training_or_inner_preprocessing (test_q2_fold_denoising.FoldDenoisingTests.test_test_eeg_cannot_change_training_or_inner_preprocessing) ... ok
+test_test_labels_do_not_affect_full_predictions (test_q2_fold_denoising.FoldDenoisingTests.test_test_labels_do_not_affect_full_predictions) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 4.709s
+
+OK

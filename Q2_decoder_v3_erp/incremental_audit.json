@@ -1,0 +1,15 @@
+{
+  "observed_delta_BA": 0.007407407407407418,
+  "paired_block_bootstrap_95pct": [
+    -0.0676692047965267,
+    0.08349063401171343
+  ],
+  "one_sided_unconditional_permutation_p": 0.469,
+  "bootstraps": 5000,
+  "permutations": 1999,
+  "note": "Permutation difference tests no cue association, not the full conditional independence null; post_given_past is linearly residualized on strict past EEG.",
+  "input_sha256": {
+    "oof_predictions.csv": "057315325e375a1377877d4aea4b502dbe6701fd39922fb95bba1a9ab81a84a6",
+    "permutation_null.csv": "109909724064c73bb6563fc99ad8a7ec2ce0fbc534ac50e3d67150beb920cb33"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "status": "complete",
+  "source_sha256": "3ced6df16a911209c9f867ed3190d6685311b27afb7a59ac973ed53f1c5f7cbe",
+  "inputs_verified": true,
+  "metrics_recomputed": true,
+  "permutation_p_recomputed": true,
+  "holm_recomputed": true,
+  "synthetic_truth_source": "Q2_result/synthetic/ground_truth.npz",
+  "visual_review": "complete_opened_both_final_pngs",
+  "visual_review_details": {
+    "01_forward_heldout.png": "Opened final image; four panels, five gray block curves, average curves, axes and legend are readable.",
+    "02_feature_decoding.png": "Opened final image; four panels, bars, 50 percent reference line, p values and labels are readable."
+  },
+  "reviewed_figure_sha256": {
+    "01_forward_heldout.png": "965b4af0349157375a262115dde49117f56596f7550cccc8571e48e5c1d58bf5",
+    "02_feature_decoding.png": "f9d79a54972ca111da4fe56ef8a61cd3777aed3cd583534777d904a313d62a3d"
+  },
+  "feature_rows": 275,
+  "new_behavior_tests": "4 passed"
+}

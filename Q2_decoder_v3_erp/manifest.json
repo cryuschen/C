@@ -1,0 +1,34 @@
+{
+  "inputs": {
+    "data/VisualCogA_Task-1.mat": "02a8167b243815c3d048763528641f002eeef3b3903a31ea130b1f4e0cfc6b33",
+    "data/VisualCogA_Task-2.mat": "c120ef16ed6bd1a2f1e86e0ab030c6306d08e555a71359cf455744a9904cb748",
+    "data/VisualCogB_Task-1.mat": "e6fb2684bddeed0f43e541a52928ce73c690a9b1f91e23a6404e0537f0ef0fc9",
+    "data/VisualCogB_Task-2.mat": "c58c998880682027119548029ba92240604b9ecf4138e6c4ea3efe4522212e9d"
+  },
+  "script_sha256": "48182f3c5030e3ba35ab3fa46eeb9252eff5128ccf645e66aed2e7656326cc77",
+  "data_source": "raw Fz/F3/F4 only; q2model.data.independent_data, guard 24 seconds",
+  "feature": "orthonormal DCT coefficients 0-5 of 3 fixed scalp modes",
+  "post_window_ms": [
+    50,
+    750
+  ],
+  "past_window_ms": [
+    -250,
+    0
+  ],
+  "past_only": "independently filtered data ending before VisCue onset",
+  "models": [
+    "past_only",
+    "post_erp",
+    "post_given_past"
+  ],
+  "shrinkage": 0.8,
+  "nuisance_ridge_penalty": "n_training_trials times identity",
+  "validation": "each recording leave 1 of 5 contiguous time blocks out",
+  "permutations": 1999,
+  "permutation_seed": 2026092511,
+  "bootstrap_unit": "contiguous time block within recording",
+  "bootstraps": 2000,
+  "pooled_residual_minus_past_BA": 0.007407407407407418,
+  "limitation": "same four MAT previously inspected; internal exploratory evidence only; linear past residualization does not exclude nonlinear confounds or eye movements"
+}
