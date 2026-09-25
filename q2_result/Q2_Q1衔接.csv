@@ -1,0 +1,9 @@
+﻿dataset,stage,n,strict_n,overlap_n,role
+A1,before,90,67,67,descriptive_only
+A1,v7,90,67,67,descriptive_only
+A2,before,95,70,70,descriptive_only
+A2,v7,95,70,70,descriptive_only
+B1,before,94,69,69,descriptive_only
+B1,v7,94,69,69,descriptive_only
+B2,before,92,69,69,descriptive_only
+B2,v7,92,69,69,descriptive_only

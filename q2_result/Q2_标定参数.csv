@@ -1,0 +1,5 @@
+﻿dataset,scale,recurrence,ridge,role
+A1,1.0,0.0,30.0,descriptive_all_data
+A2,1.25,0.2,0.1,descriptive_all_data
+B1,0.75,0.2,100.0,descriptive_all_data
+B2,1.25,0.2,0.1,descriptive_all_data

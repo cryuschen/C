@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-"""Single entry point for the Q2 model based on Q1 outputs."""
+"""Reproducible Q2 evidence pipeline; all outputs go to an existing directory."""
 
-from q1_cortical_model import main
+import sys
+sys.dont_write_bytecode = True
+
+from q2_pipeline import main
 
 
 if __name__ == "__main__":
