@@ -6,8 +6,8 @@ V7 分别分析项目一、项目二的 Fz/F3/F4 原始通道，采用固定预�
 
 ```bash
 cd /home/cryus/code-project/C
-/home/cryus/code-project/ML/.venv/bin/python EEG_P300_artifact_correction_v7.py --output eeg_v7_results
-/home/cryus/code-project/ML/.venv/bin/python -m unittest discover -s tests -v
+/home/cryus/code-project/C/.venv/bin/python EEG_P300_artifact_correction_v7.py --output eeg_v7_results
+/home/cryus/code-project/C/.venv/bin/python -m unittest discover -s tests -v
 ```
 
 其他环境使用 Python 3.11+ 并安装 `requirements-v7.txt`。只重算数值可使用 `--no-plots --output /tmp/eeg-v7-recheck`。主要复核文件是每组的 `可复核波形.npz`、`完整事件与试次审计.csv`、`逐折训练参考评价清单.csv`，以及汇总目录的 `运行清单.json`。指标公式与解释见 [指标字典_V7.md](指标字典_V7.md)。

@@ -39,9 +39,9 @@ BA 为平衡准确率；AUC 基于连续判别分数。`p_family` 对合并的�
 运行命令：
 
 ```bash
-MPLCONFIGDIR=/tmp/q2_decoder_v3_mpl OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 /home/cryus/code-project/ML/.venv/bin/python q2/decoder_v3_erp.py --output /tmp/q2_decoder_v3_repro --permutations 1999 --bootstraps 2000
-OPENBLAS_NUM_THREADS=1 /home/cryus/code-project/ML/.venv/bin/python q2/decoder_v3_incremental_audit.py /tmp/q2_decoder_v3_repro --bootstraps 5000
-/home/cryus/code-project/ML/.venv/bin/python -m unittest q2/tests/test_q2_decoder_v3_erp.py -v
+MPLCONFIGDIR=/tmp/q2_decoder_v3_mpl OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 /home/cryus/code-project/C/.venv/bin/python q2/decoder_v3_erp.py --output /tmp/q2_decoder_v3_repro --permutations 1999 --bootstraps 2000
+OPENBLAS_NUM_THREADS=1 /home/cryus/code-project/C/.venv/bin/python q2/decoder_v3_incremental_audit.py /tmp/q2_decoder_v3_repro --bootstraps 5000
+/home/cryus/code-project/C/.venv/bin/python -m unittest q2/tests/test_q2_decoder_v3_erp.py -v
 ```
 
 `--output` 必须是空目录或新目录；上述参数配置的完整流程已成功结束，四项数据流测试通过。

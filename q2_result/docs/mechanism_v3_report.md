@@ -40,7 +40,7 @@ V3 提供了题意所需的**可运行生成路径**和训练块到留出块的�
 在项目根目录执行：
 
 ```bash
-OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MPLCONFIGDIR=/tmp/q2-mechanism-v3-mpl /home/cryus/code-project/ML/.venv/bin/python q2/mechanism_v3_transfer.py --output /tmp/q2-mechanism-v3-repro
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MPLCONFIGDIR=/tmp/q2-mechanism-v3-mpl /home/cryus/code-project/C/.venv/bin/python q2/mechanism_v3_transfer.py --output /tmp/q2-mechanism-v3-repro
 ```
 
 输出目录必须为空。源码：[主程序](../../q2/mechanism_v3_transfer.py)；输入与源码校验见 [manifest](../results/mechanism/manifest.json)。验证执行了 60 个外层模型折的训练／测试编号不相交检查、逐组 `S_Δ` 从逐折误差重算、脚本语法检查，以及“翻转一个外层测试块的标签，预测波形和所选超参数完全不变”的检查，均通过。测试代码见 `q2/tests/test_q2_mechanism_v3_transfer.py`；当前科学运行环境没有 `pytest`，该文件内两个测试函数已由同一 Python 环境直接调用并通过。
