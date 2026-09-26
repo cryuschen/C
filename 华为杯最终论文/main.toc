@@ -1,0 +1,78 @@
+\contentsline {section}{\numberline {一、}问题重述}{1}{section.1}%
+\contentsline {subsection}{\numberline {1.1}研究背景}{1}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}问题重述}{2}{subsection.1.2}%
+\contentsline {section}{\numberline {二、}问题分析}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}问题一的分析}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}问题二的分析}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}问题三的分析}{4}{subsection.2.3}%
+\contentsline {section}{\numberline {三、}模型假设与符号说明}{5}{section.3}%
+\contentsline {subsection}{\numberline {3.1}模型假设}{5}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}符号说明}{5}{subsection.3.2}%
+\contentsline {section}{\numberline {四、}模型建立与求解}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}问题一模型的建立与求解}{6}{subsection.4.1}%
+\contentsline {subsubsection}{\numberline {4.1.1}数据预处理}{6}{subsubsection.4.1.1}%
+\contentsline {paragraph}{（1）数据通道与事件审计}{6}{paragraph*.2}%
+\contentsline {paragraph}{（2）连续信号保相滤波与基线校正}{7}{paragraph*.4}%
+\contentsline {paragraph}{（3）严重坏试次筛查}{7}{paragraph*.5}%
+\contentsline {subsubsection}{\numberline {4.1.2}评价指标}{7}{subsubsection.4.1.2}%
+\contentsline {paragraph}{（1）代理参考误差与信噪比代理量}{7}{paragraph*.7}%
+\contentsline {paragraph}{（2）视觉条件差异保留指标}{8}{paragraph*.8}%
+\contentsline {paragraph}{（3）已知目标恢复误差与曲线拟合误差}{8}{paragraph*.9}%
+\contentsline {paragraph}{（4）不确定性估计与指标解释}{8}{paragraph*.10}%
+\contentsline {subsubsection}{\numberline {4.1.3}问题求解与模型建立}{9}{subsubsection.4.1.3}%
+\contentsline {paragraph}{（1）五折外层划分与训练代理模板}{9}{paragraph*.13}%
+\contentsline {paragraph}{（2）垂直--水平双分量与软门控}{10}{paragraph*.14}%
+\contentsline {paragraph}{（3）带边界约束的岭回归校正}{10}{paragraph*.15}%
+\contentsline {paragraph}{（4）训练内候选选择与均值保护}{10}{paragraph*.16}%
+\contentsline {paragraph}{（5）条件 ERP 提取与三次 B 样条拟合}{11}{paragraph*.17}%
+\contentsline {paragraph}{（6）求解结果与稳健性检验}{11}{paragraph*.19}%
+\contentsline {subsection}{\numberline {4.2}问题二模型的建立与求解}{13}{subsection.4.2}%
+\contentsline {subsubsection}{\numberline {4.2.1}建模思路}{13}{subsubsection.4.2.1}%
+\contentsline {paragraph}{（1）数据口径与预处理}{13}{paragraph*.22}%
+\contentsline {paragraph}{（2）总体技术路线}{14}{paragraph*.24}%
+\contentsline {subsubsection}{\numberline {4.2.2}分层兴奋--抑制神经动力学模型的建立}{15}{subsubsection.4.2.2}%
+\contentsline {paragraph}{（1）视觉形状的空间边缘组合编码}{15}{paragraph*.26}%
+\contentsline {paragraph}{（2）LGN 中继与三级 E/I 神经群}{15}{paragraph*.27}%
+\contentsline {paragraph}{（3）突触等效源与头皮观测}{16}{paragraph*.29}%
+\contentsline {paragraph}{（4）参数选择与数值求解}{17}{paragraph*.30}%
+\contentsline {subsubsection}{\numberline {4.2.3}脑电信号差异的模型解释}{18}{subsubsection.4.2.3}%
+\contentsline {paragraph}{（1）左右差异的形成路径}{18}{paragraph*.33}%
+\contentsline {paragraph}{（2）独立留出差异波结果}{18}{paragraph*.34}%
+\contentsline {paragraph}{（3）额区空间侧化的解释}{19}{paragraph*.37}%
+\contentsline {paragraph}{（4）消融与敏感性分析}{20}{paragraph*.39}%
+\contentsline {paragraph}{（5）模型解释的证据边界}{21}{paragraph*.41}%
+\contentsline {subsubsection}{\numberline {4.2.4}视觉刺激响应的特征表示}{21}{subsubsection.4.2.4}%
+\contentsline {paragraph}{（1）二十三维机制增强特征}{21}{paragraph*.42}%
+\contentsline {paragraph}{（2）判别器与评价指标}{22}{paragraph*.44}%
+\contentsline {paragraph}{（3）留出判别结果}{22}{paragraph*.45}%
+\contentsline {paragraph}{（4）特征表示的使用结论}{23}{paragraph*.48}%
+\contentsline {subsection}{\numberline {4.3}问题三模型的建立与求解}{23}{subsection.4.3}%
+\contentsline {subsubsection}{\numberline {4.3.1}建模思路}{24}{subsubsection.4.3.1}%
+\contentsline {paragraph}{（1）从事件证据到认知状态的分层建模}{24}{paragraph*.49}%
+\contentsline {paragraph}{（2）数据隔离与模型求解原则}{24}{paragraph*.51}%
+\contentsline {paragraph}{（3）候选模型与对照体系}{24}{paragraph*.52}%
+\contentsline {paragraph}{（4）可观测性与因果边界}{25}{paragraph*.54}%
+\contentsline {subsubsection}{\numberline {4.3.2}视觉认知相关信号的截取}{25}{subsubsection.4.3.2}%
+\contentsline {paragraph}{（1）提示、目标与应答标记审计}{25}{paragraph*.55}%
+\contentsline {paragraph}{（2）应答前变长观察窗}{25}{paragraph*.57}%
+\contentsline {paragraph}{（3）因果预处理与质量控制}{26}{paragraph*.60}%
+\contentsline {subsubsection}{\numberline {4.3.3}视觉--记忆--认知宏观模型与脑电差异解释}{26}{subsubsection.4.3.3}%
+\contentsline {paragraph}{（1）提示与目标的视觉驱动构造}{26}{paragraph*.62}%
+\contentsline {paragraph}{（2）提示保持与目标触发提取}{26}{paragraph*.64}%
+\contentsline {paragraph}{（3）状态离散化与因果更新}{27}{paragraph*.67}%
+\contentsline {paragraph}{（4）头皮观测映射与参数估计}{27}{paragraph*.68}%
+\contentsline {paragraph}{（5）认知状态对脑电差异的解释}{28}{paragraph*.72}%
+\contentsline {subsubsection}{\numberline {4.3.4}认知状态驱动的三类应答模型}{29}{subsubsection.4.3.4}%
+\contentsline {paragraph}{（1）认知证据与目标匹配}{29}{paragraph*.74}%
+\contentsline {paragraph}{（2）正确、错误与未决结局的统一判定}{30}{paragraph*.78}%
+\contentsline {paragraph}{（3）机制扰动与三类决策仿真}{30}{paragraph*.81}%
+\contentsline {subsubsection}{\numberline {4.3.5}模型求解结果与验证}{31}{subsubsection.4.3.5}%
+\contentsline {paragraph}{（1）连续时间块外层留出验证}{31}{paragraph*.84}%
+\contentsline {paragraph}{（2）观察窗与点击时间敏感性}{32}{paragraph*.88}%
+\contentsline {paragraph}{（3）消融、参数恢复与数值审计}{32}{paragraph*.90}%
+\contentsline {section}{\numberline {五、}模型优缺点评价}{33}{section.5}%
+\contentsline {subsection}{\numberline {5.1}问题一模型评价}{33}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}问题二模型评价}{33}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}问题三模型评价}{33}{subsection.5.3}%
+\contentsline {section}{参考文献}{34}{section*.91}%
+\contentsline {section}{附录}{35}{section*.91}%

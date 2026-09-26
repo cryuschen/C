@@ -17,6 +17,7 @@
 \usepackage{graphicx}   % 插图支持
 \usepackage{float}      % 提供强固定浮动位置 [H]
 \usepackage{amsmath,amsfonts,amsthm} % 数学公式
+\numberwithin{figure}{section}       % 图按章节编号，如图 4.1
 \usepackage{cite}           % 文献引用
 \usepackage{bm}             % 数学矢量粗体
 \usepackage{mathrsfs}
@@ -59,6 +60,28 @@
 \pagestyle{fancy}
 \fancyhf{}
 \CTEXsetup[name={,、}, number={\chinese{section}}]{section}
+\newfontfamily\headinglatinfont{TeX Gyre Termes}
+\ctexset{
+    subsection = {
+        format = \large\headinglatinfont\heiti\bfseries,
+        numberformat = \headinglatinfont\bfseries,
+        titleformat = \headinglatinfont\bfseries
+    },
+    subsubsection = {
+        format = \large\headinglatinfont\heiti\bfseries,
+        numberformat = \headinglatinfont\bfseries,
+        titleformat = \headinglatinfont\bfseries
+    },
+    paragraph = {
+        format = \large\headinglatinfont\heiti\bfseries,
+        numberformat = \headinglatinfont\bfseries,
+        titleformat = \headinglatinfont\bfseries,
+        runin = false,
+        afterindent = true,
+        beforeskip = 1.0ex plus 0.2ex minus 0.2ex,
+        afterskip = 0.4ex
+    }
+}
 
 \cfoot{第 \thepage 页(共\pageref{LastPage}页)}
 
@@ -104,7 +127,7 @@
 %% 模块 2：问题重述中关于问题一的部分
 %% -----------------------------------------------------------------------------
 \section{问题重述}
-\subsection{研究背景与科学价值}
+\subsection{研究背景}
 大脑是自然界中最复杂的器官之一，其活动可以通过多种神经影像方法进行记录和观测。在这些方法中，皮层脑电图（ECoG）和脑电图（EEG）分别代表了侵入性和非侵入性技术的典型。尽管侵入性技术具有信号分辨率高的优势，但其伴随的手术风险以及记录信号随时间逐渐退化的缺陷，限制了其广泛应用。相比之下，非侵入性脑电图技术因其安全性高、操作便捷等特点，在探索人类大脑活动方面展现出更为广阔的应用前景。
 
 脑电图的应用范围涵盖从基础神经科学研究到临床医学的多个领域。脑电图驱动的计算模型作为连接基础神经科学研究与神经临床应用的核心桥梁，能够为科研人员与临床工作者提供可在虚拟环境中验证假说的高效平台，精准预测现实中难以直接实施的复杂实验与神经交互结果，其目标是生成可与真实实验数据进行对比的变量时间序列。当前，精神和神经系统疾病影响着越来越多的人群，带来了巨大的经济和人道主义负担。影响患者诊疗的主要障碍之一，是缺乏个体化的诊断、预后评估和治疗方案；另一个障碍则在于对精神性疾病机制——包括治疗方法起效的具体机制——普遍认知不足。根据个体可用数据调整模型参数，脑电图计算模型可实现个性化适配，为精准医疗提供可能。例如，深部脑刺激（DBS）是治疗晚期帕金森病的高效手段，但目前尚不完全清楚这种刺激如何精确抑制震颤等运动症状，而脑电图计算模型有望为此提供解释。
@@ -274,544 +297,1130 @@
 %% -----------------------------------------------------------------------------
 \newpage
 \section{模型建立与求解}
-\subsection{问题一模型的建立与求解：面向视物特征保护的特定降噪与响应拟合}
-在视觉诱发认知实验中，由于仅在前额极附近的 $F_3$、$F_z$、$F_4$ 三点记录脑电，信号不仅极其微弱，而且深度混叠了眼动（瞬目与扫视）、微小肌电及肌体漂移。针对赛题指出的“现有去噪方法破坏反映视物特征”的核心痛点，本节建立了一套基于外折训练选型、双分量软门控岭回归与训练均值保护的特定自适应伪影校正模型（命名为 V7 方案），配合严格的离线质量控制与非线性三次样条拟合，在滤除伪影的同时最大化保留了左右视物刺激诱发特征。
-\subsubsection{原始数据审计、缺陷机理分析与质量筛查规则}
-\paragraph{1. 仪器自带滤波（通道 4--6）的缺陷机理分析}
-通过对提供的通道 4--6（\texttt{FzDecon}、\texttt{F3Decon}、\texttt{F4Decon}）与原始通道 1--3 对比分析发现：仪器自带滤波算法为追求强平滑度，采用了过于激进的时域滑动滤波与高通截断。其幅频特性将 $<1\,\text{Hz}$ 的能量过度衰减，导致 $250\sim 500\,\text{ms}$ 区间内宽缓的 P300 正向成分被削顶，且左右方向刺激的差分波形能量衰减超过 $70\%$，彻底丧失了辨识视物特征的能力。因此，建模必须完全基于原始通道 1--3 开展。
-为了直观呈现这一破坏机理，如图4所示，给出了受试者 A 项目一在单试次（原始试次 \#16）下的三通道波形对比。从图4中可以清晰地观察到：原始记录（Raw，灰色虚线）在基线上伴随明显的缓慢漂移与高频颤噪；设备滤波（Decon，橙色虚线）虽然波形平滑，但几乎将信号的低频直流偏置与缓变趋势全部强制归零，导致 $250\sim 500\,\text{ms}$ 任务关键时窗内的响应特征完全失真；而本文提出的 V7 算法（青色实线）不仅有效滤除了无规则高频毛刺，同时精准保留了原本的神经电位演变态势，为后续特征提取奠定了生理真实性基础。
+\subsection{问题一模型的建立与求解}
+\renewcommand{\theequation}{1-\arabic{equation}}
+\renewcommand{\theHequation}{q1.\arabic{equation}}
+\setcounter{equation}{0}
+
+为解决原始额区脑电中视觉响应微弱、瞬目与扫视伪影幅值较大且常规强滤波容易改变条件波形的问题，本文建立特征保护型残差双分量自适应校正模型。模型以原始 $F_z$、$F_3$、$F_4$ 三通道及视觉提示事件为输入，依次完成连续信号保相滤波、坏试次筛查、折外代理模板构建、双分量伪影估计、保守校正、条件事件相关电位提取与三次 B 样条拟合，最终输出两个实验项目在三个观测点的左右刺激响应曲线。设备自带处理通道仅用于可视化对照，不参与建模与评价。
+
+\subsubsection{数据预处理}
+
+\paragraph{（1）数据通道与事件审计}
+
+题目给出受试者 A、B 在项目一和项目二下的四组数据，采样率均为 $f_s=256\,\mathrm{Hz}$。本文只读取原始通道 $F_z$、$F_3$、$F_4$ 和视觉提示通道 \texttt{VisCue}；其中 \texttt{VisCue} 从 $0$ 跳变为 $-1$ 或 $+1$ 的时刻分别记为左、右三角形提示起点。以提示起点 $t_i$ 为零时刻，截取区间 $[-250,796.875]~\mathrm{ms}$，并将 $250$--$500~\mathrm{ms}$ 作为题目给定的主要视觉响应分析窗。由于数据未提供可信的物理标定信息，全文幅值均记为“原始电位单位”，不擅自换算为 $\mu\mathrm{V}$。
+
+设备自带的 \texttt{FzDecon}、\texttt{F3Decon}、\texttt{F4Decon} 已改变原始波形的低频趋势，不能作为无噪声真值。图~\ref{fig:q1_preprocess_waveform} 给出同一试次三通道原始记录、设备处理结果与本文预处理及校正结果的对照。可以看出，设备处理曲线与原始曲线存在明显形态差异，因此后续方法完全从原始三通道重新计算。
+
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.92\textwidth]{图4.png}
-\caption*{图4 同一试次的三通道 Raw / 设备 Decon / V7 波形}
-\label{fig:4}
+    \centering
+    \includegraphics[width=0.94\textwidth]{q1_waveform.png}
+    \caption{同一试次三通道原始记录、设备处理与本文处理结果对比}
+    \label{fig:q1_preprocess_waveform}
 \end{figure}
-\paragraph{2. 固定连续预处理流程}
-设原始三通道连续采样信号为 $\mathbf{X}_{\text{raw}}(t) = [x_{F_z}(t), x_{F_3}(t), x_{F_4}(t)]^T$。连续预处理严格限制为物理保真操作：
-\begin{enumerate}
-    \item[(1)] \textbf{工频陷波滤波}：采用二阶 IIR 陷波滤波器滤除 $60\,\text{Hz}$ 及其谐波干扰。
-    \item[(2)] \textbf{零相位宽带带通滤波}：采用四阶双向 Butterworth 滤波器进行 $0.1\sim 30\,\text{Hz}$ 带通滤波，相频响应恒为零，避免波形产生人工相移。
-    \item[(3)] \textbf{分段与基线校正}：根据通道 8（\texttt{VisCue}）的触发时刻 $t_0$，截取单试次时窗 $[-250\,\text{ms}, 796.875\,\text{ms}]$（共 268 个采样点，采样率 $f_s = 256\,\text{Hz}$）。基线校正采用刺激前 $[-250\,\text{ms}, 0\,\text{ms}]$ 时段各导联的逐点中位数进行平移归零：
-    \begin{equation}
-        x_{c}^{\text{base}}(t) = x_{c}(t) - \mathop{\text{median}}_{t \in [-250, 0]} \{ x_{c}(t) \}, \quad c \in \{F_z, F_3, F_4\}
-    \end{equation}
-\end{enumerate}
-幅值单位严格忠于实验设备记录，定义为“原始电位单位”，不主观推断微伏量纲。
-\paragraph{3. 严重坏试次自适应筛查准则}
-为了防止仪器通道瞬时断路、电极脱落等极端异常破坏统计稳定性，基于工程经验与数据分布设定三项客观硬剔除门限：
-\begin{enumerate}
-    \item[(1)] \textbf{物理饱和判定}：单试次内任一通道绝对幅值 $|x_c(t)| \ge 999$ 的点数累计 $\ge 15$ 点；
-    \item[(2)] \textbf{极端峰峰值判定}：滤波后单试次全时窗峰峰值 $\text{PTP} = \max(x_c) - \min(x_c) > 1800$；
-    \item[(3)] \textbf{非生理跳变判定}：相邻采样点间一阶差分绝对值 $|\Delta x_c(t)| = |x_c(t) - x_c(t-1)| > 600$。
-\end{enumerate}
-对全部四组实验数据进行审计，坏试次剔除与样本对账情况如表 \ref{tab:trial_audit} 所示。所有被剔除试次被永久移出后续建模、ERP 计算及指标评估。
-\begin{table}[H]
-\centering
-\caption{预处理基线与本文 V7 模型核心指标详细对比表}
-\label{tab:trial_audit}
-% 核心命令：\resizebox{\textwidth}{!}{ 整个表格 }
-\resizebox{\textwidth}{!}{%
-    \begin{tabular}{llccccccc}
-    \toprule
-    \textbf{数据集} & \textbf{算法阶段} & \textbf{代理MAE} & \textbf{相对相关性} & \textbf{SNR (dB)} & \textbf{基线RMS} & \textbf{试次PTP} & \textbf{P300幅值误差} & \textbf{AUC误差(单位·ms)} \\
-    \midrule
-    受试者A\_项目一 & 预处理基线 & 19.669 & 0.666 & -14.217 & 14.123 & 104.415 & 7.476 & 1874.74 \\
-                   & \textbf{本文V7} & \textbf{17.701} & \textbf{0.675} & \textbf{-13.999} & \textbf{13.463} & \textbf{100.152} & \textbf{6.808} & \textbf{1707.70} \\
-    \midrule
-    受试者A\_项目二 & 预处理基线 & 47.603 & 0.601 & -9.352 & 21.261 & 254.680 & 46.686 & 11675.02 \\
-                   & \textbf{本文V7} & \textbf{43.684} & \textbf{0.607} & \textbf{-9.326} & \textbf{20.578} & \textbf{249.605} & \textbf{42.767} & \textbf{10695.68} \\
-    \midrule
-    受试者B\_项目一 & 预处理基线 & 14.973 & 0.595 & -22.666 & 20.425 & 158.636 & 11.667 & 2920.38 \\
-                   & \textbf{本文V7} & \textbf{14.158} & \textbf{0.602} & \textbf{-22.563} & \textbf{19.660} & \textbf{158.429} & \textbf{11.218} & \textbf{2807.87} \\
-    \midrule
-    受试者B\_项目二 & 预处理基线 & 39.316 & -0.139 & -13.081 & 26.976 & 272.288 & 32.872 & 8198.02 \\
-                   & \textbf{本文V7} & \textbf{35.455} & \textbf{-0.086} & \textbf{-12.600} & \textbf{25.557} & \textbf{267.324} & \textbf{29.013} & \textbf{7233.94} \\
-    \bottomrule
-    \end{tabular}%
-}
-\end{table}
-\subsubsection{基于折外训练选型与训练均值保护的自适应特定去噪模型}
-为了解决前额脑电中“去伪影”与“保神经特征”的零和博弈问题，本文提出基于五折外层分层交叉验证的特定自适应校正架构，确保测试试次绝不参与自身参数估计。该模型遵循从残差提取、伪影子空间构建到均值保护修正的严密数理闭环，具体建模与求解步骤如下。
-\paragraph{1. 代理参考模板与单试次残差提取}
-对于第 $k$ 个交叉验证折，令其训练集有效试次索引集为 $\Omega_{\text{train}}^{(k)}$。按刺激方向 $y \in \{-1, +1\}$ 分组，选取该方向下能量最低（低伪影）的前 $50\%$ 试次，计算各通道的逐点中位数，构造稳健的事件相关代理模板 $\mathbf{T}_{c, y}(t)$：
+
+\paragraph{（2）连续信号保相滤波与基线校正}
+
+首先对连续信号施加中心频率为 $60\,\mathrm{Hz}$、品质因数 $Q=30$ 的二阶 IIR 陷波器，以削弱工频干扰；随后采用 $0.1$--$30\,\mathrm{Hz}$ 四阶 Butterworth 带通滤波器。两类滤波均以前后双向方式执行，使总体相位响应为零，从而避免因因果滤波时延改变峰潜伏期。记陷波与带通算子分别为 $\mathcal{F}_{\mathrm{notch}}$ 和 $\mathcal{F}_{\mathrm{bp}}$，则滤波信号为
+
 \begin{equation}
-    T_{c, y}(t) = \mathop{\text{median}}_{i \in \Omega_{\text{train, low}}^{(k, y)}} \{ x_{c, i}(t) \}
-\end{equation}
-对于任一输入试次 $i$（刺激方向为 $y$），其扣除先验模板后的残差波形表示为：
-\begin{equation}
-    r_{c, i}(t) = x_{c, i}(t) - T_{c, y}(t), \quad c \in \{F_z, F_3, F_4\}
+    x^{(f)}_c(t)=\mathcal{F}_{\mathrm{bp}}\!\left(\mathcal{F}_{\mathrm{notch}}\!\left(x^{(0)}_c(t)\right)\right),
+    \quad c\in\{F_z,F_3,F_4\}.
+    \label{eq:q1_filter}
 \end{equation}
 
-\paragraph{2. 双分量伪影基函数与软门控机制}
-根据眼球运动的物理电偶极子几何特性，将残差分解为两个生理正交方向：
-\begin{enumerate}
-    \item[(1)] \textbf{垂直伪影分量（瞬目特征）}：瞬目主要引起三导联同向大幅漂移，取三通道残差的中位数表征：
-    \begin{equation}
-        r_v(t) = \text{median} \{ r_{F_z, i}(t), r_{F_3, i}(t), r_{F_4, i}(t) \}
-    \end{equation}
-    \item[(2)] \textbf{水平伪影分量（扫视特征）}：眼球侧向转动引起左右导联电位反向对称变化，取左右差分表征：
-    \begin{equation}
-        r_h(t) = \frac{r_{F_4, i}(t) - r_{F_3, i}(t)}{2}
-    \end{equation}
-\end{enumerate}
-将 $r_v(t)$ 与 $r_h(t)$ 经过高斯低通滤波平滑后，引入基于训练集残差标准差 $\sigma_{\text{train}}$ 的软门控函数 $g(u)$：
+完成事件分段后，以刺激前 $[-250,0)~\mathrm{ms}$ 的中位数进行稳健基线校正：
+
 \begin{equation}
-    g(u) = u \cdot \left[ 1 + \exp\left( -\frac{|u| - 2\sigma_{\text{train}}}{\tau} \right) \right]^{-1}
+    x_{i,c}(t)=x^{(f)}_{i,c}(t)-
+    \mathop{\mathrm{median}}_{u\in[-250,0)}x^{(f)}_{i,c}(u),
+    \label{eq:q1_baseline}
 \end{equation}
-构造试次自适应伪影设计矩阵 $\mathbf{A}(t) = [g(r_v(t)), g(r_h(t))] \in \mathbb{R}^{N \times 2}$。
-\paragraph{3. 边界约束岭回归求解}
-为防止回归系数过大造成过拟合与波形失真，引入系数上界约束的岭回归（Ridge Regression）优化目标：
+
+其中，$i$ 为试次编号，$c$ 为通道，$t$ 为相对提示时间。选择 $0.1\,\mathrm{Hz}$ 低截止频率的目的是保留项目二中较慢的条件平均变化；若直接提高高通截止频率，虽然可减小漂移，但也可能人为改变宽缓响应的幅值与潜伏期。
+
+\paragraph{（3）严重坏试次筛查}
+
+为避免硬件截幅、极端振幅和非生理跳变支配均值，本文在任何模板估计前固定三项工程阈值。设试次 $i$ 的跨通道饱和点数、最大峰峰值和最大相邻点跳变分别为 $S_i$、$P_i$ 和 $J_i$，则坏试次指示量定义为
+
 \begin{equation}
-    \hat{\boldsymbol{\beta}}_c = \arg\min_{\boldsymbol{\beta}_c} \left\{ \|\mathbf{r}_{c, i} - \mathbf{A} \boldsymbol{\beta}_c\|_2^2 + \lambda \|\boldsymbol{\beta}_c\|_2^2 \right\}, \quad \text{s.t.} \quad 0 \le \beta_{c, v} \le \beta_{\max}^{(v)}, \; |\beta_{c, h}| \le \beta_{\max}^{(h)}
+    b_i=\mathbf{1}\!\left(S_i\ge 15\ \lor\ P_i>1800\ \lor\ J_i>600\right),
+    \label{eq:q1_badtrial}
 \end{equation}
-解得最优投影系数 $\hat{\boldsymbol{\beta}}_c$ 后，计算全量候选校正改动量：
-\begin{equation}
-    \delta_{c, i}(t) = \mathbf{A}(t) \hat{\boldsymbol{\beta}}_c
-\end{equation}
-\paragraph{4. 核心机制：训练均值保护（Training Mean Protection）}
-若直接从原始信号中完全扣除 $\delta_{c, i}(t)$，方向诱发的真实微弱 ERP 也会被系统性扣除。因此，本文设计了训练均值保护机制：
-令当前外折训练集同方向试次的平均候选改动量为：
-\begin{equation}
-    m_{c, y}(t) = \frac{1}{|\Omega_{\text{train}}^{(k, y)}|} \sum_{j \in \Omega_{\text{train}}^{(k, y)}} \delta_{c, j}(t)
-\end{equation}
-对于折外测试试次 $x_{c, i}(t)$，采用双重调节的保守修正公式生成最终纯净信号 $x_{c, i}^{\text{V7}}(t)$：
-\begin{equation}
-    x_{c, i}^{\text{V7}}(t) = x_{c, i}(t) - \alpha \cdot \delta_{c, i}(t) + \gamma \cdot m_{c, y}(t)
-\end{equation}
-其中，$\alpha = 0.25$（仅从单试次扣除 $25\%$ 的动态伪影波动），$\gamma = 0.10$（将该方向训练集均值改动量的 $10\%$ 回补反向补偿）。该机制从数学上强制保证了算法在大幅压制试次间离散噪声的同时，将方向平均波形的系统性偏置严格控制在极限范围内。
-\subsubsection{有效视觉响应（ERP）提取与三次 B 样条曲线拟合模型}
-\paragraph{1. 分方向有效视觉响应估计}
-对于每一组实验数据，完成全试次折外校正后，依据刺激方向标签 $y \in \{-1, +1\}$ 进行分层算术叠加平均（Grand Average），得到事件相关电位响应曲线：
-\begin{equation}
-    \text{ERP}_{c, y}(t) = \frac{1}{N_y} \sum_{i=1}^{N_y} x_{c, i, y}^{\text{V7}}(t), \quad t \in [-250\,\text{ms}, 796.875\,\text{ms}]
-\end{equation}
-\paragraph{2. 三次 B 样条非线性拟合}
-为消除有限叠加导致的微弱毛刺，同时避免经验多项式过拟合，构建以内部结点均匀间隔 $\Delta \tau = 50\,\text{ms}$ 的三次 B 样条基函数拟合模型：
-\begin{equation}
-    f_{c, y}(t) = \sum_{j=1}^{M} \theta_{j} B_{j, 3}(t)
-\end{equation}
-其中 $B_{j, 3}(t)$ 为定义在区间 $[50\,\text{ms}, 750\,\text{ms}]$ 上的标准三次 B 样条基，系数向量 $\boldsymbol{\theta}$ 通过线性最小二乘法进行闭式求解：
-\begin{equation}
-    \hat{\boldsymbol{\theta}} = \left( \mathbf{B}^T \mathbf{B} \right)^{-1} \mathbf{B}^T \mathbf{y}_{\text{ERP}}
-\end{equation}
-拟合曲线严格保留宏观波峰特征，拟合残差均方根误差 $\text{RMSE}_{\text{fit}}$ 作为平滑度评估指标。
-\paragraph{3. 额区正向响应（P300 代理）特征量化}
-在任务核心时窗 $250\sim 500\,\text{ms}$ 内，提取以下三项核心特征参数：
-\begin{enumerate}
-    \item[(1)] \textbf{有效正峰幅值与潜伏期}：严格搜索区间内的极大值点。若存在满足一阶导数由正变负且大于零的极值点，记录其幅值 $P300_{\text{amp}}$ 与时刻 $P300_{\text{lat}}$；若仅为单调上升或端点极值，则严格标记为峰缺失（不赋予 $0\,\text{ms}$ 伪值）；
-    \item[(2)] \textbf{正向响应平均电位}：定义为 $P300_{\text{mean}} = \frac{1}{T_w} \int_{250}^{500} \max(\text{ERP}(t), 0) dt$；
-    \item[(3)] \textbf{曲线正波面积（AUC）}：采用复合梯形积分公式计算正向曲线覆盖面积 $\text{AUC}_{\text{unit}\cdot\text{ms}}$。
-\end{enumerate}
-\subsubsection{实验结果分析、指标量化与前后对照}
-基于编写的算法系统对四组数据集进行完整计算。所有指标均在严格同口径下求取（相同的试次、相同的 $250\sim 500\,\text{ms}$ 分析窗、等权平均汇总）。
-\paragraph{1. 预处理与 V7 算法性能全指标对比}
-对比基准预处理（未执行自适应子空间去噪）与本文 V7 算法的核心指标，结果如表 \ref{tab:q1_metrics_compare} 所示。
+
+其中，$S_i=\sum_{c,t}\mathbf{1}(|x^{(0)}_{i,c}(t)|\ge999)$，$P_i=\max_c\{\max_t x_{i,c}(t)-\min_t x_{i,c}(t)\}$，$J_i=\max_{c,t}|x_{i,c}(t)-x_{i,c}(t-1)|$。这些阈值由当前数据量纲下的异常分布与硬件截幅特征确定，只用于剔除不可恢复的极端记录，不把一般的高幅试次预先删除。筛查结果如表~\ref{tab:q1_trial_audit} 所示，四组数据共保留 $371$ 个试次。
+
 \begin{table}[H]
-\centering
-\caption{四组实验数据预处理与 V7 算法核心评价指标同口径对比表}
-\label{tab:q1_metrics_compare}
-% 核心技巧：自动将 9 列大宽表等比例贴合到版心宽度，绝对不溢出右边距
-\resizebox{\textwidth}{!}{%
-    \begin{tabular}{llccccccc}
-    \toprule
-    \textbf{数据组} & \textbf{算法阶段} & \textbf{代理 MAE} & \textbf{波形相关性} & \textbf{信噪比代理 SNR (dB)} & \textbf{基线 RMS} & \textbf{试次极差中位数} & \textbf{正向幅值误差} & \textbf{AUC 误差 (单位·ms)} \\
-    \midrule
-    受试者A\_项目一 & 仅预处理基线 & 19.669 & 0.666 & -14.217 & 14.123 & 104.415 & 7.476 & 1874.744 \\
-                   & \textbf{本文 V7 算法} & \textbf{17.701} & \textbf{0.675} & \textbf{-13.999} & \textbf{13.463} & \textbf{100.152} & \textbf{6.808} & \textbf{1707.703} \\
-    \midrule
-    受试者A\_项目二 & 仅预处理基线 & 47.603 & 0.601 & -9.352 & 21.261 & 254.680 & 46.686 & 11675.021 \\
-                   & \textbf{本文 V7 算法} & \textbf{43.684} & \textbf{0.607} & \textbf{-9.326} & \textbf{20.578} & \textbf{249.605} & \textbf{42.767} & \textbf{10695.684} \\
-    \midrule
-    受试者B\_项目一 & 仅预处理基线 & 14.973 & 0.595 & -22.666 & 20.425 & 158.636 & 11.667 & 2920.379 \\
-                   & \textbf{本文 V7 算法} & \textbf{14.158} & \textbf{0.602} & \textbf{-22.563} & \textbf{19.660} & \textbf{158.429} & \textbf{11.218} & \textbf{2807.874} \\
-    \midrule
-    受试者B\_项目二 & 仅预处理基线 & 39.316 & -0.139 & -13.081 & 26.976 & 272.288 & 32.872 & 8198.024 \\
-                   & \textbf{本文 V7 算法} & \textbf{35.455} & \textbf{-0.086} & \textbf{-12.600} & \textbf{25.557} & \textbf{267.324} & \textbf{29.013} & \textbf{7233.939} \\
-    \bottomrule
-    \end{tabular}%
-}
+    \centering
+    \caption{四组实验数据的事件与有效试次对账}
+    \label{tab:q1_trial_audit}
+    \begin{tabular}{lccccc}
+        \toprule
+        \textbf{数据组} & \textbf{提示事件数} & \textbf{边界剔除} & \textbf{质量剔除} & \textbf{有效试次} & \textbf{左/右试次} \\
+        \midrule
+        受试者 A 项目一 & 100 & 0 & 10 & 90 & 47/43 \\
+        受试者 A 项目二 & 100 & 0 & 5  & 95 & 53/42 \\
+        受试者 B 项目一 & 100 & 0 & 6  & 94 & 46/48 \\
+        受试者 B 项目二 & 100 & 0 & 8  & 92 & 45/47 \\
+        \bottomrule
+    \end{tabular}
 \end{table}
-表 \ref{tab:q1_metrics_compare} 的对比数据表明：
-\begin{enumerate}
-    \item[(1)] \textbf{逼近代理参考度显著提升}：在全部四组实验中，V7 处理后的 MAE 均实现单调下降，受试者 A 项目一降幅达 $10.0\%$，受试者 B 项目二降幅达 $9.8\%$，与代理模板的相关度普遍提升；
-    \item[(2)] \textbf{正向响应表征误差全面收敛}：正向响应均值误差降低 $0.45\sim 3.92$，AUC 积分误差降低 $112.5\sim 979.3\,\text{单位}\cdot\text{ms}$，证明本文算法对晚期正电位的保真度极高；
-    \item[(3)] \textbf{高频噪声与漂移得到平抑}：基线 RMS 与试次极差（PTP）均有适度收敛，未出现因过度滤波引发的信号“坍缩”。
-\end{enumerate}
-\paragraph{2. 视觉形状与空间差异保留度分析}
-为了严格检验赛题要求的“在保留视物形状脑电图特征的前提下去噪”，计算左右刺激差分波形 $\Delta \text{ERP}(t) = \text{ERP}_{\text{Left}}(t) - \text{ERP}_{\text{Right}}(t)$，定义差分保留比（Retention Ratio）与波形相关系数：
+
+\subsubsection{评价指标}
+
+问题一没有同步眼电或独立无噪声脑电，故设备处理波形与训练模板均不能视为真实标签。为同时评价去噪、条件差异保留与曲线拟合，本文采用代理参考误差、信噪比代理量、左右差异保留率、半合成恢复误差和样条拟合误差五类互补指标，而不将其合成为单一分数。
+
+\paragraph{（1）代理参考误差与信噪比代理量}
+
+在第 $k$ 个外折中，仅用训练试次构造方向 $d\in\{-1,+1\}$ 的代理模板 $T^{(k)}_{d,c}(t)$。测试集方向平均响应记为 $\bar{x}^{(k)}_{d,c}(t)$，则 $250$--$500~\mathrm{ms}$ 窗内的代理平均绝对误差为
+
 \begin{equation}
-    \text{Retention Ratio} = \frac{\|\Delta \text{ERP}_{\text{V7}}\|_{L_2}}{\|\Delta \text{ERP}_{\text{pre}}\|_{L_2}}, \quad r_{\text{wave}} = \text{corr}(\Delta \text{ERP}_{\text{V7}}, \Delta \text{ERP}_{\text{pre}})
+    \mathrm{MAE}_{\mathrm{proxy}}=
+    \frac{1}{|\mathcal{W}|}\sum_{t\in\mathcal{W}}
+    \left|\bar{x}^{(k)}_{d,c}(t)-T^{(k)}_{d,c}(t)\right|,
+    \quad \mathcal{W}=[250,500]~\mathrm{ms}.
+    \label{eq:q1_mae}
 \end{equation}
-图5A与图5B分别展示了受试者 A 与受试者 B 在项目一、项目二全通道下，原始预处理与本文 V7 算法处理后的 ERP 响应对比曲线。
+
+该指标越小，说明测试条件平均曲线越接近训练折内的低伪影参考，但不能据此断言更接近真实神经信号。进一步以 $0$--$500~\mathrm{ms}$ 内 ERP 功率与单试次相对 ERP 的残差功率之比定义信噪比代理量：
+
+\begin{equation}
+    \mathrm{SNR}_{\mathrm{proxy}}=10\log_{10}
+    \frac{\frac{1}{|\mathcal{W}_0|}\sum_{t\in\mathcal{W}_0}\bar{x}_{d,c}^{,2}(t)}
+    {\frac{1}{N_d|\mathcal{W}_0|}\sum_{i:y_i=d}\sum_{t\in\mathcal{W}_0}
+    \left[x_{i,c}(t)-\bar{x}_{d,c}(t)\right]^2},
+    \quad \mathcal{W}_0=[0,500]~\mathrm{ms}.
+    \label{eq:q1_snr}
+\end{equation}
+
+残差中仍含真实的试次间变异，因此该指标只反映条件平均响应相对试次波动的突出程度。
+
+\paragraph{（2）视觉条件差异保留指标}
+
+令 $\Delta_c^{\mathrm{pre}}(t)$ 与 $\Delta_c^{\mathrm{V7}}(t)$ 分别表示预处理后和校正后左减右 ERP 差分，则定义差分幅度保留率与形状相关系数为
+
+\begin{equation}
+    R_{\Delta,c}=
+    \frac{\left\|\Delta_c^{\mathrm{V7}}\right\|_2}
+    {\left\|\Delta_c^{\mathrm{pre}}\right\|_2},
+    \qquad
+    \rho_{\Delta,c}=\operatorname{corr}
+    \left(\Delta_c^{\mathrm{V7}},\Delta_c^{\mathrm{pre}}\right),
+    \label{eq:q1_retention}
+\end{equation}
+
+其中范数和相关均在 $250$--$500~\mathrm{ms}$ 计算。$R_{\Delta,c}$ 接近 $1$ 且 $\rho_{\Delta,c}$ 较高，仅表示处理前后的条件差异较接近；若原始条件差异含方向相关眼动，该指标同样会保留该成分，因而不是视觉神经特异性的直接证据。
+
+\paragraph{（3）已知目标恢复误差与曲线拟合误差}
+
+在半合成检验中，将人工伪影加入预处理实测背景，以污染前波形 $x^{\ast}$ 为可计算目标。归一化恢复误差定义为
+
+\begin{equation}
+    \mathrm{NRMSE}=
+    \frac{\sqrt{\frac{1}{NCT}\sum_{i,c,t}\left(\hat{x}_{i,c}(t)-x^{\ast}_{i,c}(t)\right)^2}}
+    {\sqrt{\frac{1}{NCT}\sum_{i,c,t}\left(x^{\ast}_{i,c}(t)\right)^2}},
+    \label{eq:q1_nrmse}
+\end{equation}
+
+该指标可以检验对“额外注入污染”的恢复能力，但污染前实测背景仍可能含原有伪影。对于最终 ERP 的三次 B 样条拟合，另以同一样本上的残差均方根误差 $\mathrm{RMSE}_{\mathrm{fit}}$ 描述平滑拟合程度，它不是独立预测误差。
+
+\paragraph{（4）不确定性估计与指标解释}
+
+对左右方向分别进行配对试次 Bootstrap 重采样，预处理与 V7 共用同一批索引；组均值指标使用 $800$ 次重采样并报告 $95\%$ 区间。图~\ref{fig:q1_metric_dashboard} 汇总了代理 MAE 降幅、SNR 代理增量和左右差异保留率。可见四组代理 MAE 降幅点估计均为正，区间为 $5.4\%$--$10.0\%$；SNR 代理增量仅为 $0.027$--$0.481~\mathrm{dB}$，且四组区间均跨过零点；左右差异保留率点估计为 $0.813$--$0.952$。因此，评价证据支持“校正后更接近训练代理参考且未大幅压缩处理前条件差异”，但不支持“真实神经信噪比已稳定提高”这一更强结论。
+
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{图5A.png}
-\caption*{图5A 受试者 A：左右提示 ERP 的原始与 V7 对照}
-\label{fig:5A}
+    \centering
+    \includegraphics[width=0.86\textwidth]{q1_metrics.png}
+    \caption{四组数据的去噪代理指标与左右条件差异保留结果}
+    \label{fig:q1_metric_dashboard}
 \end{figure}
+
+\begin{table}[H]
+    \centering
+    \caption{问题一核心评价结果及 $95\%$ Bootstrap 区间}
+    \label{tab:q1_core_metrics}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lcccc}
+        \toprule
+        \textbf{数据组} & \textbf{有效试次} & \textbf{代理 MAE 降幅/\%} & \textbf{SNR 代理增量/dB} & \textbf{左右差异保留率} \\
+        \midrule
+        受试者 A 项目一 & 90 & 10.0 [4.9, 13.8] & 0.217 [$-0.197$, 0.623] & 0.934 [0.908, 1.009] \\
+        受试者 A 项目二 & 95 & 8.2 [4.9, 11.9]  & 0.027 [$-0.422$, 0.549] & 0.952 [0.865, 1.148] \\
+        受试者 B 项目一 & 94 & 5.4 [1.1, 9.3]   & 0.103 [$-0.228$, 0.702] & 0.942 [0.865, 1.121] \\
+        受试者 B 项目二 & 92 & 9.8 [4.8, 14.6]  & 0.481 [$-0.585$, 1.388] & 0.813 [0.708, 1.107] \\
+        \bottomrule
+    \end{tabular}%
+    }
+\end{table}
+
+\subsubsection{问题求解与模型建立}
+
+\paragraph{（1）五折外层划分与训练代理模板}
+
+将每组有效试次按左右方向分层划分为五折，随机种子固定为 $42$。对第 $k$ 折，测试试次不参与模板、残差尺度或候选策略的估计。首先在训练集内按稳健伪影得分从低到高排序，分别选取左右方向中较低的 $50\%$ 试次，并计算逐时间点中位数：
+
+\begin{equation}
+    T^{(k)}_{d,c}(t)=
+    \mathop{\mathrm{median}}_{i\in\Omega^{(k)}_{d,\mathrm{low}}}
+    x_{i,c}(t),
+    \qquad d\in\{-1,+1\}.
+    \label{eq:q1_template}
+\end{equation}
+
+该模板的作用是从单试次中分离相对于同方向条件平均的异常波动，而不是充当无噪声真值。单试次残差写为 $r_{i,c}(t)=x_{i,c}(t)-T^{(k)}_{d,c}(t)$。
+
+\paragraph{（2）垂直--水平双分量与软门控}
+
+前额区瞬目通常在三个导联上表现为较强的同相变化，水平扫视则更容易在 $F_3$ 与 $F_4$ 形成反相差异。基于这一几何结构，从残差构造垂直与水平候选参考：
+
+\begin{equation}
+    v_i(t)=\mathop{\mathrm{median}}_{c\in\{F_z,F_3,F_4\}}r_{i,c}(t),
+    \qquad
+    h_i(t)=\frac{r_{i,F_4}(t)-r_{i,F_3}(t)}{2}.
+    \label{eq:q1_components}
+\end{equation}
+
+分别用约 $160~\mathrm{ms}$ 和 $120~\mathrm{ms}$ 的 Savitzky--Golay 窗对 $v_i$、$h_i$ 平滑。设训练折估计的逐点 MAD 尺度为 $s_q(t)$，门控阈值和过渡宽度为 $\eta_q$、$w$，则软门控分量统一表示为
+
+\begin{equation}
+    a_q(t)=\tilde q(t)\cdot
+    \operatorname{clip}\!\left(
+    \frac{|\tilde q(t)|/(s_q(t)+\varepsilon)-\eta_q}{w},0,1
+    \right),
+    \qquad q\in\{v,h\}.
+    \label{eq:q1_gate}
+\end{equation}
+
+软门控使低于训练残差尺度的波动基本保持不变，而对超过阈值的缓慢同相或反相成分逐渐增加校正强度，从而减小硬阈值引起的波形突变。
+
+\paragraph{（3）带边界约束的岭回归校正}
+
+将两个门控分量组成设计矩阵 $\mathbf A_i=[a_v,a_h]$。对每个通道分别求解
+
+\begin{equation}
+    \hat{\boldsymbol\beta}_{i,c}=
+    \arg\min_{\boldsymbol\beta}
+    \left\|\mathbf r_{i,c}-\mathbf A_i\boldsymbol\beta\right\|_2^2
+    +\lambda\left\|\boldsymbol\beta\right\|_2^2,
+    \label{eq:q1_ridge}
+\end{equation}
+
+其中 $\lambda=0.05$。垂直系数限制在 $[0,1.8]$，水平系数限制在 $[-1.5,1.5]$；由于 $F_z$ 位于中线，其水平系数进一步限制在 $[-0.3,0.3]$。全量候选改动量为
+
+\begin{equation}
+    \delta_{i,c}(t)=\mathbf A_i(t)\hat{\boldsymbol\beta}_{i,c},
+    \qquad x^{\mathrm{cand}}_{i,c}(t)=x_{i,c}(t)-\delta_{i,c}(t).
+    \label{eq:q1_candidate}
+\end{equation}
+
+岭正则与系数边界共同限制了共线分量的过度扣除；但由于只有三个额区通道，$v_i$、$h_i$ 仍应理解为伪影候选方向，而不是已经分离出的独立眼电源。
+
+\paragraph{（4）训练内候选选择与均值保护}
+
+每个外折训练集再划分训练子集和验证子集，在验证背景上注入 $0$、$1$、$2$ 倍人工污染，对“不校正、中位数基线、保守双分量、仅垂直分量、时域保护”等候选进行比较。候选损失由全波形恢复误差、左右差分恢复误差和正向均值误差组成：
+
+\begin{equation}
+    \mathcal L_{\ell}=
+    \frac{\mathrm{RMSE}_{\ell}+0.5\,\mathrm{RMSE}_{\Delta,\ell}+E_{+,\ell}}
+    {\mathrm{RMS}_{\mathrm{background}}},
+    \qquad
+    \mathcal L=0.50\mathcal L_0+0.25\mathcal L_1+0.25\mathcal L_2.
+    \label{eq:q1_selection}
+\end{equation}
+
+若训练内选中“保守双分量”，则对测试试次仅采用 $25\%$ 候选改动，并回补同方向训练试次平均改动量的 $10\%$；其余候选仅采用 $15\%$ 改动。记 $m^{(k)}_{d,c}(t)$ 为训练集同方向 $\delta_{i,c}(t)$ 的均值，最终输出为
+
+\begin{equation}
+    \tilde x_{i,c}(t)=
+    \begin{cases}
+        x_{i,c}(t)-0.25\,\delta_{i,c}(t)+0.10\,m^{(k)}_{d,c}(t),
+        & \text{保守双分量分支},\\
+        x_{i,c}(t)-0.15\,\delta_{i,c}(t),
+        & \text{其他候选分支}.
+    \end{cases}
+    \label{eq:q1_meanprotect}
+\end{equation}
+
+该结构把“对单试次异常波动的校正”和“对条件平均形态的保护”分开控制。比例参数来自四组数据的开发过程，外折隔离防止测试试次直接进入自身参数估计，但不能把当前结果称为全新受试者的独立验证。
+
+\paragraph{（5）条件 ERP 提取与三次 B 样条拟合}
+
+汇总五个外折的测试输出后，按刺激方向分别计算条件 ERP：
+
+\begin{equation}
+    \overline{x}_{d,c}(t)=\frac{1}{N_d}
+    \sum_{i:y_i=d}\tilde x_{i,c}(t).
+    \label{eq:q1_erp}
+\end{equation}
+
+为获得连续、便于比较的响应曲线，在 $50$--$750~\mathrm{ms}$ 上采用内部结点间隔为 $50~\mathrm{ms}$ 的三次 B 样条：
+
+\begin{equation}
+    f_{d,c}(t)=\sum_{j=1}^{M}\theta_{j,d,c}B_{j,3}(t),
+    \qquad
+    \hat{\boldsymbol\theta}_{d,c}=
+    \arg\min_{\boldsymbol\theta}
+    \sum_{t=50}^{750}\left[\overline{x}_{d,c}(t)-
+    \sum_{j=1}^{M}\theta_jB_{j,3}(t)\right]^2.
+    \label{eq:q1_spline}
+\end{equation}
+
+固定结点间隔可抑制有限试次平均后的局部毛刺，并避免逐点插值。四组数据、左右方向及三个通道共 $24$ 条曲线在 $50$--$750~\mathrm{ms}$ 上的拟合 RMSE 为 $0.497$--$0.975$ 原始单位，在 $250$--$500~\mathrm{ms}$ 上为 $0.366$--$1.131$ 原始单位。图~\ref{fig:q1_spline_example} 展示受试者 A 项目一的代表性拟合结果，灰色曲线为残差；拟合误差较小只说明样条能描述当前平均波形，不等同于对新试次的预测性能。
+
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{图5B.png}
-\caption*{图5B 受试者 B：左右提示 ERP 的原始与 V7 对照}
-\label{fig:5B}
+    \centering
+    \includegraphics[width=0.95\textwidth]{q1_spline_a1.png}
+    \caption{受试者 A 项目一左右条件 ERP 的三次 B 样条拟合与残差}
+    \label{fig:q1_spline_example}
 \end{figure}
-由图5A与图5B的实验波形可以提炼出以下核心生物电生理规律：
-\begin{enumerate}
-    \item[(1)] \textbf{微弱差分轮廓的高保真保留}：对比各子图中处理前（虚线）与处理后（实线）的形态，V7 曲线几乎严格贴合了原始信号的几何走势，在 $250\sim 500\,\text{ms}$ 阴影时窗内，左向刺激（青色）与右向刺激（橙棕色）的电位分歧轨迹被完整传承，并未因降噪产生任何伪相移或形态失真；
-    \item[(2)] \textbf{两类任务的显著认知模式差异}：
-    在项目一中，目标位置已知，受试者主要维持空间定向注意，ERP 在刺激呈现后迅速响应并在 $200\sim 400\,\text{ms}$ 内形成左右极性分离；而在项目二中，目标位置未知、需匹配形状，受试者需要调动更多的工作记忆与特征检索资源，导致晚期正成分的幅值显著抬升（受试者 A 超过 $200$ 单位，受试者 B 超过 $150$ 单位），且潜伏期明显后移；
-    \item[(3)] \textbf{双侧导联的半球对称反转特征}：在左向与右向提示下，$F_3$ 与 $F_4$ 导联展现出清晰的空间对偶性，这与第二问中基于大脑半球偏侧化（FEF 区激活）的机理推导完全契合。
-\end{enumerate}
-各数据集逐通道计算结果如表 \ref{tab:retention_ratio} 所示。
+
+\paragraph{（6）求解结果与稳健性检验}
+
+四组数据的左右条件平均曲线如图~\ref{fig:q1_erp_all} 所示。实线与虚线分别表示校正后和预处理后 ERP，阴影区为 $250$--$500~\mathrm{ms}$ 分析窗。校正后曲线整体保留了处理前的主要低频形态，同时对部分试次间波动进行了收缩。四组数据的逐通道左右差分波形相关系数均值为 $0.992$--$0.998$，但将试次按时间顺序前后对半后，受试者 A 项目一和受试者 B 项目二的三通道差分相关分别为 $-0.322$ 和 $-0.400$，说明条件差异的跨时段稳定性尚未建立。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.94\textwidth]{q1_erp_a.png}\\[-0.3em]
+    \includegraphics[width=0.94\textwidth]{q1_erp_b.png}
+    \caption{受试者 A、B 在两个项目中的左右提示三通道 ERP 对比}
+    \label{fig:q1_erp_all}
+\end{figure}
+
+进一步在真实测试背景上注入不同强度的瞬目样、扫视样和短暂运动样污染，结果如图~\ref{fig:q1_semisynthetic} 所示。强度为 $2$ 倍时，四组 V7 归一化 RMSE 相对未校正结果分别下降约 $9.9\%$、$11.6\%$、$10.8\%$ 和 $11.7\%$；但受试者 A 项目一在 $0.5$ 倍轻扰动下由 $0.174$ 上升至 $0.206$，且零注入时 V7 仍产生 $0.090$--$0.124$ 的背景改动。这表明模型更适合抑制较强的附加污染，不能保证每一种低强度场景均获得收益。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{q1_recovery.png}
+    \caption{四组数据在不同伪影强度下的半合成恢复检验}
+    \label{fig:q1_semisynthetic}
+\end{figure}
+
+综上，问题一得到了一套可复现的“原始通道预处理--折外自适应校正--条件 ERP 提取--样条拟合”求解方案。现有证据能够说明：在当前四组开发数据上，模型降低了相对训练代理模板的误差，并在较强人工污染下改善了恢复误差；现有证据不能单独证明：被保留的左右差异全部来自视觉神经活动、前额三通道已观测到典型中央--顶区 P300，或该方法能够直接完成未知方向识别。上述校正结果作为已知条件下的有效视觉响应，将为问题二的机理建模提供观测输入。
+
+\renewcommand{\theequation}{2-\arabic{equation}}
+\renewcommand{\theHequation}{q2.\arabic{equation}}
+\setcounter{equation}{0}
+
+\subsection{问题二模型的建立与求解}
+\renewcommand{\theequation}{2-\arabic{equation}}
+\renewcommand{\theHequation}{q2.\arabic{equation}}
+\setcounter{equation}{0}
+
+问题二要求由视觉刺激出发，建立贯通外侧膝状体核（LGN）、视皮层神经群与头皮脑电的正向计算模型，并据此解释左、右三角刺激所对应的脑电差异，进一步给出可供未知试次使用的特征表示。考虑到题给数据仅包含 Fz、F3、F4 三个前额通道，且未提供个体头模型、独立视觉源定位结果及同步眼动信息，本文不直接把头皮电位差异等同于某一脑区的唯一活动，而是构建“形状编码---群体动力学---突触等效源---条件共享观测”的可检验模型，将机制假设转化为可在独立时间块上验证的波形预测问题。
+
+\subsubsection{建模思路}
+
+\paragraph{（1）数据口径与预处理}
+
+本问使用受试者 A、B 在项目一和项目二中的四组原始记录，分别记为 A1、A2、B1、B2。全部分析仅使用原始脑电通道 Fz、F3、F4，采样率为 $256~\mathrm{Hz}$；数据文件中的机器处理通道不作为“干净真值”，第 7 通道为心电通道，亦不将其误作眼电回归量。按照事件通道 VisCue 的符号，将 $-1$ 与 $+1$ 分别编码为左三角和右三角刺激。为兼顾刺激前基线和刺激后反应，截取每次提示前 $250~\mathrm{ms}$ 至提示后约 $800~\mathrm{ms}$ 的脑电片段。
+
+连续记录先按时间顺序划分为 5 个互不重叠的时间块，再在每一块内独立完成 $0.1$--$30~\mathrm{Hz}$ 带通、$60~\mathrm{Hz}$ 陷波及提示前中位数基线校正。块边界两侧设置 $24~\mathrm{s}$ 保护区，防止双向滤波把测试块信息卷入训练块。经事件完整性、边界可用性和数值有效性检查后，四组记录分别保留 67、70、69、69 个试次，共 275 个试次，见表~\ref{tab:q2_trial_audit}。
+
 \begin{table}[H]
 \centering
-\small
-\caption{视物方向差分波形保留比与通道级波形相关系数汇总表}
-\label{tab:retention_ratio}
-\begin{tabular}{lcccc}
+\caption{问题二四组记录的数据审计与留出划分}
+\label{tab:q2_trial_audit}
+\begin{tabular}{ccccc}
 \toprule
-\textbf{数据集名称} & \textbf{通道} & \textbf{整体左右差分比} & \textbf{逐通道左右差分比} & \textbf{差分波形相关度 $r_{\text{wave}}$} \\
+\textbf{记录} & \textbf{受试者} & \textbf{实验项目} & \textbf{有效试次数} & \textbf{连续时间块数} \\
 \midrule
-\multirow{3}{*}{\textbf{受试者A\_项目一}} & $F_z$ & \multirow{3}{*}{0.934} & 1.001 & 0.998 \\
- & $F_3$ &  & 0.902 & 0.999 \\
- & $F_4$ &  & 0.899 & 0.997 \\
+A1 & A & 项目一 & 67 & 5 \\
+A2 & A & 项目二 & 70 & 5 \\
+B1 & B & 项目一 & 69 & 5 \\
+B2 & B & 项目二 & 69 & 5 \\
 \midrule
-\multirow{3}{*}{\textbf{受试者A\_项目二}} & $F_z$ & \multirow{3}{*}{0.952} & 0.966 & 0.987 \\
- & $F_3$ &  & 0.951 & 0.997 \\
- & $F_4$ &  & 0.939 & 0.991 \\
-\midrule
-\multirow{3}{*}{\textbf{受试者B\_项目一}} & $F_z$ & \multirow{3}{*}{0.942} & 0.954 & 0.995 \\
- & $F_3$ &  & 0.917 & 0.999 \\
- & $F_4$ &  & 0.955 & 1.000 \\
-\midrule
-\multirow{3}{*}{\textbf{受试者B\_项目二}} & $F_z$ & \multirow{3}{*}{0.813} & 0.783 & 0.996 \\
- & $F_3$ &  & 0.826 & 0.998 \\
- & $F_4$ &  & 0.831 & 0.998 \\
+\textbf{合计} & 2 人 & 2 个项目 & \textbf{275} & 20 \\
 \bottomrule
 \end{tabular}
 \end{table}
-数据实证表明：四组数据的左右差分波形相关系数均高于 $0.987$，且差异能量保留比处于 $0.813\sim 0.952$ 的极高区间。这强有力地证明了 V7 算法在剔除数十倍幅值噪声的同时，完整传承了由左、右三角形刺激诱发的核心差分几何轮廓。
-\paragraph{3. Bootstrap 重采样置信区间与时段稳定性检验}
-采用 800 次分层 Bootstrap 试次重采样估计组均值 $95\%$ 置信区间，并将原始实验试次按时间先后对半切分，评估前后半段差分波形的相关性，结果如表 \ref{tab:bootstrap_ci} 所示。
-\begin{table}[H]
-\centering
-\caption{组均值 95\% Bootstrap 置信区间与前后时段稳定性检验表}
-\label{tab:bootstrap_ci}
-% 自动适配长文本置信区间列宽
-\resizebox{\textwidth}{!}{%
-    \begin{tabular}{lcccc}
-    \toprule
-    \textbf{数据组} & \textbf{V7 代理 MAE 降幅\% [95\% 区间]} & \textbf{V7 SNR 代理增量 dB [95\% 区间]} & \textbf{V7 左右差分比 [95\% 区间]} & \textbf{前后半段差分相关性} \\
-    \midrule
-    受试者A\_项目一 & 10.0 [4.9, 13.8] & +0.217 [-0.197, +0.623] & 0.934 [0.908, 1.009] & -0.322 \\
-    受试者A\_项目二 & 8.2 [4.9, 11.9]  & +0.027 [-0.422, +0.549] & 0.952 [0.865, 1.148] & 0.767 \\
-    受试者B\_项目一 & 5.4 [1.1, 9.3]   & +0.103 [-0.228, +0.702] & 0.942 [0.865, 1.121] & 0.476 \\
-    受试者B\_项目二 & 9.8 [4.8, 14.6]  & +0.481 [-0.585, +1.388] & 0.813 [0.708, 1.107] & -0.400 \\
-    \bottomrule
-    \end{tabular}%
-}
-\end{table}
-客观结论表明：
-\begin{enumerate}
-    \item[(1)] \textbf{统计学显著性}：MAE 降幅的 $95\%$ 置信区间下界全部严格大于零（$1.1\%\sim 4.9\%$），证明去噪收敛性具备坚实的统计学置信度；
-    \item[(2)] \textbf{SNR 离散性本质}：SNR 代理量点估计虽有提升，但置信区间跨越零点，这符合脑电单试次间存在生理学高可变性的客观规律；
-    \item[(3)] \textbf{非平稳性启示}：前后半段相关性在项目一中出现负值，揭示了受试者在长时间测试中可能存在疲劳、注意力漂移及眼动模式时变，为第三问认知模型的非平稳性构建提供了数据依据。
-\end{enumerate}
-\subsubsection{半合成闭环注入压力测试验证}
-为了在“无客观真值”的脑电中建立绝对可复现的验证标准，设计了半合成闭环压力实验：在真实测试试次上叠加不同幅度倍数（$0\times, 0.5\times, 1.0\times, 2.0\times$ 背景 RMS）的人工合成瞬目、扫视与尖峰脉冲，以未经额外污染的实测波形作为计算基准，对比未校正与 V7 算法的归一化恢复误差（$\text{Normalized RMSE}$），结果如表 \ref{tab:semisynthetic} 所示。
-\begin{table}[H]
-\centering
-\caption{半合成闭环扰动注入下的归一化 RMSE 恢复表现对比表}
-\label{tab:semisynthetic}
-% 自动适配四组受试者、多梯度扰动对比
-\resizebox{\textwidth}{!}{%
-    \begin{tabular}{lcccc}
-    \toprule
-    \textbf{数据组} & \textbf{扰动注入幅度} & \textbf{未校正归一化 RMSE} & \textbf{V7 校正归一化 RMSE} & \textbf{相对未校正改善表现} \\
-    \midrule
-    受试者A\_项目一 & 0.0 倍 (零注入) & 0.000 & 0.124 & 算法对背景微调（底噪微量变动） \\
-                   & 0.5 倍 (轻度)   & 0.174 & 0.206 & 受软门控保护，抑制低噪声过校正 \\
-                   & 1.0 倍 (标准)   & 0.347 & \textbf{0.337} & 恢复误差低于未校正基线（改善 2.9\%） \\
-                   & 2.0 倍 (强污染) & 0.691 & \textbf{0.623} & \textbf{恢复误差显著下降 9.8\%} \\
-    \midrule
-    受试者A\_项目二 & 0.0 倍 (零注入) & 0.000 & 0.100 & 算法对背景微调 \\
-                   & 0.5 倍 (轻度)   & 0.365 & \textbf{0.350} & 恢复误差小幅下降（改善 4.1\%） \\
-                   & 1.0 倍 (标准)   & 0.729 & \textbf{0.662} & 恢复误差显著下降（改善 9.2\%） \\
-                   & 2.0 倍 (强污染) & 1.456 & \textbf{1.288} & \textbf{恢复误差大幅下降 11.5\%} \\
-    \midrule
-    受试者B\_项目一 & 0.0 倍 (零注入) & 0.000 & 0.090 & 算法对背景微调 \\
-                   & 0.5 倍 (轻度)   & 0.253 & \textbf{0.251} & 恢复误差微弱改善 \\
-                   & 1.0 倍 (标准)   & 0.504 & \textbf{0.464} & 恢复误差显著下降（改善 7.9\%） \\
-                   & 2.0 倍 (强污染) & 1.006 & \textbf{0.897} & \textbf{恢复误差大幅下降 10.8\%} \\
-    \midrule
-    受试者B\_项目二 & 0.0 倍 (零注入) & 0.000 & 0.110 & 算法对背景微调 \\
-                   & 0.5 倍 (轻度)   & 0.327 & \textbf{0.316} & 恢复误差小幅下降（改善 3.4\%） \\
-                   & 1.0 倍 (标准)   & 0.650 & \textbf{0.588} & 恢复误差显著下降（改善 9.5\%） \\
-                   & 2.0 倍 (强污染) & 1.299 & \textbf{1.147} & \textbf{恢复误差大幅下降 11.7\%} \\
-    \bottomrule
-    \end{tabular}%
-}
-\end{table}
-半合成闭环测试清晰地证明：
-\begin{enumerate}
-    \item[(1)] \textbf{零注入保真度}：在 $0$ 倍额外注入时，算法仅产生 $\approx 0.1$ 的归一化微调，证实了训练均值保护机制有效遏制了对原生背景的破坏；
-    \item[(2)] \textbf{大扰动抑制性}：当扰动强度增加至 $1.0\sim 2.0$ 倍时，未校正波形迅速畸变，而 V7 算法展现出强大的误差抑制能力，归一化 RMSE 降幅达 $10\%\sim 12\%$，充分验证了特定降噪算法在复杂现实场景下的鲁棒性与工程实用价值。
-\end{enumerate}
 
-\subsection{问题二模型的建立与求解}
-问题二的核心目标在于克服传统统计黑盒模型缺乏神经生理可解释性的缺陷，构建一套贯通“几何刺激输入 $\to$ 丘脑 LGN 中继 $\to$ 视皮层与额叶群体演化 $\to$ 头皮三通道观测”的跨尺度正向计算动力学模型，从生物物理机制上阐明左、右三角形诱发脑电波形差异的本质成因，并提炼能有效表征刺激差异的紧凑特征空间。
-\subsubsection{视觉输入几何编码模型（基于 COSFIRE 空间边缘组合）}
-神经电生理学研究表明，大脑对复杂形状（如面部轮廓、几何多边形）的辨识并非通过全图模板匹配，而是由视网膜和初级视皮层（V1）简单细胞对具有特定相对空间位置的局部边缘特征进行多层次组合感知实现的（如图 9 所示的神经元调谐特性）。本研究借鉴结合腹侧通路计算原理的 COSFIRE（Combination of Receptive Fields）感受野模型思想\cite{azzopardi2014ventral}，从题给视觉提示图像中提取左向三角（$\triangleleft$）与右向三角（$\triangleright$）的几何基元。
-设视觉刺激图像为 $I(x,y)$，模型定义 $K$ 个具有特定朝向 $\theta_{jk}$ 与极坐标相对位移 $p_{jk}$ 的 Gabor 边缘响应算子 $r_\theta(p; I)$，以此表征三角形三个顶点与对应底边的轮廓边界。左偏与右偏几何形状偏好神经元群的稳态激活度 $f_j(I)$ 通过空间容差模糊最大值与几何平均进行非线性响应融合：
-\begin{equation}
-    f_j(I) = \exp\left[ \frac{1}{K} \sum_{k=1}^{K} \log\left( \max_{\delta \in \mathcal{N}} r_{\theta_{jk}}(p_{jk} + \delta; I) + \epsilon \right) \right], \quad j \in \{L, R\}
-    \label{eq:cosfire}
-\end{equation}
-式中，$\mathcal{N}$ 为局部空间平移容差邻域，$\epsilon = 10^{-6}$ 为数值稳定性微量。针对左、右三角形刺激，由于图像呈严格的水平镜像对称性，构建出的几何偏好输入在结构上具有对偶性：当呈现左向三角刺激时，$f_L(I_{\text{Left}}) > f_R(I_{\text{Left}})$；呈现右向三角刺激时相反。为避免模型仅依靠单侧信号进行虚假判断，模型在输入端引入共同注视基线输入 $I_0$。
-图像驱动的脑电前向计算模型与形状边缘组合编码机制如图~\ref{fig:q2_model_pipeline} 所示。由图~\ref{fig:q2_model_pipeline} 上排可知，原始题图中的三角形及其计算机反事实形状（如缺角三角、打乱边缘）通过空间边缘滤波生成了对偶的形状响应输入；由图下排可知，该形状驱动信号随后送入共享的群体动力学网络中，驱动全脑前向传导。
+在验证过程中，第 $k$ 个时间块只作为外层测试集，其余四块用于参数选择和观测矩阵估计。任何依赖类别均值、尺度分位数、缺失值填补或判别器参数的统计量，均只在训练块内计算后作用于测试块。由此，模型接受的是一个未知方向的原始试次，而非已经利用该试次标签构造的方向均值。
+
+\paragraph{（2）总体技术路线}
+
+本文采用“先建立可解释正向模型，再提炼可验证特征”的两阶段思路。第一阶段将左、右三角的镜像轮廓转化为三个形状偏好群的输入，经 LGN 中继和三级兴奋--抑制（E/I）神经群传播，得到九维突触等效源；随后用左右条件共享的观测矩阵映射到 Fz、F3、F4。第二阶段从单试次中提取时域幅值、峰值与潜伏期、空间侧化和机制模板投影等特征，并在连续时间块留出框架下检验其区分能力。
+
+整体建模链路如图~\ref{fig:q2_model_pipeline} 所示。上排给出左右三角及两种反事实扰动，用于检查形状编码是否确由边缘组合驱动；下排展示从视觉边缘、LGN 中继、三级视觉皮层 E/I 神经群到突触源和头皮观测的计算路径。这里的三角图形依据题图示意进行标准化镜像构造，只承担模型输入编码作用，不将其解释为经过屏幕几何标定的真实刺激图像。
+
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.92\textwidth]{Q2_图1_机制与形状编码.pdf}
-\caption{图像驱动的脑电前向计算模型与形状边缘组合编码机制图}
+\includegraphics[width=0.98\textwidth]{Q2_图1_机制与形状编码.pdf}
+\caption{左右三角形状编码及脑电正向计算模型的总体路径}
 \label{fig:q2_model_pipeline}
 \end{figure}
-\subsubsection{跨尺度介观皮层动力学网络（三级 Wilson--Cowan 群体模型）}
-从丘脑外侧膝状体核（LGN）到初级视皮层，再经腹侧/背侧流投射至前额叶皮层（PFC），信息传递具有明显的层级时延与局部循环反馈特征。为此，构建由三级兴奋（E）与抑制（I）神经元群体级联组成的 Wilson--Cowan 神经场模型\cite{wilson1972excitatory, glomb2022computational}，层级结构分别对应：\textbf{第 1 级：早期视觉感知层（LGN/V1 中继）}；\textbf{第 2 级：中阶形状整合层（V4/腹侧流）}；\textbf{第 3 级：前额叶认知决策响应层（PFC）}。
-\noindent\textbf{1. 神经元群状态微分方程}：
-设第 $s$ 级（$s \in \{1, 2, 3\}$）的兴奋性神经元群放电率为 $E_s(t)$，抑制性神经元群放电率为 $I_s(t)$。系统的非线性时空动力学演化受控于以下微分方程组：
-\begin{align}
-    \tau_g \frac{dg(t)}{dt} &= -g(t) + 3 f(I) \cdot \mathbb{I}_{0 \le t < T_s} \label{eq:lgn_dynamics} \\
-    \tau_{E,s} \frac{dE_s(t)}{dt} &= -E_s(t) + \sigma\left( w_{EE} E_s(t) - w_{EI} I_s(t) + \rho \mathbf{W} E_s(t) + d_s(t) - \theta_{\text{bias}} \right) \label{eq:E_dynamics} \\
-    \tau_{I,s} \frac{dI_s(t)}{dt} &= -I_s(t) + \sigma\left( w_{IE} E_s(t) - w_{II} I_s(t) - \theta_{\text{bias}} \right) \label{eq:I_dynamics}
-\end{align}
-式中，$\sigma(u) = 1 / (1 + e^{-u})$ 为 Sigmoid 神经群体非线性传递函数，$\theta_{\text{bias}} = 2$ 为放电阈值偏置；$\tau_{E,s}$ 与 $\tau_{I,s}$ 为各层级神经膜时间常数；$T_s = 52/256\text{ s} \approx 0.203\text{ s}$ 为视觉刺激物理呈现时间；$\mathbb{I}$ 为时间指示函数。
-\noindent\textbf{2. 级间前馈与同级复发网络拓扑}：
-* 前馈驱动项 $d_s(t)$：第一级直接接收来自 LGN 的前馈脉冲，即 $d_1(t) = g(t)$；后级依次接收前一级兴奋群偏离静息态的增益放大输出：
+
+\subsubsection{分层兴奋--抑制神经动力学模型的建立}
+
+\paragraph{（1）视觉形状的空间边缘组合编码}
+
+左、右三角具有镜像对称的轮廓结构。若只使用全图像素差，会使输入对位置和平移过于敏感，因此本文借鉴 COSFIRE 感受野的“定向边缘加空间组合”思想\cite{azzopardi2014ventral}。设标准化刺激图像为 $X_d(x,y)$，$d\in\{L,R\}$，$r_{\theta}(p;X_d)$ 表示在位置 $p$、方向 $\theta$ 上的边缘响应。对形状偏好群 $j\in\{L,R,0\}$，在 $K_j$ 个模板点上进行局部容差最大化，再以几何平均聚合：
 \begin{equation}
-    d_s(t) = 3 \left( E_{s-1}(t) - E_{s-1, 0} \right), \quad s \in \{2, 3\}
-    \label{eq:feedforward}
+f_j(X_d)=
+\exp\!\left[
+\frac{1}{K_j}\sum_{k=1}^{K_j}
+\log\!\left(
+\max_{\delta\in\mathcal N}
+r_{\theta_{jk}}(p_{jk}+\delta;X_d)+\varepsilon
+\right)\right],
+\quad \varepsilon=10^{-6}.
+\label{eq:q2_shape}
 \end{equation}
-* 同级侧向复发连接 $\mathbf{W}$：为模拟皮层同一功能层内跨超柱（Hypercolumn）的侧向交互，定义同级互联矩阵 $\mathbf{W} \in \mathbb{R}^{3 \times 3}$，其主对角元为 0，非对角元恒为 $1/2$；$\rho$ 控制同级复发耦合强度。该动力学系统全部参数在左、右刺激条件下严格对等共享。
-三级兴奋--抑制神经元群在左右刺激下的内部状态演化如图~\ref{fig:q2_cortex_response} 所示。图~\ref{fig:q2_cortex_response} 清晰展示了在输入脉冲驱动下，从早期视觉感知层到前额叶决策区的层级时滞递增特性；同一个左形状偏好神经元群在接收左向或右向刺激时，其兴奋性与抑制性放电呈现出显著的不对称抑制模式，为后续前向传导奠定了生理差异基础。
+其中，$L$、$R$ 分别表示左、右形状偏好群，$0$ 表示共同边缘群；$\mathcal N$ 为局部位移容差邻域。镜像刺激使得 $f_L(X_L)>f_R(X_L)$、$f_R(X_R)>f_L(X_R)$，但模型后续动力学参数在两种条件间完全共享，因而左右差异只能来自输入编码，而不能来自人为设置两套不同模型。
+
+\paragraph{（2）LGN 中继与三级 E/I 神经群}
+
+将形状编码向量记为 $\boldsymbol f(X_d)=[f_L,f_R,f_0]^{\mathsf T}$。LGN 中继状态 $\boldsymbol g(t)$ 接受有限持续时间的视觉驱动：
+\begin{equation}
+\tau_g\dot{\boldsymbol g}(t)
+=-\boldsymbol g(t)+3\boldsymbol f(X_d)\,
+\mathbb I_{[0,T_s)}(t),
+\qquad T_s=\frac{52}{256}\ \mathrm{s}.
+\label{eq:q2_lgn}
+\end{equation}
+为描述由早期视觉、中阶形状整合至额区响应的时序传递，构建三级 Wilson--Cowan 型神经群模型\cite{wilson1972excitatory,glomb2022computational}。令 $\boldsymbol E_s(t),\boldsymbol I_s(t)\in\mathbb R^3$ 分别为第 $s$ 级的兴奋性与抑制性群体状态，$s=1,2,3$，则
+\begin{align}
+\tau_{E,s}\dot{\boldsymbol E}_s
+&=-\boldsymbol E_s+
+\sigma\!\left(
+\boldsymbol E_s-\boldsymbol I_s+
+\rho\boldsymbol W\boldsymbol E_s+
+\boldsymbol d_s-2\boldsymbol 1
+\right), \label{eq:q2_e}\\
+\tau_{I,s}\dot{\boldsymbol I}_s
+&=-\boldsymbol I_s+
+\sigma\!\left(
+\boldsymbol E_s-\boldsymbol I_s-2\boldsymbol 1
+\right), \label{eq:q2_i}\\
+\boldsymbol d_1&=\boldsymbol g,\qquad
+\boldsymbol d_s=3\!\left(
+\boldsymbol E_{s-1}-\boldsymbol E_{s-1,0}
+\right),\quad s=2,3. \label{eq:q2_feed}
+\end{align}
+式中，$\sigma(u)=1/(1+\mathrm e^{-u})$ 按元素作用，$\boldsymbol E_{s-1,0}$ 为静息状态；$\boldsymbol W$ 的主对角元为 0、非对角元为 $1/2$，用以表示同层不同形状偏好群之间的侧向复发耦合，$\rho$ 为复发强度。三级时间常数逐层增大，使模型可以表达早期快速感觉响应、中期形状整合及较慢额区响应，而不把三者压缩为一个无时延的线性映射。
+
+图~\ref{fig:q2_cortex_response} 以 A1 为例展示完整模型内部状态。灰色区为视觉驱动时段；从早期视觉层到形状整合层、再到额区响应层，兴奋性状态和突触等效源的峰值逐级后移。蓝、红两线的分离首先出现在与输入方向一致的形状偏好群，并随级联传播至后续层级。这一结果说明模型内部确能把镜像轮廓差异转化为具有时延的动态差异，但它本身仍属于模型结构结果，不能单独证明相应神经群已被实际观测。
+
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.92\textwidth]{Q2_图2_皮层内部响应.pdf}
-\caption{受试者 A1 模型中三级 E/I 神经元群在左右刺激下的内部放电与突触响应演化}
+\includegraphics[width=0.98\textwidth]{Q2_图2_皮层内部响应.pdf}
+\caption{A1 记录对应的三级 E/I 神经群及突触等效源响应}
 \label{fig:q2_cortex_response}
 \end{figure}
-\subsubsection{突触等效源与前向体传导观测模型（求解观测矩阵 $\hat{\mathbf{L}}$）}
-脑电图测量到的宏观头皮电压反映的是皮层锥体细胞树突突触后电流产生的局部场电位（LFP），而非动作电位本身\cite{steeghs2025slow}。因此，必须将神经元群的放电率转换为突触等效源。
-\noindent\textbf{1. 突触后电流双低通滤波核}：
-为真实反映突触充放电引起的时滞与衰减，各层级的活动分别驱动一个二阶双低通突触动力学系统：
+
+\paragraph{（3）突触等效源与头皮观测}
+
+头皮脑电主要反映大规模同步突触后电流，而非单个神经元动作电位\cite{steeghs2025slow}。因此，对每一级兴奋、抑制状态分别施加二阶低通突触核：
 \begin{align}
-    \tau_{e,s} \frac{du_{e,s}(t)}{dt} &= E_s(t) - E_{s,0} - u_{e,s}(t), \quad 
-    \tau_{e,s} \frac{dv_{e,s}(t)}{dt} = u_{e,s}(t) - v_{e,s}(t) \label{eq:synaptic_E} \\
-    \tau_{i,s} \frac{du_{i,s}(t)}{dt} &= I_s(t) - I_{s,0} - u_{i,s}(t), \quad 
-    \tau_{i,s} \frac{dv_{i,s}(t)}{dt} = u_{i,s}(t) - v_{i,s}(t) \label{eq:synaptic_I}
+\tau_{e,s}\dot{\boldsymbol u}_{e,s}
+&=\boldsymbol E_s-\boldsymbol E_{s,0}-\boldsymbol u_{e,s},
+&
+\tau_{e,s}\dot{\boldsymbol v}_{e,s}
+&=\boldsymbol u_{e,s}-\boldsymbol v_{e,s}, \label{eq:q2_syn_e}\\
+\tau_{i,s}\dot{\boldsymbol u}_{i,s}
+&=\boldsymbol I_s-\boldsymbol I_{s,0}-\boldsymbol u_{i,s},
+&
+\tau_{i,s}\dot{\boldsymbol v}_{i,s}
+&=\boldsymbol u_{i,s}-\boldsymbol v_{i,s}. \label{eq:q2_syn_i}
 \end{align}
-结合兴奋与抑制偶极电流的代数相消效应，第 $s$ 级皮层产生的综合突触等效电流偶极子源定义为：
+第 $s$ 级的突触等效源定义为
 \begin{equation}
-    q_s(t) = v_{e,s}(t) - 0.7 v_{i,s}(t)
-    \label{eq:dipole_source}
+\boldsymbol q_s(t)=
+\boldsymbol v_{e,s}(t)-0.7\boldsymbol v_{i,s}(t).
+\label{eq:q2_source}
 \end{equation}
-对全部 3 级结构构成的 9 维神经源向量 $\mathbf{q}(t) \in \mathbb{R}^9$，施加与实测脑电完全一致的 0.1--30 Hz 双向带通与基线校正，得到无失真突触源时程 $\tilde{\mathbf{q}}(t)$。
-\noindent\textbf{2. 条件共享有效前向观测矩阵 $\hat{\mathbf{L}}$ 的联合优化求解}：
-设头皮观测向量为 $\hat{\mathbf{y}}(t) = [\text{Fz}, \text{F3}, \text{F4}]^T \in \mathbb{R}^3$。前向物理模型表示为 $\hat{\mathbf{y}}(t) = \mathbf{L} \tilde{\mathbf{q}}(t)$，其中 $\mathbf{L} \in \mathbb{R}^{3 \times 9}$ 为待辨识的条件共享有效观测矩阵。
-为避免微弱的方向差分淹没在共模大背景中，构建“共同--差分双目标加权优化准则”。定义左右刺激下的头皮共同响应 $C_y(t) = [y_R(t) + y_L(t)]/2$ 与方向差分响应 $D_y(t) = y_R(t) - y_L(t)$，以及对应的突触源共同响应 $C_q(t)$ 与差分响应 $D_q(t)$。引入带岭正则化的目标函数：
+将三级、三群的源活动拼接为九维向量 $\boldsymbol q(t)\in\mathbb R^9$，并施加与实测脑电相同的滤波和基线处理，得到 $\widetilde{\boldsymbol q}(t)$。Fz、F3、F4 的预测向量为
 \begin{equation}
-    \hat{\mathbf{L}} = \arg\min_{\mathbf{L}} \left\{ \frac{1}{2} \|C_y - \mathbf{L} C_q\|_{\mathbf{W}_t}^2 + \frac{1}{2} \|D_y - \mathbf{L} D_q\|_{\mathbf{W}_t}^2 + \lambda \|\mathbf{L}\|_F^2 \right\}
-    \label{eq:solve_L}
+\widehat{\boldsymbol y}_d(t)
+=\boldsymbol L\,\widetilde{\boldsymbol q}_d(t),
+\qquad
+\widehat{\boldsymbol y}_d(t)\in\mathbb R^3,\quad
+\boldsymbol L\in\mathbb R^{3\times 9}.
+\label{eq:q2_observation}
 \end{equation}
-式中，$\|\cdot\|_{\mathbf{W}_t}$ 为在 50--250 ms、250--500 ms、500--750 ms 三大关键认知时窗等权分配的时间范数权重，$\lambda$ 为岭回归正则化阻尼因子。
-基于求解出的有效观测矩阵 $\hat{\mathbf{L}}$，模型在受试者 A1 上的 ERP 拟合与独立时间块留出预测如图~\ref{fig:q2_erp_fitting} 所示。由图~\ref{fig:q2_erp_fitting} 可知，模型拟合波形（虚线）与实测 ERP（实线）在 Fz、F3、F4 通道上呈现出高度一致的极性转折与峰值趋势，尤其在下排独立的五个时间块留出测试中，模型仍能稳健跟踪真实诱发响应，证实了观测矩阵映射的泛化可靠性。
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.92\textwidth]{Q2_图3_ERP拟合与留出.pdf}
-\caption{受试者 A1 左右刺激下头皮三通道 ERP 拟合与独立时间块留出预测对比}
-\label{fig:q2_erp_fitting}
-\end{figure}
-\subsubsection{模型参数标定与验证体系}
-为保证模型严密的统计学外推效度，主分析严格遵循\textbf{连续时间块独立留出验证（Block Cross-Validation）}。将各组连续记录划分为 5 个时间块，施加 24 秒边界保护。在训练块内网格搜索全局时间尺度 $\text{scale} \in \{0.75, 1.0, 1.25\}$、复发强度 $\rho \in \{0, 0.1, 0.2\}$ 与正则化因子 $\lambda \in \{0.1, \dots, 100\}$；外层测试块数据严禁参与参数选择与矩阵拟合。模型的物理参数配置如表 \ref{tab:q2_params} 所示。
+由于缺少个体 MRI 和电导率头模型，$\boldsymbol L$ 被定义为训练块内估计的“有效观测矩阵”，而非可直接对应解剖位置的物理导联场。为了同时拟合两种条件共有的 ERP 背景与较弱的方向差异，定义
+\[
+\boldsymbol C_y=\frac{\boldsymbol y_R+\boldsymbol y_L}{2},
+\qquad
+\boldsymbol D_y=\boldsymbol y_R-\boldsymbol y_L,
+\]
+并对源信号构造相应的 $\boldsymbol C_q,\boldsymbol D_q$。条件共享观测矩阵通过下式求解：
+\begin{equation}
+\widehat{\boldsymbol L}
+=\arg\min_{\boldsymbol L}
+\left\{
+\frac12\|\boldsymbol C_y-\boldsymbol L\boldsymbol C_q\|_{\boldsymbol W_t}^{2}
++\frac12\|\boldsymbol D_y-\boldsymbol L\boldsymbol D_q\|_{\boldsymbol W_t}^{2}
++\lambda\|\boldsymbol L\|_F^2
+\right\}.
+\label{eq:q2_readout}
+\end{equation}
+时间权重 $\boldsymbol W_t$ 对 $50$--$250~\mathrm{ms}$、$250$--$500~\mathrm{ms}$ 和 $500$--$750~\mathrm{ms}$ 三个分析窗等权赋值，避免样本点数不同使某一时间窗主导目标函数。
+
+\paragraph{（4）参数选择与数值求解}
+
+模型微分方程按 $256~\mathrm{Hz}$ 的时间网格数值积分。固定参数用于描述逐层变慢的群体与突触过程；全局时间尺度、复发强度和岭参数则仅在外层训练块中选择，具体见表~\ref{tab:q2_params}。
+
 \begin{table}[H]
 \centering
-\caption{三级神经计算动力学模型物理参数设定与来源说明}
+\caption{问题二神经动力学模型的主要参数}
 \label{tab:q2_params}
 \resizebox{\textwidth}{!}{%
-    \begin{tabular}{llccc}
-    \toprule
-    \textbf{参数符号} & \textbf{生物物理含义} & \textbf{取值设定} & \textbf{量纲 / 单位} & \textbf{参数确定来源} \\
-    \midrule
-    $\tau_{\text{LGN}}$ & 丘脑外侧膝状体核中继时间常数 & $20 \times \text{scale}$ & $\text{ms}$ & 生理先验假设 \\
-    $\tau_{E, 1:3}$ & 三级皮层兴奋神经元群放电时间常数 & $[20, 40, 80] \times \text{scale}$ & $\text{ms}$ & 递进层级假设 \\
-    $\tau_{I, 1:3}$ & 三级皮层抑制神经元群放电时间常数 & $[40, 80, 160] \times \text{scale}$ & $\text{ms}$ & 递进层级假设 \\
-    $\tau_{\text{syn}, E}$ & 兴奋性突触双低通平滑时间核 & $[25, 50, 100] \times \text{scale}$ & $\text{ms}$ & 突触电导充放电模型 \\
-    $\tau_{\text{syn}, I}$ & 抑制性突触双低通平滑时间核 & $[75, 150, 300] \times \text{scale}$ & $\text{ms}$ & 慢抑制神经回路 \\
-    $w_{EE}, w_{EI}, w_{IE}, w_{II}$ & 局部微回路内部 E/I 突触耦合强度 & $1.0, 1.0, 1.0, 1.0$ & 无量纲 & 平衡态网络假设 \\
-    $\theta_{\text{bias}}$ & Sigmoid 神经群放电非线性激活偏置 & $-2.0$ & 无量纲 & 静息电位设定 \\
-    $\rho$ & 同级皮层跨神经元群复发连接增益 & $\{0, 0.1, 0.2\}$ & 无量纲 & 训练块内留出选择 \\
-    $\lambda$ & 有效观测矩阵吉洪诺夫正则化参数 & $\{0.1, 0.3, 1, 3, 10, 30, 100\}$ & 无量纲 & 训练块内留出选择 \\
-    $\hat{\mathbf{L}}$ & 条件共享的 $3 \times 9$ 维头皮有效前向观测矩阵 & 岭回归解析求解 & 记录单位/归一化源 & 仅由训练块数据估计 \\
-    $T_s$ & 模拟视觉刺激物理呈现持续时间 & $52 / 256 \approx 0.203$ & $\text{s}$ & 赛题事件通道实测 \\
-    \bottomrule
-    \end{tabular}%
-}
+\begin{tabular}{llll}
+\toprule
+\textbf{参数} & \textbf{含义} & \textbf{候选值或设定} & \textbf{确定方式} \\
+\midrule
+$\tau_g$ & LGN 中继时间常数 & $20\times\mathrm{scale}~\mathrm{ms}$ & 层级时间先验 \\
+$\tau_{E,1:3}$ & 三级兴奋群时间常数 & $[20,40,80]\times\mathrm{scale}~\mathrm{ms}$ & 层级时间先验 \\
+$\tau_{I,1:3}$ & 三级抑制群时间常数 & $[40,80,160]\times\mathrm{scale}~\mathrm{ms}$ & 层级时间先验 \\
+$\tau_{e,1:3}$ & 兴奋性突触时间常数 & $[25,50,100]\times\mathrm{scale}~\mathrm{ms}$ & 突触核设定 \\
+$\tau_{i,1:3}$ & 抑制性突触时间常数 & $[75,150,300]\times\mathrm{scale}~\mathrm{ms}$ & 慢抑制设定 \\
+$\mathrm{scale}$ & 全局时间尺度 & $\{0.75,1.00,1.25\}$ & 训练块内选择 \\
+$\rho$ & 同层复发强度 & $\{0,0.1,0.2\}$ & 训练块内选择 \\
+$\lambda$ & 观测矩阵岭参数 & $\{0.1,0.3,1,3,10,30,100\}$ & 训练块内选择 \\
+\bottomrule
+\end{tabular}}
 \end{table}
-\subsubsection{左右三角刺激脑电差异的形成机制与消融分析}
-为量化模型复现实测脑电左右差异波形的能力，引入\textbf{方向差分相对拟合优度指标 $S_\Delta$}：
-\begin{equation}
-    S_\Delta = 1 - \frac{\operatorname{MSE}(D^{\text{obs}}, D^{\text{pred}})}{\operatorname{MSE}(D^{\text{obs}}, 0)}
-    \label{eq:S_delta}
-\end{equation}
-式中，分母为“将左右差异全部预测为零”的平庸基准均方误差。$S_\Delta > 0$ 表明计算模型成功捕获到了超越静态零假设的真实方向差分动态。
-四组数据集在右减左方向差分波形上的独立留出预测表现如图~\ref{fig:q2_diff_waves} 所示。图中的阴影区域代表通过块内分层重采样得到的实测点态 95\% 置信区间。可以看出，尽管单试次波动剧烈，但在四组记录中，模型预测的差分轨迹在关键时间窗内均较好地落入了实测置信带内，定量证明左右差异波具有确定性的神经动力学生成基础。
+
+图~\ref{fig:q2_erp_fitting} 给出 A1 的同样本描述拟合和五个外层留出块的等权汇总。实线为观测 ERP，虚线为模型预测。上排用于观察模型在训练信息充分时可表示的波形形态，下排用于评价模型的外推能力。结果显示，模型能够生成与视觉提示同步、并在三通道呈现不同符号和尺度的预测；对于 F3、F4 中幅值较大的慢变成分，模型仍有进一步细化空间，因此后续重点结合留出结果评价其解释能力。
+
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.92\textwidth]{Q2_图4_左右差异波.pdf}
-\caption{四组数据集在右减左方向差分波形上的独立留出预测表现与实测置信带}
+\includegraphics[width=0.98\textwidth]{Q2_图3_ERP拟合与留出.pdf}
+\caption{A1 左右条件 ERP 的同样本描述拟合与连续时间块留出预测}
+\label{fig:q2_erp_fitting}
+\end{figure}
+
+\subsubsection{脑电信号差异的模型解释}
+
+\paragraph{（1）左右差异的形成路径}
+
+在模型中，左右刺激之间的差异沿如下路径形成：镜像轮廓首先改变式~\eqref{eq:q2_shape} 中的形状偏好输入；该差异经式~\eqref{eq:q2_lgn} 的 LGN 中继进入三级 E/I 网络，在不同时间常数作用下形成逐层延迟的源活动；最后由同一个 $\widehat{\boldsymbol L}$ 投影为三通道电位。由于动力学参数和观测矩阵对左右条件共享，模型不允许通过“给左、右条件分别拟合一套参数”来制造差异。
+
+为检验预测差异是否优于“左右完全相同”的平凡模型，定义右减左差异波
+\[
+\boldsymbol D^{\mathrm{obs}}(t)
+=\boldsymbol y_R(t)-\boldsymbol y_L(t),\qquad
+\boldsymbol D^{\mathrm{pred}}(t)
+=\widehat{\boldsymbol y}_R(t)-\widehat{\boldsymbol y}_L(t),
+\]
+并构造差分预测增益
+\begin{equation}
+S_\Delta
+=1-
+\frac{\operatorname{MSE}
+\!\left(\boldsymbol D^{\mathrm{obs}},\boldsymbol D^{\mathrm{pred}}\right)}
+{\operatorname{MSE}
+\!\left(\boldsymbol D^{\mathrm{obs}},\boldsymbol 0\right)}.
+\label{eq:q2_sdelta}
+\end{equation}
+当 $S_\Delta>0$ 时，模型在该记录上的差异预测优于零差异基准；$S_\Delta<0$ 表明当前参数配置相对零差异基准的增益较为有限。该指标是相对于零差异基准的预测增益，不等同于常规定义的决定系数 $R^2$。
+
+\paragraph{（2）独立留出差异波结果}
+
+四组记录的留出差异波如图~\ref{fig:q2_diff_waves} 所示。蓝色实线为实测右减左差异，红色虚线为模型预测，浅蓝阴影为块重采样得到的点态区间。A2、B2 在部分分析窗内能够跟踪差异波的方向和缓慢变化；A1、B1 的预测在部分时段与观测幅值存在偏差。随时间增大的区间宽度进一步反映了慢漂移和试次间波动对差异波估计的影响。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{Q2_图4_左右差异波.pdf}
+\caption{四组记录右减左 ERP 差异波的连续时间块留出预测}
 \label{fig:q2_diff_waves}
 \end{figure}
-表 \ref{tab:q2_fit_results} 给出了完整模型在四组实测数据集上的独立时间块测试综合性能指标：
+
+表~\ref{tab:q2_mechanism_results} 给出各记录的定量结果。A1、B2 的 $S_\Delta$ 点估计为正，表明模型在这两组记录上捕捉到了优于零差异基准的方向变化；A2、B1 的点估计相对接近基准，且块重采样区间整体较宽。综合来看，该模型已呈现一定的差异波外推能力，其跨记录稳定性仍有进一步提升空间。
+
 \begin{table}[H]
 \centering
-\caption{完整前向动力学模型在四组数据集上的留出拟合与差分预测表现}
-\label{tab:q2_fit_results}
+\caption{完整模型在四组记录上的留出预测结果}
+\label{tab:q2_mechanism_results}
 \resizebox{\textwidth}{!}{%
-    \begin{tabular}{lcccccc}
-    \toprule
-    \textbf{数据集编号} & \textbf{差分优度 $S_\Delta$} & \textbf{$S_\Delta$ 95\% 置信区间} & \textbf{差分波形残差 RMSE} & \textbf{总 ERP 决定系数 $R^2$} & \textbf{波形皮尔逊相关性} & \textbf{有效试次数} \\
-    \midrule
-    受试者A\_项目一 (A1) & \textbf{+0.0581} & [-0.4743, +0.1474] & 91.1154 & -0.1825 & -0.5342 & 67 \\
-    受试者A\_项目二 (A2) & -0.0842 & [-1.0452, +0.4769] & 87.6182 & \textbf{+0.1283} & \textbf{+0.4166} & 70 \\
-    受试者B\_项目一 (B1) & -0.0176 & [-0.0699, -0.0004] & 98.3928 & -0.1027 & -0.1545 & 69 \\
-    受试者B\_项目二 (B2) & \textbf{+0.2562} & [-1.1102, +0.5607] & 90.6075 & -0.1176 & +0.1193 & 69 \\
-    \bottomrule
-    \end{tabular}%
-}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{记录} & \textbf{$S_\Delta$} & \textbf{$S_\Delta$ 块重采样区间} &
+\textbf{差异 RMSE} & \textbf{总 ERP $R^2$} & \textbf{波形相关系数} \\
+\midrule
+A1 & 0.0581 & $[-0.4743,\ 0.1474]$ & 91.1154 & $-0.1825$ & $-0.5342$ \\
+A2 & $-0.0842$ & $[-1.0452,\ 0.4769]$ & 87.6182 & 0.1283 & 0.4166 \\
+B1 & $-0.0176$ & $[-0.0699,\ -0.0004]$ & 98.3928 & $-0.1027$ & $-0.1545$ \\
+B2 & 0.2562 & $[-1.1102,\ 0.5607]$ & 90.6075 & $-0.1176$ & 0.1193 \\
+\bottomrule
+\end{tabular}}
 \end{table}
-\noindent\textbf{1. 跨半球空间侧化与偏侧化指数（LI）表征}：
-双侧额区跨半球差分（F4--F3）与时变偏侧化指数（LI）的空间响应如图~\ref{fig:q2_lateralization} 所示。从时变曲线与右侧箱线图的统计分布可以看出，左、右三角形所诱发的空间注意偏向，驱动了对侧额叶皮层的非对称放电，使得偏侧化指数 LI 在刺激后 250--500 ms 区间内产生了显著的极性分离，为区分左右视觉刺激提供了明确的电生理指针。
+
+\paragraph{（3）额区空间侧化的解释}
+
+为描述双侧额区相对变化，在 $250$--$500~\mathrm{ms}$ 时窗内记三通道平均幅值为 $A_{\mathrm{Fz}},A_{\mathrm{F3}},A_{\mathrm{F4}}$，定义稳定化侧化指数
+\begin{equation}
+\mathrm{LI}
+=\frac{A_{\mathrm{F4}}-A_{\mathrm{F3}}}
+{\max\!\left(
+|A_{\mathrm{F4}}|+|A_{\mathrm{F3}}|,
+\epsilon_{\mathrm{train}}
+\right)}.
+\label{eq:q2_li}
+\end{equation}
+其中，$\epsilon_{\mathrm{train}}$ 由训练块幅值尺度的低分位数确定，用于防止分母接近零。图~\ref{fig:q2_lateralization} 的左、中列分别给出 F4--F3 电位差和 LI 的实测/预测曲线，右列给出分析窗内单试次 LI 分布。不同记录中的极性与幅值呈现一定个体差异，因此额区侧化更适合作为候选空间特征；其生理含义还需结合眼动、任务准备、参考电极及个体体传导差异进行综合分析。
+
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.92\textwidth]{Q2_图5_空间侧化.pdf}
-\caption{双侧额区跨半球差分（F4-F3）与时变偏侧化指数（LI）的空间侧化响应特征}
+\includegraphics[width=0.98\textwidth]{Q2_图5_空间侧化.pdf}
+\caption{四组记录的 F4--F3 电位差与稳定化侧化指数}
 \label{fig:q2_lateralization}
 \end{figure}
-\noindent\textbf{2. 关键因果机制的系统消融实验（Ablation Study）}：
-为严格排查拟合收益的生理源头，设计了三大系统消融测试，其干预对比曲线如图~\ref{fig:q2_ablation} 所示：
-\begin{enumerate}
-    \item \textbf{形状选择性消融（Ablation: Shape Preference）}：强制使输入 $f_L(I) = f_R(I)$。如图~\ref{fig:q2_ablation} 所示，模拟输出的左、右头皮电位完全重合，方向差分 $D^{\text{pred}}(t) \equiv 0$，$S_\Delta$ 骤降至 0。该反事实检验在模型内部严格证实了\textbf{视物形状几何轮廓的非对称空间编码是引发下游皮层差异的第一物理驱动源}；
-    \item \textbf{复发连接消融（Ablation: Recurrence, $\rho = 0$）}：断开同级神经群之间的横向耦合。结果显示高频诱发振荡显著衰退，波形平滑度下降，表明皮层内侧向交互负责维持刺激后期的波形延续；
-    \item \textbf{跨半球观测对称消融（Ablation: Symmetric Projection）}：强制约束前向观测矩阵在 F3 与 F4 上的行权重镜像对称。此时跨半球偏侧化电位被抹平，直接导致 F4 与 F3 之间的时域差分严重失真，证实了\textbf{双侧大脑半球解剖投射的不对称性是决定电极差异极性反转的核心传导基础}。
-\end{enumerate}
+
+\paragraph{（4）消融与敏感性分析}
+
+为判定预测结果依赖模型中的哪些结构，分别进行三类反事实消融：令 $f_L=f_R$ 以取消形状选择性；令 $\rho=0$ 以取消同层跨群复发；约束 F3、F4 观测行对称以取消观测侧化。同时，将时间尺度、复发强度及 F4 读出权重在固定范围内扰动，考察 $S_\Delta$ 的变化。
+
+图~\ref{fig:q2_ablation} 左上给出完整模型和多种替代模型的留出增益，右上为三项消融后的误差变化，左下为参数敏感性，右下为完整模型的块重采样区间。取消形状后模型的方向输出按结构归零，表明“形状选择性输入”是模型内部产生左右差异的必要条件；复发和对称观测消融在不同记录上呈现不同影响，反映了各结构对个体记录的贡献存在差异。A2、B2 的区间相对较宽，后续可通过增加重复记录进一步提高消融效应估计的精度。
+
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.92\textwidth]{Q2_图6_消融与敏感性.pdf}
-\caption{关键因果机制消融对比、固定参数干预与超参数敏感性检验曲线}
+\includegraphics[width=0.98\textwidth]{Q2_图6_消融与敏感性.pdf}
+\caption{模型消融、固定参数干预及差异预测增益的敏感性分析}
 \label{fig:q2_ablation}
 \end{figure}
-\subsubsection{区分左、右三角视觉刺激的 23 维特征表示与判别性能评估}
-为了将问题二建立的生物物理前向机理转化为脑机接口（BCI）与临床诊断中切实可用的工程特征表示，构建了涵盖“传统时域、局部峰特征、半球侧化、机制模型先验投影”四个维度的 \textbf{23 维机制增强特征向量 $\boldsymbol{\phi} \in \mathbb{R}^{23}$}。
-\noindent\textbf{1. 23 维特征体系的数学定义}：
-各维特征的提取严格在测试试次内完成，数学构造如表 \ref{tab:feature_def} 所示。
+
+\paragraph{（5）模型解释的证据边界}
+
+综上，本模型形成了三层递进结果。第一，形状编码和级联动力学在数学上给出一条可计算的差异形成路径；第二，A1、B2 的正 $S_\Delta$ 表明该路径在部分记录上具有超越零差异基准的留出预测价值；第三，A2、B1 的点估计及较宽区间提示模型在跨记录适配方面仍有优化空间。考虑到现有观测通道数量和辅助信息条件，本文将 LGN、视觉层和额区层作为功能性计算模块，用于提供可解释的正向建模框架；更精细的解剖定位可在后续结合个体头模型、眼动与多通道数据进一步验证。
+
+\subsubsection{视觉刺激响应的特征表示}
+
+\paragraph{（1）二十三维机制增强特征}
+
+为将正向模型转化为可供未知试次使用的表示，在每个试次上构造
+\begin{equation}
+\boldsymbol\phi
+=
+\left[
+\boldsymbol A_{1:3},
+\boldsymbol P_{1:3},
+\boldsymbol T_{1:3},
+\boldsymbol M_{1:3},
+\mathrm{LI},
+A_{\mathrm{F4}}-A_{\mathrm{F3}},
+\boldsymbol b_{1:6},
+\boldsymbol e_{1:3}
+\right]^{\mathsf T}
+\in\mathbb R^{23}.
+\label{eq:q2_feature}
+\end{equation}
+各分量的定义见表~\ref{tab:q2_feature_def}。其中，$\boldsymbol b$ 为单试次在训练块共同模板和差异模板上的最小二乘投影系数，$\boldsymbol e$ 为相应的通道重构残差。构造测试试次特征时只使用训练块模板，不读取该试次的真实方向，因此该表示可用于严格的未知方向预测。
+
 \begin{table}[H]
 \centering
-\caption{区分左、右三角视觉刺激的 23 维特征表示数学定义表}
-\label{tab:feature_def}
+\caption{二十三维视觉刺激响应特征的组成}
+\label{tab:q2_feature_def}
 \resizebox{\textwidth}{!}{%
-    \begin{tabular}{lccl}
-    \toprule
-    \textbf{特征分组名称} & \textbf{特征维度} & \textbf{数学计算公式} & \textbf{电生理与特征工程含义} \\
-    \midrule
-    时域幅值均值 ($A_{1:3}$) & 3 & $\frac{1}{T_w}\sum_{t \in [250, 500)} x_c(t), \; c \in \{\text{Fz, F3, F4}\}$ & 250--500 ms 认知关键窗内的有符号能量 \\
-    有效正峰幅值 ($P_{1:3}$) & 3 & $\max_{t \in [250, 500)} x_c(t), \; \text{s.t. 显著度} \ge 0.5 \times \text{SD}_{\text{pre}}$ & 局部正向极大值；无有效峰记录为缺失标记 \\
-    正峰潜伏期 ($T_{1:3}$) & 3 & $\arg\max_{t \in [250, 500)} x_c(t), \; (\text{单位: ms})$ & 正峰出现时刻；无峰时采用训练集均值填补 \\
-    峰缺失指示器 ($M_{1:3}$) & 3 & $\mathbb{I}(\text{当前试次通道 } c \text{ 无合格局部正峰})$ & 显式表征神经响应不显著状态的布尔特征 \\
-    稳定化偏侧化指数 (LI) & 1 & $\frac{A_{\text{F4}} - A_{\text{F3}}}{\max(|A_{\text{F4}}| + |A_{\text{F3}}|, \, q_{10}^{\text{train}})}$ & 反映左右半球相对不对称激活度的平滑指数 \\
-    半球差分绝对值 & 1 & $A_{\text{F4}} - A_{\text{F3}}$ & 前额叶跨半球空间电压梯度 \\
-    机制模板投影系数 ($b_{1:6}$) & 6 & $\arg\min_{\mathbf{b}} \|x_c - b_1 C_{y,c}^{\text{train}} - b_2 D_{y,c}^{\text{train}}\|_2^2$ & 未知试次在训练机理共同与差分模板上的坐标 \\
-    前向模型重构残差 ($e_{1:3}$) & 3 & $\text{RMS}\left( x_c(t) - \hat{x}_{c}^{\text{model}}(t) \right), \; t \in [50, 750]\text{ ms}$ & 纯前向机理所无法解释的高阶个体差异波动 \\
-    \bottomrule
-    \end{tabular}%
-}
+\begin{tabular}{lccl}
+\toprule
+\textbf{特征组} & \textbf{维数} & \textbf{计算区间或定义} & \textbf{表征含义} \\
+\midrule
+$\boldsymbol A_{1:3}$ & 3 & $250$--$500~\mathrm{ms}$ 三通道有符号均值 & 中期响应幅值 \\
+$\boldsymbol P_{1:3}$ & 3 & 窗内满足阈值的局部正峰 & 峰值强度 \\
+$\boldsymbol T_{1:3}$ & 3 & 有效正峰的潜伏期 & 反应时序 \\
+$\boldsymbol M_{1:3}$ & 3 & 无合格峰时取 1 & 峰缺失状态 \\
+$\mathrm{LI}$ & 1 & 式~\eqref{eq:q2_li} & 稳定化额区侧化 \\
+$A_{\mathrm{F4}}-A_{\mathrm{F3}}$ & 1 & 分析窗内 F4 与 F3 幅值差 & 双侧额区梯度 \\
+$\boldsymbol b_{1:6}$ & 6 & 训练块共同/差异模板投影 & 机制模板坐标 \\
+$\boldsymbol e_{1:3}$ & 3 & $50$--$750~\mathrm{ms}$ 通道重构 RMS & 模型未解释成分 \\
+\midrule
+\textbf{合计} & \textbf{23} & --- & 时域、空间与机制信息联合表示 \\
+\bottomrule
+\end{tabular}}
 \end{table}
-\noindent\textbf{2. 独立时间块判别验证与置换检验}：
-在收缩协方差线性判别分析（Shrinkage-LDA）分类器下，分别对传统特征集与本文提出的机制特征集进行严格五折时间块外推评估。为杜绝伪相关，执行了 \textbf{1999 次时间块内置换检验}（结合 maxT 多重比较校正），实测统计判别性能如表 \ref{tab:feature_performance} 所示。
+
+\paragraph{（2）判别器与评价指标}
+
+对每个特征组使用收缩协方差线性判别分析。训练块内估计类别均值 $\boldsymbol\mu_L,\boldsymbol\mu_R$ 和收缩协方差 $\widehat{\boldsymbol\Sigma}_\gamma$，对未知试次 $\boldsymbol\phi$ 的判别函数写为
+\begin{equation}
+h(\boldsymbol\phi)
+=
+\left(\boldsymbol\mu_R-\boldsymbol\mu_L\right)^{\mathsf T}
+\widehat{\boldsymbol\Sigma}_{\gamma}^{-1}\boldsymbol\phi
+-\frac12
+\left(
+\boldsymbol\mu_R^{\mathsf T}
+\widehat{\boldsymbol\Sigma}_{\gamma}^{-1}\boldsymbol\mu_R
+-
+\boldsymbol\mu_L^{\mathsf T}
+\widehat{\boldsymbol\Sigma}_{\gamma}^{-1}\boldsymbol\mu_L
+\right).
+\label{eq:q2_lda}
+\end{equation}
+以平衡准确率
+\begin{equation}
+\mathrm{BA}
+=\frac12
+\left(
+\frac{\mathrm{TP}}{\mathrm{TP}+\mathrm{FN}}
++
+\frac{\mathrm{TN}}{\mathrm{TN}+\mathrm{FP}}
+\right)
+\label{eq:q2_ba}
+\end{equation}
+作为主指标，并同时报告 AUC 与 F1。置信区间采用 1000 次连续块重采样；原假设检验在每个时间块内部置换标签 1999 次，以保留块内类别数和时间结构；七组特征之间再使用 maxT 对多重比较进行校正。另以 199 次块内循环移位作为时间依赖稳健性检查。
+
+\paragraph{（3）留出判别结果}
+
+表~\ref{tab:q2_feature_performance} 汇总全部 275 个试次的外层留出结果。幅值特征取得最高的观测 BA 0.5161，其 95\% 块重采样区间覆盖 0.5，maxT 校正后 $p=0.7855$；23 维机制增强特征的 BA 为 0.4471、AUC 为 0.4679，校正后 $p=0.9995$。峰潜伏期、空间侧化和协方差投影等特征的结果主要分布在机会水平附近，表明在当前样本规模下，单试次方向信息的可分程度相对有限。
+
 \begin{table}[H]
 \centering
-\caption{不同特征组在区分左右三角视觉刺激时的独立留出分类判别性能}
-\label{tab:feature_performance}
+\caption{不同视觉刺激响应特征的连续时间块留出判别性能}
+\label{tab:q2_feature_performance}
 \resizebox{\textwidth}{!}{%
-    \begin{tabular}{lcccccc}
-    \toprule
-    \textbf{特征输入组合} & \textbf{平衡准确率 (BA)} & \textbf{BA 95\% 块重采样区间} & \textbf{受试者操作曲线面积 (AUC)} & \textbf{F1 分数} & \textbf{块内置换 $p$ 值} & \textbf{maxT 校正 $p$ 值} \\
-    \midrule
-    仅时域幅值均值 (amplitude) & \textbf{0.5161} & [0.4846, 0.5481] & \textbf{0.5337} & 0.5056 & 0.3125 & 0.7130 \\
-    仅有效峰潜伏期 (latency) & 0.4690 & [0.4200, 0.5159] & 0.4663 & 0.4632 & 0.8165 & 0.9880 \\
-    空间侧化特征组 (spatial) & 0.4693 & [0.4332, 0.5004] & 0.4721 & 0.4710 & 0.8035 & 0.9870 \\
-    \textbf{23维机制增强特征 (mechanism)} & 0.4471 & [0.4016, 0.4837] & 0.4679 & 0.4370 & 0.9175 & 0.9985 \\
-    高维空间协方差组 (covariance) & 0.4692 & [0.4221, 0.5208] & 0.4770 & 0.4672 & 0.7945 & 0.9880 \\
-    \midrule
-    \textbf{跨受试者迁移测试: A1 $\to$ B1} & \textbf{0.6231} & --- & \textbf{0.5807} & \textbf{0.6176} & --- & --- \\
-    \textbf{跨受试者迁移测试: A2 $\to$ B2} & \textbf{0.5557} & --- & \textbf{0.5270} & \textbf{0.5373} & --- & --- \\
-    \bottomrule
-    \end{tabular}%
-}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{特征组} & \textbf{BA} & \textbf{BA 块重采样区间} &
+\textbf{AUC} & \textbf{F1} & \textbf{maxT 校正 $p$ 值} \\
+\midrule
+时域幅值（amplitude） & 0.5161 & $[0.4846,\ 0.5481]$ & 0.5337 & 0.5056 & 0.7855 \\
+峰潜伏期（peak\_latency） & 0.4690 & $[0.4200,\ 0.5159]$ & 0.4663 & 0.4632 & 0.9960 \\
+空间侧化（spatial） & 0.4693 & $[0.4332,\ 0.5004]$ & 0.4721 & 0.4710 & 0.9960 \\
+23 维机制特征（mechanism） & 0.4471 & $[0.4016,\ 0.4837]$ & 0.4679 & 0.4370 & 0.9995 \\
+协方差特征（covariance） & 0.4692 & $[0.4221,\ 0.5208]$ & 0.4770 & 0.4672 & 0.9960 \\
+六维投影（projection6） & 0.4840 & $[0.4521,\ 0.5205]$ & 0.4896 & --- & 0.9795 \\
+三维方向投影（direction3） & 0.4919 & $[0.4451,\ 0.5378]$ & 0.4632 & --- & 0.9535 \\
+\bottomrule
+\end{tabular}}
 \end{table}
-23 维机制增强特征空间的 PCA 降维投影、LDA 混淆矩阵与置换检验统计分布如图~\ref{fig:q2_classification} 所示。由图~\ref{fig:q2_classification} 左侧 PCA 二维投影可见，左、右刺激试次在前两个主成分上呈现出宏观分离态势；右侧混淆矩阵与经验置换分布客观揭示了时间块内的单试次不确定性。而在跨受试者迁移测试（A1 $\to$ B1）中，机制模型取得了 **62.31\% 的平衡准确率与 0.5807 的 AUC**，表明本模型成功捕获到了超越个体背景噪声的稳健先验，实现了从生物物理机制解释到工程特征表示的闭环。
+
+图~\ref{fig:q2_classification} 以 A1 为例给出 PCA 投影、各特征组留出 BA、机制特征混淆矩阵以及置换零分布。PCA 图中的训练点存在局部聚集，测试点则保留一定重叠；观测 BA 的红线落在置换分布主体内，与校正 $p$ 值一致。机制特征相对空间特征的 BA 差值为 $-2.2$ 个百分点，块重采样区间为 $[-4.9,\ 0.3]$ 个百分点，说明其当前增量收益较为有限，后续可通过丰富观测通道和扩大训练样本进一步提升。
+
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.92\textwidth]{Q2_图7_特征与判别.pdf}
-\caption{23 维机制增强特征空间的 PCA 降维投影、LDA 混淆矩阵与块内置换分布}
+\includegraphics[width=0.98\textwidth]{Q2_图7_特征与判别.pdf}
+\caption{A1 视觉刺激特征投影、留出判别与块内置换检验}
 \label{fig:q2_classification}
 \end{figure}
 
+\paragraph{（4）特征表示的使用结论}
+
+由上述结果可知，式~\eqref{eq:q2_feature} 给出了一个计算闭合、对未知试次无标签泄漏的视觉刺激响应表示，可作为后续脑机接口模型的候选输入。现有两名受试者、四组记录和三个额区通道已呈现幅值、侧化与机制投影等多类候选差异，但单试次层面的区分度仍有提升空间。后续可通过增加受试者与重复记录，引入枕区/顶区电极和同步眼动通道，并在独立采集批次上固定时间窗、参数网格和最终判别器，以进一步提高特征表示的稳定性和迁移能力。
 \subsection{问题三模型的建立与求解}
+
+问题三要求在视觉提示、候选目标与应答行为之间建立连续的认知过程模型。为避免把应答后的动作电位混入认知状态，本文首先审计四组记录的事件语义，并按“应答前约 $100~\mathrm{ms}$”原则构造变长脑电窗口；随后继承问题二的形状编码与视觉群体动力学，将提示保持、目标触发提取和认知整合表示为低维功能状态，再通过训练块内估计的有效观测矩阵映射至 $F_z$、$F_3$、$F_4$；最后以认知差分状态驱动随机证据累积过程，统一表示正确、错误和有限观察期内未决三类结局。真实 EEG 用于检验波形预测，仿真轨迹用于检验模型能否产生题目所述的异常应答情形，二者在解释上严格区分。
+
+\subsubsection{建模思路}
+
+\paragraph{（1）从事件证据到认知状态的分层建模}
+
+本问采用“事件层---认知层---观测层---决策层”的递进结构。事件层确定提示、目标和应答的时间边界；认知层描述视觉输入在短时保持与目标触发下的状态演化；观测层把模型状态投影为头皮电位；决策层仅在仿真任务布局中把方向证据转换为行为结局。各层的输入、状态与输出如表~\ref{tab:q3_route} 所示。该结构一方面复用问题二已建立的视觉通路，另一方面将无法由三导联 EEG 直接确认的深部来源保留为功能性状态，而不将其解释为海马体的直接源定位结果\cite{glomb2022computational,daume2024control}。
+
+\begin{table}[H]
+\centering
+\caption{问题三认知模型的分层结构}
+\label{tab:q3_route}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llll}
+\toprule
+\textbf{模型层次} & \textbf{主要输入} & \textbf{核心状态或运算} & \textbf{输出及作用} \\
+\midrule
+事件层 & VisCue、TgtAct、记录边界 & 事件审计与应答前截窗 & 合格的变长认知脑电片段 \\
+视觉--认知层 & 提示形状、目标出现时刻 & 视觉输入 $\boldsymbol v$、记忆状态 $\boldsymbol m$、认知状态 $\boldsymbol p$ & 连续认知源时间序列 \\
+头皮观测层 & 认知源与提示前背景 & 条件共享有效观测矩阵 & 三通道预测脑电 $\widehat{\boldsymbol x}$ \\
+行为决策层 & 方向对齐认知证据 & 有界随机证据累积 & 正确、错误与未决三类仿真结局 \\
+验证层 & 留出时间块与保存结果 & 误差比较、消融及敏感性分析 & 模型适用范围与证据边界 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\paragraph{（2）数据隔离与模型求解原则}
+
+每组 100 个提示事件按原始时间顺序划分为 5 个连续时间块。第 $k$ 个时间块仅作为外层测试集，其余 4 个时间块用于选择时间常数、目标输入持续时间和岭惩罚强度，并估计头皮观测系数。任何由均值、尺度、背景斜率或候选参数产生的统计量均在训练块内部计算后作用于测试块。由此，模型接受的是一条未见过的原始认知试次，而不是已经利用该试次应答信息构造的条件平均波形。
+
+模型求解依次完成四个步骤：首先确定每次试验可用的认知窗口；其次由问题二模型生成提示与目标的视觉驱动；再次联合求解低维认知状态和三通道观测映射；最后在固定认知状态上进行决策仿真、消融检验和观察窗敏感性分析。该路线对应“信号截取---状态建模---参数估计---外层验证”的闭环，能够分别回答认知信号如何截取、模型状态如何形成、头皮脑电如何观测以及异常应答如何处理。
+
+\paragraph{（3）候选模型与对照体系}
+
+为判断模型性能来自视觉瞬态、缓慢背景还是提示保持结构，本文不只拟合单一模型，而是建立由简到繁的候选族。各候选共享同一事件窗口、因果滤波、外层划分和评价指标，仅改变进入设计矩阵的状态列，因此模型间误差可以在相同测试试次上逐项比较。主模型记为 N2，其余候选分别承担零输入基准、视觉瞬态基准、单级认知基准和慢趋势对照等作用；同时通过删除记忆投影或关闭提取门，检验 N2 中各环节是否确有贡献。具体关系见表~\ref{tab:q3_candidates}。
+
+\begin{table}[H]
+\centering
+\caption{问题三候选模型与对照关系}
+\label{tab:q3_candidates}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{clll}
+\toprule
+\textbf{模型} & \textbf{保留的状态} & \textbf{主要用途} & \textbf{解释边界} \\
+\midrule
+B0 & 不含刺激状态，仅保留提示前背景外推 & 检查慢漂移可预测性 & 输入信息多于纯刺激模型 \\
+N0 & 提示与目标的视觉瞬态 $\boldsymbol v$ & 视觉输入基准 & 不描述保持与提取 \\
+N1 & $\boldsymbol v$ 与单级低通认知状态 & 检查一般时间平滑作用 & 不含独立记忆状态 \\
+N2 & $\boldsymbol v$、$\boldsymbol m$ 与 $\boldsymbol p$ & 视觉--记忆--认知主模型 & 仅作功能性状态解释 \\
+N3 & 与事件对齐的平滑慢趋势基函数 & 排除一般慢变化解释 & 不代表特定神经机制 \\
+N2 消融 & 删除记忆投影或关闭目标触发提取 & 定位主模型的结构贡献 & 与完整 N2 同一参数框架 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+其中，N2 与 N3 使用完全相同的外层测试块，二者的目标后误差差异用于回答“提示保持结构是否比一般慢趋势提供更多留出解释”；B0 则使用严格提示前 EEG 构造背景外推，属于更丰富的信息集合，只用于说明背景可预测性，不能与 N2 的机制贡献混为一谈。该对照体系把“能否拟合”“由何种信息拟合”以及“是否需要记忆结构”三个问题分开，避免仅凭复杂模型曲线更贴近实测波形便作出生理结论。
+
+\paragraph{（4）可观测性与因果边界}
+
+本问的直接观测量只有原始三通道 EEG、提示标记、候选目标标记及部分点击时刻；$\boldsymbol v$、$\boldsymbol m$、$\boldsymbol p$ 和决策变量 $z$ 均为模型内部状态。建模时遵守三项边界：其一，神经状态只由提示、目标和此前样本驱动，应答时刻仅决定窗口终点，不反向进入状态方程；其二，头皮观测矩阵对左右提示共享，不能通过分别拟合两套系数人为制造方向差异；其三，决策层读取认知状态但不反馈修改 EEG，因而脑电预测与行为仿真可以分别审计。上述边界使每一项结果均能追溯至明确的信息来源，也为后续消融和独立留出检验提供可执行的判据。
+
+\subsubsection{视觉认知相关信号的截取}
+
+\paragraph{（1）提示、目标与应答标记审计}
+
+设第 $i$ 次试验的提示起点、候选目标起点、应答时刻、下一次提示时刻和记录终点分别为 $t_i^{\mathrm c}$、$t_i^{\mathrm T}$、$t_i^{\mathrm r}$、$t_i^{\mathrm n}$ 与 $t^{\mathrm{rec}}$。通过对 VisCue 与 TgtAct 通道逐段扫描可知，四组记录均包含 100 个提示事件；A2、B2 的 $\pm2$ 标记可作为独立点击，而 A1、B1 仅能以候选目标平台的结束时刻作为应答代理。由于数据未提供逐试次正确目标映射和实验超时阈值，本文不依据点击方向推造正误标签，也不把缺少独立点击的项目一试次直接记为超时。审计及质量控制结果见表~\ref{tab:q3_event_audit}。
+
+\begin{table}[H]
+\centering
+\caption{四组记录的事件标记与认知 EEG 保留情况}
+\label{tab:q3_event_audit}
+\begin{tabular}{cccccc}
+\toprule
+\textbf{记录} & \textbf{提示事件数} & \textbf{独立点击数} & \textbf{平台末端代理数} & \textbf{无明确标记数} & \textbf{EEG 保留数} \\
+\midrule
+A1 & 100 & 0   & 100 & 0 & 65 \\
+A2 & 100 & 100 & 0   & 0 & 68 \\
+B1 & 100 & 0   & 100 & 0 & 64 \\
+B2 & 100 & 100 & 0   & 0 & 71 \\
+\midrule
+合计 & 400 & 200 & 200 & 0 & 268 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{（2）应答前变长观察窗}
+
+为排除应答后的动作活动，令应答保护间隔 $\Delta=0.1~\mathrm{s}$，目标后行政观察上限 $D=2~\mathrm{s}$。对存在独立点击或平台末端代理的试次，认知窗口终点取应答前 $100~\mathrm{ms}$、目标后上限、下一提示和记录终点中的最早者；对无明确应答标记但目标事件有效的试次，则去除应答项并保留有限观察窗。于是
+\begin{equation}
+T_i^{\mathrm{end}}=
+\begin{cases}
+\min\!\left(t_i^{\mathrm r}-\Delta,\ t_i^{\mathrm T}+D,\ t_i^{\mathrm n},\ t^{\mathrm{rec}}\right),
+& t_i^{\mathrm r}\ \text{可用},\\[2mm]
+\min\!\left(t_i^{\mathrm T}+D,\ t_i^{\mathrm n},\ t^{\mathrm{rec}}\right),
+& t_i^{\mathrm r}\ \text{不可观测}.
+\end{cases}
+\tag{3-1}
+\label{eq:q3_window}
+\end{equation}
+式~\eqref{eq:q3_window} 中的 $D$ 是统一的分析上限，而不是题目未提供的实验超时阈值。若点击晚于该上限，只在时间分析中视为行政右删失；若点击标记本身缺失，则标记为“应答不可观测”，可以进入 EEG 分析，但不进入真实点击的生存统计。正确、错误和正误未知的试次使用同一截窗规则，避免因行为结果不同而产生选择性剔除。事件类型与截窗逻辑如图~\ref{fig:q3_events} 所示。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.94\textwidth]{q3_events.png}
+\caption{四组记录的应答标记审计与认知信号截窗规则}
+\label{fig:q3_events}
+\end{figure}
+
+\paragraph{（3）因果预处理与质量控制}
+
+在每个连续时间块内，对原始 $F_z$、$F_3$、$F_4$ 依次施加 $60~\mathrm{Hz}$ 陷波和 $0.1$--$30~\mathrm{Hz}$ 四阶 Butterworth 带通。与问题一用于离线 ERP 对齐的双向滤波不同，本问采用单向因果滤波，使时刻 $t$ 的输出只依赖 $t$ 及其之前的样本，从而避免未来应答附近信号反向泄漏至较早认知阶段。每个试次以提示前 $[-250,0)~\mathrm{ms}$ 的中位数进行基线校正，并沿用硬件饱和、峰峰值和相邻采样跳变三类质量规则；阈值按变长窗口归一化后使用。
+
+为比较不同阶段，定义编码、保持和提取三个不重叠时窗：
+\begin{equation}
+\mathcal W_i^{\mathrm E}=[t_i^{\mathrm c},t_i^{\mathrm c}+0.8),\qquad
+\mathcal W_i^{\mathrm M}=[t_i^{\mathrm c}+0.8,t_i^{\mathrm T}),\qquad
+\mathcal W_i^{\mathrm R}=[t_i^{\mathrm T},T_i^{\mathrm{end}}].
+\tag{3-2}
+\label{eq:q3_stages}
+\end{equation}
+窗口外样本记为缺失，不通过时间伸缩把不同反应速度强行对齐。质量控制后 A1、A2、B1、B2 分别保留 65、68、64、71 个试次，共 268 个主 EEG 试次，为后续状态估计提供统一输入。
+
+\subsubsection{视觉--记忆--认知宏观模型与脑电差异解释}
+
+\paragraph{（1）提示与目标的视觉驱动构造}
+
+问题二已给出左右三角形经形状编码、LGN 中继和三级 E/I 神经群传播后的末级视觉源。为避免将真实点击方向写入模型，本文只利用提示符号 $d_i\in\{-1,+1\}$ 构造提示的共同分量 $v_i^{\mathrm c}(t)$ 与镜像差分分量 $v_i^{\Delta}(t)$，并为候选目标设置与点击方向无关的共同输入 $v_i^{\mathrm T}(t)$：
+\begin{equation}
+\boldsymbol v_i(t)=
+\begin{bmatrix}
+v_i^{\mathrm c}(t)\\ d_i v_i^{\Delta}(t)\\ v_i^{\mathrm T}(t-t_i^{\mathrm T})
+\end{bmatrix}.
+\tag{3-3}
+\label{eq:q3_visual_input}
+\end{equation}
+其中，前两项继承问题二形状选择性网络的共同/反对称输出，第三项由统一目标脉冲经相同视觉动力学产生。由此，目标出现时刻可以触发认知提取，但真实应答、点击侧和正误标签均不进入视觉源。
+
+\paragraph{（2）提示保持与目标触发提取}
+
+设 $\boldsymbol m_i(t)\in\mathbb R^2$ 为提示保持状态，$\boldsymbol p_i(t)=[p_i^{\mathrm c}(t),p_i^{\Delta}(t),p_i^{\mathrm T}(t)]^{\mathsf T}$ 为认知整合状态。提示信息以时间常数 $\tau_m$ 衰减，目标到达后通过门函数 $G_i^{\mathrm T}(t)=\mathbf 1(t\ge t_i^{\mathrm T})$ 触发延迟提取；独立目标通路不写入提示记忆。其动力学方程为
+\begin{equation}
+\tau_m\dot{\boldsymbol m}_i(t)
+=-\boldsymbol m_i(t)+
+\begin{bmatrix}v_i^{\mathrm c}(t)\\ d_i v_i^{\Delta}(t)\end{bmatrix},
+\tag{3-4}
+\label{eq:q3_memory}
+\end{equation}
+\begin{equation}
+\begin{aligned}
+\tau_p\dot{p}_i^{\mathrm c}(t)
+&=-p_i^{\mathrm c}(t)+v_i^{\mathrm c}(t)+G_i^{\mathrm T}(t)m_i^{\mathrm c}(t-\delta),\\
+\tau_p\dot{p}_i^{\Delta}(t)
+&=-p_i^{\Delta}(t)+d_i v_i^{\Delta}(t)+G_i^{\mathrm T}(t)m_i^{\Delta}(t-\delta),\\
+\tau_p\dot{p}_i^{\mathrm T}(t)
+&=-p_i^{\mathrm T}(t)+v_i^{\mathrm T}(t-t_i^{\mathrm T}),
+\end{aligned}
+\qquad \delta=50~\mathrm{ms}.
+\tag{3-5}
+\label{eq:q3_cognition}
+\end{equation}
+式~\eqref{eq:q3_memory}--\eqref{eq:q3_cognition} 将认知过程划分为“提示编码---缓慢保持---目标触发提取”三个环节。$\boldsymbol m_i$ 表示功能性的保持变量，$\boldsymbol p_i$ 表示多通路整合后的宏观群体状态；二者可用于构造可检验的头皮电位预测，但在缺少个体 MRI、深部电极与高密度导联时，不把 $\boldsymbol m_i$ 唯一归因于海马体活动。
+
+\paragraph{（3）状态离散化与因果更新}
+
+模型按原始采样率 $f_s=256~\mathrm{Hz}$ 在固定时间网格上积分，时间步长为 $\Delta t=1/f_s$。对任一一阶状态 $\tau_q\dot{\boldsymbol q}=-\boldsymbol q+\boldsymbol u$，采用指数 Euler 更新
+\[
+\boldsymbol q[n]=a_q\boldsymbol q[n-1]+(1-a_q)\boldsymbol u[n-1],
+\qquad a_q=\exp\!\left(-\frac{\Delta t}{\tau_q}\right).
+\]
+由于第 $n$ 个状态只读取第 $n-1$ 个及更早输入，该离散形式保持因果性。$50~\mathrm{ms}$ 提取延迟约为 12.8 个采样间隔，计算时在记忆轨迹上进行线性分数延迟插值，而不简单取整为 13 个点，从而减少采样量化对目标触发时刻的影响。对每组记录，提示共同分量、提示差分分量和目标共同分量均先在统一时间轴上生成，再按该试次的 $t_i^{\mathrm T}$ 启动门函数；因此不同反应时只改变可评分终点，不改变目标前状态的计算结果。
+
+从参数作用看，$\tau_m$ 决定提示信息跨越保持期的衰减速度，$\tau_p$ 决定目标后认知整合的响应速度，$T_{\mathrm T}$ 控制目标输入的持续范围，$\delta$ 则描述提取通路的固定传播延迟。四类参数分别影响波形的长期幅度、上升速度、驱动宽度和相位位置，具有相对清晰的结构分工；但在仅有三个额区通道时仍可能存在相关性，因此本文通过训练块内网格选择、岭惩罚和半合成参数恢复共同约束，而不把单次最小误差对应值直接视为生理真值。
+
+\paragraph{（4）头皮观测映射与参数估计}
+
+将式~\eqref{eq:q3_visual_input}--\eqref{eq:q3_cognition} 的状态拼接为设计矩阵 $\boldsymbol H_i(t;\boldsymbol\theta)$，经与实测 EEG 相同的因果滤波后，建立三通道有效观测模型
+\begin{equation}
+\widehat{\boldsymbol x}_i(t)=\boldsymbol H_i(t;\boldsymbol\theta)\boldsymbol B,
+\qquad \widehat{\boldsymbol x}_i(t)\in\mathbb R^3,
+\tag{3-6}
+\label{eq:q3_observation}
+\end{equation}
+其中，$\boldsymbol\theta=(\tau_m,\tau_p,T_{\mathrm T},\delta)$ 为动力学参数，$\boldsymbol B$ 为从视觉、记忆与认知状态到 $F_z$、$F_3$、$F_4$ 的有效读出矩阵。同一外折内所有训练试次及左右提示共享 $\boldsymbol B$，只允许事件时刻和提示方向改变设计矩阵，因而测试波形不能依靠逐试次自由系数进行拟合。
+
+考虑长时程脑电中还存在与任务无关的缓慢漂移，本文另设提示前背景辅助项。对每个通道，分别在三个提示前时间尺度上估计斜率 $s_{i,h,c}^{\mathrm{pre}}$，并将其因果外推为
+\[
+c_{i,h,c}(t)=s_{i,h,c}^{\mathrm{pre}}\tau_h
+\left(1-\mathrm e^{-t/\tau_h}\right),
+\qquad \tau_h\in\{0.25,1,4\}~\mathrm{s}.
+\]
+该项只使用提示出现前的样本，既不会读取测试试次未来脑电，也不改变式~\eqref{eq:q3_memory}--\eqref{eq:q3_cognition} 的认知状态。纯刺激模型以 $\boldsymbol H_i$ 为输入；背景辅助设置则将 $\boldsymbol c_i$ 追加到设计矩阵后单独拟合和报告。两者信息集合不同，前者用于机制比较，后者用于评估实际长窗预测中背景条件的价值。
+
+为使编码、保持和提取三个阶段在变长试次中具有相同权重，令 $w_i(t)$ 在每个非空阶段内归一化。训练块上的稳健估计写为
+\begin{equation}
+(\widehat{\boldsymbol\theta},\widehat{\boldsymbol B})
+=\arg\min_{\boldsymbol\theta,\boldsymbol B}
+\sum_{i\in\mathcal T}\sum_t w_i(t)
+\rho_{1.5}\!\left(
+\frac{\boldsymbol x_i(t)-\boldsymbol H_i(t;\boldsymbol\theta)\boldsymbol B}
+{\boldsymbol s_{\mathcal T}}
+\right)
++\lambda\|\boldsymbol P\boldsymbol B\|_F^2,
+\tag{3-7}
+\label{eq:q3_fit}
+\end{equation}
+式中，$\rho_{1.5}(\cdot)$ 为逐通道作用的 Huber 损失，$\boldsymbol s_{\mathcal T}$ 为训练块尺度，$\boldsymbol P$ 对方向相关状态施加较强收缩，$\lambda$ 为岭惩罚系数。具体求解分为两个阶段：先对全部候选参数与 $\lambda$ 组合计算训练块内嵌套岭回归误差，筛出排名最靠前的两个组合；再对这两个组合逐折执行 Huber 迭代加权最小二乘，并按平均稳健损失确定最终参数。最后仅用四个外层训练块重估 $\boldsymbol B$，直接预测未参与任何选择的第五块。该“全网格筛选---稳健复核---外层预测”策略兼顾计算效率与异常样本抵抗能力。主要候选范围如表~\ref{tab:q3_parameters} 所示。
+
+\begin{table}[H]
+\centering
+\caption{认知模型与决策层的主要参数}
+\label{tab:q3_parameters}
+\begin{tabular}{cllc}
+\toprule
+\textbf{参数} & \textbf{含义} & \textbf{候选值或设定} & \textbf{确定方式} \\
+\midrule
+$\tau_m$ & 提示保持时间常数 & $\{0.5,1,2,4\}~\mathrm{s}$ & 训练块内选择 \\
+$\tau_p$ & 认知整合时间常数 & $\{0.1,0.3,0.6\}~\mathrm{s}$ & 训练块内选择 \\
+$T_{\mathrm T}$ & 目标输入持续时间 & $\{0.1,0.2,0.4\}~\mathrm{s}$ & 训练块内选择 \\
+$\delta$ & 提取延迟 & $0.05~\mathrm{s}$ & 固定设定 \\
+$r_d$ & 方向状态收缩倍数 & $\{1,10\}$ & 训练块内选择 \\
+$\lambda$ & 岭惩罚强度 & $\{10^{-3},10^{-2},10^{-1},1,10\}$ & 嵌套验证 \\
+$\gamma$ & 决策证据增益 & 1.5 & 参考仿真设定 \\
+$\sigma$ & 扩散噪声强度 & 0.6 & 参考仿真设定 \\
+$b$ & 决策边界 & 1 & 归一化设定 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{（5）认知状态对脑电差异的解释}
+
+左右提示的差异首先表现为 $d_i v_i^{\Delta}$ 的符号反转，随后在 $\tau_m$ 控制下形成不同方向的保持轨迹；目标到达时，门函数把延迟记忆状态重新注入 $p_i^{\Delta}$，经同一个观测矩阵投影为三导联差异。模型不为左右条件分别拟合两套参数，因此差异必须由提示的镜像输入及其随时间传播产生。为检查慢变背景的影响，另构造只使用提示前 EEG 斜率的背景辅助观测项，并与纯刺激输入模型分别报告。
+
+图~\ref{fig:q3_eeg} 给出四组记录在 $F_z$ 通道上的留出平均预测。蓝线为式~\eqref{eq:q3_observation} 的刺激--认知模型，橙线在其信息集合之外加入严格提示前背景，黑线为实测脑电。背景辅助模型对长时间慢漂移的跟踪更充分，四组目标后均方误差相对纯刺激模型约下降 22\%--56\%；这一变化说明提示前背景对长窗预测具有价值，但不能据此把收益归因于记忆或海马机制。纯刺激模型则保留了更清晰的机制解释路径，用于后续记忆状态与慢趋势对照。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{q3_eeg.png}
+\caption{四组记录的认知模型留出预测与实测 $F_z$ 脑电对比}
+\label{fig:q3_eeg}
+\end{figure}
+
+\subsubsection{认知状态驱动的三类应答模型}
+
+\paragraph{（1）认知证据与目标匹配}
+
+取未经过头皮观测滤波的认知差分状态 $p_i^{\Delta}(t)$，以参考状态最大幅度 $a$ 归一化，并按提示方向对齐：
+\begin{equation}
+e_i(t)=\frac{d_i p_i^{\Delta}(t)}{a},
+\qquad
+a=\max_t\left|p_{\mathrm{ref}}^{\Delta}(t)\right|.
+\tag{3-8}
+\label{eq:q3_evidence}
+\end{equation}
+为使提示记忆能够与左右候选目标相比较，进一步复用问题二的形状编码。设归一化提示特征为 $\boldsymbol f_i^{\mathrm c}$，模拟布局中左、右目标特征为 $\boldsymbol f_i^{\mathrm L}$ 与 $\boldsymbol f_i^{\mathrm R}$，则方向匹配系数取为
+\[
+r_i=\frac{\langle\boldsymbol f_i^{\mathrm c},\boldsymbol f_i^{\mathrm R}\rangle
+-\langle\boldsymbol f_i^{\mathrm c},\boldsymbol f_i^{\mathrm L}\rangle}{\kappa},
+\]
+其中，$\kappa$ 由左右标准形状的余弦距离归一化，使交换左右目标位置时 $r_i$ 符号反转。在主机制扰动实验中，为单独考察记忆保持、证据增益与噪声的作用，取 $r_i=s_i^*$；在目标匹配扩展中则由上式计算 $r_i$。正确目标侧 $s_i^*\in\{-1,+1\}$ 仅由平衡的模拟任务布局给定并用于结局评分，不由真实 MAT 文件中的点击方向反推，也不进入形状相似度计算。
+
+决策变量 $z_i(t)$ 服从有界随机累积方程
+\begin{equation}
+\mathrm dz_i(t)=r_i\gamma e_i(t)\,\mathrm dt+\sigma\,\mathrm dW_i(t),
+\qquad z_i(0)=0,\qquad |z_i(t)|<b,
+\tag{3-9}
+\label{eq:q3_diffusion}
+\end{equation}
+其中，$\gamma$ 为证据增益，$\sigma$ 为扩散噪声，$W_i(t)$ 为标准 Wiener 过程，$b$ 为对称决策边界。$z_i$ 只读取认知证据，不作为新的头皮源，也不反馈修改 $\boldsymbol m_i$ 或 $\boldsymbol p_i$；模型未单独估计感觉--运动转换和按键执行耗时，因此首次越界时间表示模型决策时间，而不直接等同于实测点击间隔。图~\ref{fig:q3_states} 展示基准、短保持和关闭提取三种情况下的记忆状态、认知状态与决策驱动。缩短 $\tau_m$ 会使目标出现前的可用证据衰减；关闭提取则使目标后差分状态接近零，从机制上给出迟疑或错误应答的形成路径。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.96\textwidth]{q3_states.png}
+\caption{提示保持、目标触发认知状态与决策证据的连续演化}
+\label{fig:q3_states}
+\end{figure}
+
+\paragraph{（2）正确、错误与未决结局的统一判定}
+
+令 $T_i=\inf\{t:|z_i(t)|\ge b\}$ 为首次越界时间，仿真截止时刻为 $D$。若 $T_i\le D$，则 $\operatorname{sign}[z_i(T_i)]$ 给出选择；若截止前未越界，则该轨迹记为未决并在 $D$ 处右删失。三类结果定义为
+\begin{equation}
+Y_i=
+\begin{cases}
+\text{正确}, & T_i\le D,\ \operatorname{sign}[z_i(T_i)]=s_i^*,\\
+\text{错误}, & T_i\le D,\ \operatorname{sign}[z_i(T_i)]\ne s_i^*,\\
+\text{未决}, & T_i>D.
+\end{cases}
+\tag{3-10}
+\label{eq:q3_outcome}
+\end{equation}
+在任意时刻 $t$，分别记正确越界、错误越界的累计概率为 $F_{\mathrm c}(t)$、$F_{\mathrm e}(t)$，未决概率为 $S_{\mathrm u}(t)$，则模型逐时满足
+\[
+F_{\mathrm c}(t)+F_{\mathrm e}(t)+S_{\mathrm u}(t)=1.
+\]
+这一守恒关系保证错误轨迹不会被剔除，未决轨迹也不会被强制归入错误。数值实现采用 $\Delta t=1/256~\mathrm{s}$ 的首次越界判定，一旦轨迹触及边界便停止更新其选择和决策时间；不同机制场景使用共同随机数，使比例变化主要反映被扰动参数而非蒙特卡洛样本差异。
+
+未决轨迹只保存观察时长 $D$，不把 $D$ 或 0 伪装成反应时间。对实测项目二点击，采用同样的右删失定义计算任意点击的描述性生存曲线：若时刻 $u_j$ 的风险集为 $n_j$、点击数为 $d_j$，则
+\begin{equation}
+\widehat S(t)=\prod_{u_j\le t}\left(1-\frac{d_j}{n_j}\right).
+\tag{3-11}
+\label{eq:q3_survival}
+\end{equation}
+该曲线反映“截至时刻 $t$ 尚未出现点击”的比例，但不区分点击是否正确，也不把项目一平台末端代理当作真实点击事件。
+
+\paragraph{（3）机制扰动与三类决策仿真}
+
+在参考设置 $\tau_m=2~\mathrm{s}$、$\tau_p=0.3~\mathrm{s}$、$\gamma=1.5$、$\sigma=0.6$、$b=1$、$D=2~\mathrm{s}$ 下，对每个场景生成 6000 条轨迹，并使用相同随机数实施单因素比较。表~\ref{tab:q3_decision} 与图~\ref{fig:q3_decision} 给出结果。基准场景的证据持续且噪声适中，轨迹大多在正确边界越界；短保持、关闭提取和低证据增益均提高未决比例；高噪声主要增加错误越界；缩短截止时间则在基本不改变早期错误率的同时增加行政未决比例。上述结果说明同一认知状态模型能够生成题目要求考虑的多种应答情形。
+
+\begin{table}[H]
+\centering
+\caption{不同机制扰动下的三类决策仿真结果}
+\label{tab:q3_decision}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{场景} & \textbf{轨迹数} & \textbf{正确比例} & \textbf{错误比例} & \textbf{未决比例} & \textbf{受限平均时间/s} \\
+\midrule
+基准 & 6000 & 0.9742 & 0.0010 & 0.0248 & 0.8665 \\
+短保持 & 6000 & 0.3315 & 0.1405 & 0.5280 & 1.6000 \\
+关闭提取 & 6000 & 0.2150 & 0.2310 & 0.5540 & 1.6305 \\
+高噪声 & 6000 & 0.7737 & 0.2128 & 0.0135 & 0.5612 \\
+低证据增益 & 6000 & 0.3072 & 0.1563 & 0.5365 & 1.6161 \\
+短仿真截止 & 6000 & 0.8300 & 0.0010 & 0.1690 & 0.8095 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{q3_decision.png}
+\caption{认知状态驱动的正确、错误与未决决策仿真}
+\label{fig:q3_decision}
+\end{figure}
+
+表~\ref{tab:q3_decision} 中的比例是给定模拟目标布局和参数下的模型输出，Wilson 区间只反映蒙特卡洛抽样误差，不是受试者总体置信区间。由于原始数据未提供正确目标映射和正式超时规则，本文不将其解释为两名受试者的实测正确率或超时率；其作用是验证模型结构能够以统一方程表示正确、错误和未决三种可能结局。
+
+\subsubsection{模型求解结果与验证}
+
+\paragraph{（1）连续时间块外层留出验证}
+
+对每个外层测试块，使用训练块确定的参数和读出矩阵重建三通道 EEG。令 $\mathcal I_{g,c}$ 表示阶段 $g$、通道 $c$ 的有效测试样本集合，则阶段均方误差为
+\begin{equation}
+\mathrm{MSE}_{g}=\frac{1}{3}\sum_{c=1}^{3}
+\frac{1}{|\mathcal I_{g,c}|}
+\sum_{(i,t)\in\mathcal I_{g,c}}
+\left[x_{i,c}(t)-\widehat x_{i,c}(t)\right]^2.
+\tag{3-12}
+\label{eq:q3_mse}
+\end{equation}
+为判断目标后记忆--认知结构是否优于一般慢变化，设置不含提示记忆、仅使用平滑慢趋势基函数的 N3 对照，并定义相对预测增益
+\begin{equation}
+S_g=1-\frac{\mathrm{MSE}_{g}^{\mathrm{N2}}}
+{\mathrm{MSE}_{g}^{\mathrm{N3}}}.
+\tag{3-13}
+\label{eq:q3_gain}
+\end{equation}
+$S_g>0$ 表示认知模型在该阶段的留出误差更低。表~\ref{tab:q3_eeg_validation} 给出目标后提取阶段的结果，区间由 2000 次连续时间块重采样获得。A1、A2、B1 的点估计为正，B2 略为负；四组区间均跨越 0，说明现有三导联、两名受试者记录支持将该结构作为可计算的候选认知模型，但尚不足以把缓慢成分唯一解释为特定深部记忆源。
+
+\begin{table}[H]
+\centering
+\caption{认知模型相对慢趋势对照的目标后留出预测增益}
+\label{tab:q3_eeg_validation}
+\begin{tabular}{ccccc}
+\toprule
+\textbf{记录} & \textbf{EEG 试次} & \textbf{$S_{\mathrm R}$} & \textbf{95\% 块重采样区间} & \textbf{结果方向} \\
+\midrule
+A1 & 65 & 0.0244 & $[-0.0134,\ 0.0742]$ & 正向 \\
+A2 & 68 & 0.0022 & $[-0.0125,\ 0.0114]$ & 正向 \\
+B1 & 64 & 0.0034 & $[-0.0028,\ 0.0163]$ & 正向 \\
+B2 & 71 & $-0.0148$ & $[-0.0547,\ 0.0298]$ & 轻微负向 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{（2）观察窗与点击时间敏感性}
+
+将目标后行政观察上限分别设为 1.5、2.0 与 $2.5~\mathrm{s}$，使用同一组冻结参数，并仅在各上限共同保留的试次上重新评分。由图~\ref{fig:q3_window} 左侧可知，四组 $S_{\mathrm R}$ 的点估计随观察上限基本稳定，结论不依赖单一 $2~\mathrm{s}$ 设置；右侧给出 A2、B2 的实测任意点击时间，两组曲线均在约 $1.0~\mathrm{s}$ 后开始下降，并在 $2~\mathrm{s}$ 附近接近零。该结果只用于说明窗口覆盖了现有点击时间分布，点击间隔同时包含认知与运动过程，不能直接等同于模型决策时间。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.80\textwidth]{q3_window.png}
+\caption{目标后观察窗敏感性与项目二实测点击时间分布}
+\label{fig:q3_window}
+\end{figure}
+
+\paragraph{（3）消融、参数恢复与数值审计}
+
+除慢趋势对照外，本文分别关闭记忆向认知状态的投影、关闭目标触发提取，并改变 $\tau_m$、$\gamma$、$\sigma$ 和 $D$，检查结论是否由单一环节偶然造成。进一步将记忆时间常数搜索范围扩展至 $0.25$--$8~\mathrm{s}$，新拟合相对原参数网格未呈现稳定的外层误差改善，因而保留训练内选择的主结果。半合成参数恢复表明：无噪声时 9 个场景均能恢复生成时间常数；噪声为 0.5 倍时精确恢复率为 0.333，噪声为 1 倍时精确恢复率下降至 0。该结果说明求解程序在理想条件下可辨识，但真实噪声会显著增加时间常数的不确定性，故本文不对单个受试者报告唯一生理参数。
+
+最终验证共通过 28 项自动测试，覆盖未来 EEG 不影响过去状态、外层测试块不参与参数估计、目标不写入提示记忆、缺失点击不等于超时、平台代理不进入真实生存曲线以及三类结局概率守恒等关键性质。独立审计重新计算 31356 条阶段误差记录，最大相对差异为 $3.17\times10^{-16}$；冻结预测重建的最大绝对差异为 0；36000 条决策轨迹在时间步长减半后，三类比例的最大绝对变化为 0.00375。上述结果验证了程序实现、数据隔离和数值计算的一致性。
+
+综上，本文构建了由视觉编码、提示保持、目标触发提取、头皮观测与随机决策组成的认知宏观模型。该模型能够在同一框架下处理应答代理、独立点击和潜在的未决试次，并在连续时间块留出条件下生成可与实测 EEG 比较的预测波形。现有结果支持其作为视觉认知过程的功能性解释与仿真平台；对深部脑区来源、真实正误及实验超时的进一步确认，仍需结合逐试次目标布局、高密度 EEG 或独立深部观测数据。
 
 
 
 %% -----------------------------------------------------------------------------
 %% 模块 6：模型评价与优缺点讨论
 %% -----------------------------------------------------------------------------
-\newpage
 \section{模型优缺点评价}
-\subsection{问题一模型的优缺点评价}
-\subsubsection{模型优点}
-\begin{enumerate}
-    \item \textbf{机理解耦彻底，避免盲目过滤波}：摒弃纯黑盒模型，采用垂直/水平物理分量解耦、软门控阈值与“训练均值保护”三大屏障，使得左右视物差分波形相关性超 0.99，差分能量保持比达 0.81 以上，切实达成了“去噪保特征”的要求。
-    \item \textbf{验证范式严密真实}：采用分层五折外折验证，彻底杜绝数据穿越；通过半合成加噪闭环检验，给出了清晰可量化的抗噪边界，结论客观扎实。
-    \item \textbf{样条拟合控制得当}：固定 50 ms 结点的三次 B 样条拟合在消除局部随机抖动的同时，精准保留了前额正向波峰结构与潜伏期信息。
-\end{enumerate}
-\subsubsection{模型缺点与改进方向}
-\begin{enumerate}
-    \item \textbf{缺乏专用眼电参考电极}：仅依靠 Fz、F3、F4 重构水平扫视分量，若发生单侧眼动与大脑半球认知偏侧化放电高度重合时，存在极细微的共线性解耦误差。未来可引入带自适应先验导联的联合盲分离算法加以完善。
-    \item \textbf{轻微扰动下收益微弱}：半合成实验表明在极弱伪影（$<0.5$倍）时存在微小背景扰动。后续可引入基于试次信噪比动态感知的收缩函数，进一步自适应调节均值保护比例。
-\end{enumerate}
+\subsection{问题一模型评价}
 
-\subsection{问题二模型的优缺点评价}
-\subsubsection{模型的优点}
-\begin{enumerate}
-    \item \textbf{机理闭环与电生理因果性明确}：彻底打破了传统机器学习端到端“黑盒特征拟合”的局限，构建了“几何边缘组合编码（COSFIRE）$\to$ 三级介观皮层群体动力学（Wilson--Cowan E/I 级联）$\to$ 突触等效源体传导观测”的连续物理模型，从生物物理层面清晰阐明了视觉刺激几何非对称性如何演化为头皮电位极性差异的传导机理。
-    
-    \item \textbf{消融证据链扎实，拒绝伪相关解释}：引入方向差分相对拟合优度指标 $S_\Delta$，并在 4 组实测数据中展示了超越零差基线的拟合效力（受试者 B2 达 0.2562）；系统实施了“形状选择性消融”、“同级复发耦合消融”与“跨半球对称投射消融”三套反事实对照实验，在计算模型内部严格证实了刺激差异的产生源头，理论逻辑自洽闭环。
-    
-    \item \textbf{特征工程具备跨个体迁移不变性}：提炼构建的 23 维机制增强特征向量融合了局部正峰、时变偏侧化指数（LI）与前向机理模板坐标投影；在完全独立的受试者间迁移测试（Transfer Learning）中取得了高达 \textbf{62.31\% 的平衡准确率与 0.5807 的 AUC}，证明本模型成功滤除了单受试者特异性自发背景噪声，抓取到了群体共通的稳定神经表征。
-\end{enumerate}
-\subsubsection{模型的局限与不足}
-\begin{enumerate}
-    \item \textbf{前额三导联的唯象性与空间逆问题欠定性}：实测数据仅提供额区 Fz、F3、F4 三个电极，缺乏枕叶（初级视觉皮层直接测区）与专用眼电通道（EOG）。因此，所求解的前向观测矩阵 $\hat{\mathbf{L}}$ 本质上属于功能性等效投射，无法结合真实大脑三维核磁（MRI）解剖几何实现严格的三维等效电流偶极子反演定位。
-    
-    \item \textbf{单试次背景自发脑电与微眼动的掩盖效应}：严格的 1999 次时间块内置换检验表明，在同受试者单试次水平上，左右分类平衡准确率接近 50\% 随机猜测线（maxT 校正 $p=0.9985$）。这反映出在强自发背景脑电与未测量微扫视干扰下，单试次前额微弱视觉诱发差异具有极高的非平稳性，依赖多次试次相干累积。
-    
-    \item \textbf{皮层信息级联通路的集总化假设}：模型将视网膜至额叶极其复杂的腹侧视通路（V1 $\to$ V2 $\to$ V4 $\to$ IT $\to$ PFC）抽象集总为三级串联神经元群，未对各亚区精细的层状微回路（如皮层第 IV 层输入与第 II/III 层侧向投射）展开更细致的物理细分。
-\end{enumerate}
-\subsubsection{改进思路与工程/临床推广}
-\begin{enumerate}
-    \item \textbf{结合高密度导联与解剖真实头模型}：未来可将计算模型推广至 64 导高密全脑脑电系统，并结合个体化 MRI 结构建立边界元（BEM）或有限元（FEM）真实电导率头模型，使观测矩阵 $\hat{\mathbf{L}}$ 转化为具备真实解剖坐标约束的物理铅场矩阵（Lead-Field Matrix）。
-    
-    \item \textbf{引入非线性隐状态滤波以实现单试次实时跟踪}：可将三级 Wilson--Cowan 微分方程作为状态转移方程，结合无迹卡尔曼滤波（UKF）或粒子滤波（Particle Filter），对单试次突触等效源动力学进行在线隐变量跟踪，进一步提升脑机接口（BCI）在复杂噪声环境下的瞬态解码稳定性。
-    
-    \item \textbf{在神经精神性疾病早期诊断中的临床延伸}：模型揭示的皮层兴奋--抑制（E/I）平衡耦合系数（$w_{EI}, w_{IE}$）与跨半球侧化指数（LI），可作为阿尔茨海默症早期海马--额叶信息传输迟滞、以及精神分裂症患者前额叶局部微回路抑制功能受损的定量数字生物标志物（Biomarkers）。
-\end{enumerate}
+\textbf{模型的优点：}该模型以垂直/水平分量、软门控和均值保护兼顾伪影抑制与响应保留，并通过五折留出和训练内半合成选型减少信息泄漏。四组代理 MAE 降幅为 $5.4\%$--$10.0\%$，左右差异保留率为 $0.813$--$0.952$；三次 B 样条可进一步给出连续响应曲线。
+
+\textbf{模型的缺点：}数据缺少同步眼电、眼动和独立无噪声脑电，代理误差下降不能直接等同于真实神经信号恢复。四组 SNR 代理增量区间均跨越零点，弱扰动与部分时间分段下的收益仍有波动，现有结果主要适用于已知条件下的离线响应描述。
+
+\textbf{改进思路：}增加眼电、眼动及中央、顶区、枕区电极，在独立受试者上固定参数验证；依据训练块信噪比自适应调节收缩强度，并用时延校准的因果滤波替代双向滤波。
+
+\subsection{问题二模型评价}
+
+\textbf{模型的优点：}模型构建了“形状编码--LGN 中继--三级 E/I 群体--突触源--头皮观测”的完整计算链，左右条件共享参数，并用消融检验结构贡献。连续时间块留出、1999 次块内置换和 maxT 校正将机制解释、差异预测与单试次判别分开评价，二十三维特征亦可用于未知试次。
+
+\textbf{模型的缺点：}仅有 Fz、F3、F4 三个额区电极，缺少枕顶区、电眼和个体头模型，有效观测矩阵不能作为唯一神经源定位。简单幅值和机制特征的总体 BA 分别为 $0.5161$、$0.4471$，跨块方向信息较弱，稳定判别能力仍有提升空间。
+
+\textbf{改进思路：}增加高密度 EEG、同步眼动和个体 MRI，将共同背景与方向差异分别正则化；固定时间窗与候选特征，并在扩大受试者规模后检验跨个体稳定性。
+
+\subsection{问题三模型评价}
+
+\textbf{模型的优点：}模型区分独立点击、平台代理和应答不可观测三类事件，按应答前约 $100~\mathrm{ms}$ 截取信号；并将视觉编码、提示保持、目标提取、头皮观测与随机决策统一起来，表示正确、错误和未决三类结局。时间块留出、窗口敏感性、消融和数值审计保证了过程可复核。
+
+\textbf{模型的缺点：}数据缺少逐试次正确目标、完整布局和正式超时阈值，三类决策比例只能作为机制仿真结果。三导联 EEG 不能直接定位海马体等深部来源；相对慢趋势对照的四组区间均覆盖零点，且时间常数恢复精度随噪声增加而下降。
+
+\textbf{改进思路：}完整记录目标布局、正误、超时和动作触发信息，增加高密度 EEG、眼电与独立深部观测；采用分层状态空间模型区分认知决策和运动时间，并在新增受试者上检验泛化能力。
 % ==============================================================================
 % 参考文献（GB/T 7714 国标学术规范，支持点击超链接跳转）
 % ==============================================================================
@@ -1140,6 +1749,3 @@ def extract_23d_features(epoch, template_common, template_diff, train_q10):
 \end{lstlisting}
 
 \end{document}
-
-
-
