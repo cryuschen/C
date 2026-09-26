@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "review": "all six final PNGs opened; caption spacing, legends and annotation clipping corrected",
+  "pdf_scope": "six vector exports from same figures; not independently rendered",
+  "png_sha256": {
+    "01_慢变化诊断.png": "247fef7d107719639a4ba095d85c45d6bf3347de6f3d9637ea9b9f19fa84dc17",
+    "02_新旧模型与认知增量.png": "5d0822dd6019838b051c4fc9c99fec7335943e5000ab5a2d676553d88d618fe3",
+    "03_背景与认知分离.png": "ebc7e30967ce5e8b768d7580173ae41c5c1460f0ef8a3309d3859f963ed51872",
+    "04_外层波形.png": "e6bdc0e94b0839c89931164c4a6149f229507e01512ce7cc4f8afce98e2cc18a",
+    "05_反应时验证.png": "bf976dc2d64a44d7cddd02d54bdc1959b74ac391fb7477ffc8b5f46760083a7d",
+    "06_消融与恢复.png": "76e7a91a0c93770c9929d2356710f25ff8e7734f5f7eb775f636ca952b0fb575"
+  }
+}

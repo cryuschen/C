@@ -1,0 +1,3 @@
+﻿dataset,trial_id,synthetic_marker_deletion,real_response_s,injected_end_s,retained,exclusion_reason,survival_eligible,correctness_ignored_in_window,caveat
+A2,2,True,4.1875,4.21484375,True,retained,False,True,real EEG may contain actual movement; this is software stress only
+B2,2,True,3.81640625,4.21484375,False,quality,False,True,real EEG may contain actual movement; this is software stress only

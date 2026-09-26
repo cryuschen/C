@@ -1,0 +1,21 @@
+{
+  "reference": {
+    "model": "N2",
+    "tau_m": 2.0,
+    "tau_p": 0.3,
+    "target_duration": 0.2,
+    "direction_penalty": 1.0,
+    "delay": 0.05
+  },
+  "event": {
+    "cue": 1,
+    "cue_duration_s": 0.203125,
+    "target_s": 2.21875
+  },
+  "equation": "dz = correct_side * gamma * cue * p_cue_contrast(t) / fixed_reference_scale * dt + sigma*dW",
+  "simulation_mapping_only": true,
+  "fitted_observed_behavior": false,
+  "nondecision_time_added": false,
+  "no_response": "censored decision time, observation duration stored separately",
+  "limitation": "Target layout-to-action mapping is assumed in simulation; it is not inferred from real EEG."
+}

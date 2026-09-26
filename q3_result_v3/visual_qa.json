@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "scope": "five final PNG figures visually inspected",
+  "checks": [
+    "Chinese labels readable",
+    "axes and legends readable",
+    "captions do not overlap",
+    "empirical and simulation labels explicit"
+  ],
+  "png_hashes": {
+    "01_事件与截窗.png": "2c13940b82f14e64a4827f8d30a4ff25a05db9f9902ec9f7607a7ffa7a78ade3",
+    "02_EEG继承与重建.png": "a127f3209a31d25e79a6fcb425b3eb5de13f52a59df47d5f61b4c01fbd6f4da6",
+    "03_统一认知与决策.png": "64a2492e2e538372a43e41095408308575f9d3058aa61623c4fb5a62925bf969",
+    "04_正确错误与删失.png": "746b500f9e8654cb43703abbc483e313b5031d7158540e4685903b7dd9f44347",
+    "05_观察窗敏感性.png": "d0d6d8b82b2612e99ee86f7f4e7f4d5fdf874c5dd0495779a1acd38b5a077cfa"
+  },
+  "pdf_check": "five corresponding vector PDFs exported; file headers checked; no separate PDF raster inspection"
+}
