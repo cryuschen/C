@@ -58,6 +58,18 @@ plt.rcParams['font.size'] = 10
 plt.rcParams['axes.labelsize'] = 11
 plt.rcParams['axes.titlesize'] = 12
 plt.rcParams['legend.fontsize'] = 9
+plt.rcParams['figure.facecolor'] = 'white'
+plt.rcParams['axes.facecolor'] = 'white'
+plt.rcParams['axes.edgecolor'] = '#333333'
+plt.rcParams['axes.linewidth'] = .9
+plt.rcParams['axes.spines.top'] = True
+plt.rcParams['axes.spines.right'] = True
+plt.rcParams['axes.axisbelow'] = True
+plt.rcParams['grid.color'] = '#D9DEE3'
+plt.rcParams['grid.linestyle'] = '--'
+plt.rcParams['grid.linewidth'] = .7
+plt.rcParams['grid.alpha'] = .75
+plt.rcParams['legend.frameon'] = True
 
 # 校正与绘图统一使用毫秒时间轴。
 TIMES=TIMES_MS
@@ -784,16 +796,16 @@ def spline_fit(erp):
                        local_positive_peak=peak,local_peak_latency_ms=lat,peak_status=status)
 
 
-def make_axes(title,subtitle):
+def make_axes(title,subtitle=None):
     fig,axes=plt.subplots(3,2,figsize=(13.5,9.5),sharex=True,layout='constrained')
-    fig.suptitle(title+'\n'+subtitle,fontsize=14)
+    fig.suptitle(title,fontsize=14)
     for ax in axes.flat:
         ax.axvline(0,color='#aeb5bc',lw=.75)
         ax.axhline(0,color='#cbd0d5',lw=.6)
         ax.axvspan(250,500,color='#d5ebed',alpha=.27)
         ax.set_xlabel('相对提示时间（ms）')
-        ax.set_ylabel('原始电位单位')
-        ax.spines[['top','right']].set_visible(False)
+        ax.set_ylabel('电位（原始单位）')
+        ax.grid(True)
     return fig,axes
 
 
@@ -808,20 +820,27 @@ def shared_row_limits(axes,values,margin=.06):
 def draw_lines(ax,signals,mask=None,legend=True):
     mask=np.ones(len(TIMES),bool) if mask is None else mask
     for label,y in signals.items():
-        ax.plot(TIMES[mask],np.asarray(y)[mask],label=label,color=COLORS[label],
+        shown={'原始':'降噪前','预处理':'降噪前','V7':'降噪后','代理参考':'参考波形'}.get(label,label)
+        ax.plot(TIMES[mask],np.asarray(y)[mask],label=shown,color=COLORS[label],
                 ls=LINES[label],lw=1.5 if label=='V7' else 1.)
     if legend:ax.legend(loc='upper left',fontsize=8,ncol=2)
 
 
 def save_fig(fig,path):
-    fig.savefig(path,dpi=170)
+    temporary=path.parent/'.__plot_tmp.png'
+    fig.savefig(temporary,dpi=170)
+    path.unlink(missing_ok=True)
+    temporary.replace(path)
     plt.close(fig)
 
 
+def display_name(name):
+    return str(name).replace('_','')
+
+
 def plot_condition(name,methods,cues,refs,out,zoom=False):
-    title=name+(' · 250–500 ms 正向响应窗' if zoom else ' · 左右刺激三通道 ERP')
-    subtitle='各图同一有效试次，同行左右共享纵轴；代理参考只作描述' if zoom else '处理前后同一试次；阴影是V7逐点95%试次重采样区间'
-    fig,axes=make_axes(title,subtitle)
+    title=display_name(name)+(' P300分析窗' if zoom else ' 左右三角提示ERP')
+    fig,axes=make_axes(title)
     scale={k:[] for k in range(3)}
     for col,c in enumerate((-1,1)):
         n=int((cues==c).sum())
@@ -832,18 +851,18 @@ def plot_condition(name,methods,cues,refs,out,zoom=False):
             draw_lines(ax,curves,WINDOW if zoom else None)
             if not zoom:
                 lower,upper=compute_bootstrap_ci(methods['V7'][cues==c,ch],n_boot=400)
-                ax.fill_between(TIMES,lower,upper,color=COLORS['V7'],alpha=.14,label='V7逐点95%试次区间')
+                ax.fill_between(TIMES,lower,upper,color=COLORS['V7'],alpha=.14,label='降噪后95%区间')
                 ax.legend(loc='upper left',fontsize=8,ncol=2)
                 scale[ch].extend([*curves.values(),lower,upper])
             else:scale[ch].extend([v[WINDOW] for v in curves.values()])
-            ax.set_title(f'{channel} · {"左" if c==-1 else "右"}刺激 · n={n}')
+            ax.set_title(f'{channel} {"左三角" if c==-1 else "右三角"}（{n}次）')
             if zoom:ax.set_xlim(250,500)
     shared_row_limits(axes,scale)
     save_fig(fig,out/('P300分析窗对比.png' if zoom else '左右刺激三通道ERP.png'))
 
 
 def plot_examples(name,raw,methods,cues,scores,trial_ids,out,quantile,filename):
-    fig,axes=make_axes(name+' · 固定试次原始/处理对照',f'同方向伪影评分第{int(100*quantile)}百分位；原始试次编号已标注，纵轴不截断')
+    fig,axes=make_axes(display_name(name)+' 单试次降噪对比')
     scale={k:[] for k in range(3)}
     selected=[]
     for col,c in enumerate((-1,1)):
@@ -855,7 +874,7 @@ def plot_examples(name,raw,methods,cues,scores,trial_ids,out,quantile,filename):
             original=raw[ix,ch]-np.median(raw[ix,ch,:N_PRE])
             curves={'原始':original,**{k:x[ix,ch] for k,x in methods.items()}}
             draw_lines(axes[ch,col],curves)
-            axes[ch,col].set_title(f'{channel} · {"左" if c==-1 else "右"} · 原始试次 #{trial_ids[ix]}')
+            axes[ch,col].set_title(f'{channel} {"左三角" if c==-1 else "右三角"} 试次{trial_ids[ix]}')
             scale[ch].extend(curves.values())
     shared_row_limits(axes,scale)
     save_fig(fig,out/filename)
@@ -889,40 +908,39 @@ def plot_heatmap(name,methods,cues,trial_ids,out,focus=False):
                             cmap='RdBu_r',vmin=-limit,vmax=limit,extent=[TIMES[0],TIMES[-1],.5,len(ids)+.5])
             ticks=np.unique(np.linspace(0,len(ids)-1,5,dtype=int))
             ax.set_yticks(ticks+1,[str(i) for i in trial_ids[ids[ticks]]])
-            ax.set_title(f'{"左" if c==-1 else "右"}刺激 · {stage} · n={len(ids)}')
+            stage_name={'预处理':'降噪前','V7':'降噪后'}.get(stage,stage)
+            ax.set_title(f'{"左三角" if c==-1 else "右三角"} {stage_name}（{len(ids)}次）')
             ax.set_xlabel('相对提示时间（ms）')
-            ax.set_ylabel('原始试次编号')
-    fig.colorbar(image,ax=axes,label='Fz 原始电位单位')
-    subtitle=(f'细节视图：处理前后共用98%绝对值分位 ±{limit:.1f}；{exceed:.2f}%像素截色' if focus
-              else f'完整色域：处理前后共用 ±{limit:.1f}，无截色')
-    fig.suptitle(name+' · Fz 试次时间热力图\n'+subtitle)
+            ax.set_ylabel('试次编号')
+            ax.grid(False)
+    fig.colorbar(image,ax=axes,label='Fz电位（原始单位）')
+    fig.suptitle(display_name(name)+(' Fz试次热力图（细节）' if focus else ' Fz试次热力图'))
     save_fig(fig,out/('Fz热力图_细节视图.png' if focus else 'Fz热力图_完整色域.png'))
 
 
 def plot_spatial(name,methods,cues,out):
-    fig,axes=make_axes(name+' · 左右与额区差分','左列为左减右；右列为F3减F4及左右交互；各面板内处理前后同尺度；差分可能包含残余眼动')
+    fig,axes=make_axes(display_name(name)+' 提示方向与额区侧化差异')
     scale={k:[] for k in range(3)}
     for ch,channel in enumerate(CHANNELS):
         signals={s:x[cues==-1,ch].mean(0)-x[cues==1,ch].mean(0) for s,x in methods.items()}
         draw_lines(axes[ch,0],signals)
-        axes[ch,0].set_title(channel+' · 左减右')
+        axes[ch,0].set_title(channel+' 左三角−右三角')
         scale[ch].extend(signals.values())
     for row,c in enumerate((-1,1)):
         signals={s:x[cues==c,1].mean(0)-x[cues==c,2].mean(0) for s,x in methods.items()}
         draw_lines(axes[row,1],signals)
-        axes[row,1].set_title(('左' if c==-1 else '右')+'刺激 · F3减F4')
+        axes[row,1].set_title(('左三角' if c==-1 else '右三角')+' F3−F4')
         scale[row].extend(signals.values())
     signals={s:(x[cues==-1,1].mean(0)-x[cues==-1,2].mean(0))
              -(x[cues==1,1].mean(0)-x[cues==1,2].mean(0)) for s,x in methods.items()}
     draw_lines(axes[2,1],signals)
-    axes[2,1].set_title('左右交互 · (F3−F4)左减右')
+    axes[2,1].set_title('方向×侧化交互')
     # 差分类型不同，不强制左右列同一幅度；每图方法共享其自身坐标。
     save_fig(fig,out/'左右与F3-F4差分.png')
 
 
 def plot_fits(name,methods,cues,out):
-    fig,axes=make_axes(name+' · V7 三通道分方向响应曲线拟合',
-                       '固定50 ms结点三次样条；灰色为残差；窗内局部正峰只是描述量，不确认生理P300')
+    fig,axes=make_axes(display_name(name)+' 左右三角ERP曲线拟合')
     records=[]
     for col,c in enumerate((-1,1)):
         n=int((cues==c).sum())
@@ -930,14 +948,14 @@ def plot_fits(name,methods,cues,out):
             erp=methods['V7'][cues==c,ch].mean(0)
             fitted,fit=spline_fit(erp)
             ax=axes[ch,col]
-            ax.plot(TIMES,erp,color=COLORS['V7'],label='V7 ERP')
+            ax.plot(TIMES,erp,color=COLORS['V7'],label='降噪后ERP')
             mask=(TIMES>=50)&(TIMES<=750)
             ax.plot(TIMES[mask],fitted[mask],color='#32373c',ls='--',label='样条拟合')
             ax.plot(TIMES[mask],(erp-fitted)[mask],color='#9a938d',lw=.8,label='残差')
             if np.isfinite(fit['local_peak_latency_ms']):
                 ax.scatter([fit['local_peak_latency_ms']],[fit['local_positive_peak']],s=14,color='#32373c',zorder=3)
             ax.legend(fontsize=8,loc='upper left')
-            ax.set_title(f'{channel} · {"左" if c==-1 else "右"} · n={n} · 窗内拟合RMSE={fit["fit_RMSE_250_500"]:.2f}\n'+fit['peak_status'],fontsize=10)
+            ax.set_title(f'{channel} {"左三角" if c==-1 else "右三角"}（{n}次，RMSE={fit["fit_RMSE_250_500"]:.2f}）',fontsize=10)
             records.append(dict(cue=c,channel=channel,n_trials=n,**fit))
     save_fig(fig,out/'分方向样条拟合与残差.png')
     save_csv(records,out/'分方向样条拟合参数.csv')
@@ -1071,8 +1089,7 @@ def write_report(out,datasets,summary,spatial,benchmark,fitrows,group_intervals,
 def plot_cross_task(out,datasets):
     folder=out/'跨项目对比';folder.mkdir(exist_ok=True)
     for subject in 'AB':
-        fig,axes=make_axes('受试者'+subject+' · V7按方向跨项目ERP',
-                           '同通道左右共享纵轴；项目一/二仅描述同受试者条件差异，不作为跨人群效应')
+        fig,axes=make_axes('受试者'+subject+' 两项目左右三角ERP')
         scale={ch:[] for ch in range(3)}
         for col,c in enumerate((-1,1)):
             for ch,channel in enumerate(CHANNELS):
@@ -1080,10 +1097,10 @@ def plot_cross_task(out,datasets):
                 for task,color,style in ((1,'#007f89','-'),(2,'#c87927','--')):
                     d=datasets[f'VisualCog{subject}_Task-{task}']
                     y=d['stages']['V7'][d['cues']==c,ch].mean(0)
-                    ax.plot(TIMES,y,color=color,ls=style,label=f'项目{task} · n={(d["cues"]==c).sum()}')
+                    ax.plot(TIMES,y,color=color,ls=style,label=f'项目{task}（n={(d["cues"]==c).sum()}）')
                     scale[ch].append(y)
                 ax.legend(fontsize=8)
-                ax.set_title(channel+' · '+('左' if c==-1 else '右')+'刺激')
+                ax.set_title(channel+' '+('左三角' if c==-1 else '右三角'))
         shared_row_limits(axes,scale)
         save_fig(fig,folder/f'受试者{subject}_左右分方向跨项目.png')
 
@@ -1097,13 +1114,15 @@ def plot_benchmark(out,synthetic):
             s=g[g.stage==stage].groupby('level').normalized_RMSE.mean()
             color=COLORS['预处理'] if stage=='未校正' else COLORS['V7']
             style=LINES['预处理'] if stage=='未校正' else LINES['V7']
-            ax.plot(s.index,s.values,color=color,ls=style,marker='o',label=stage)
-        ax.set_title(ds+' · 背景样本与外折固定')
-        ax.set_xlabel('人工注入幅度倍数（0表示未注入）')
-        ax.set_ylabel('恢复RMSE / 背景RMS')
+            ax.plot(s.index,s.values,color=color,ls=style,marker='o',label='未校正' if stage=='未校正' else '降噪后')
+        short={'VisualCogA_Task-1':'A1组','VisualCogA_Task-2':'A2组',
+               'VisualCogB_Task-1':'B1组','VisualCogB_Task-2':'B2组'}.get(ds,ds)
+        ax.set_title(short)
+        ax.set_xlabel('伪影强度倍数')
+        ax.set_ylabel('归一化恢复误差')
         ax.set_ylim(bottom=0)
         ax.legend(fontsize=8,ncol=2)
-    fig.suptitle('四组各自归一化：已知注入扰动恢复与零注入背景改动\n污染前为实测预处理背景，可能已含伪影；试次重用不表示独立受试者')
+    fig.suptitle('问题一降噪方法的半合成恢复检验')
     save_fig(fig,folder/'四组多幅度半合成验证.png')
 
 
@@ -1146,8 +1165,8 @@ def plot_decomposition_for_dataset(results_dir, dataset_folder_name, quantile, q
     fig, axes = plt.subplots(6, 3, figsize=(15, 16.5), sharex=True)
 
     blocks = [
-        ('左侧视觉提示 (VisCue = -1, 左视野)', ix_left, left_trial_id, 0),
-        ('右侧视觉提示 (VisCue = +1, 右视野)', ix_right, right_trial_id, 3)
+        ('左向三角提示', ix_left, left_trial_id, 0),
+        ('右向三角提示', ix_right, right_trial_id, 3)
     ]
 
     for cue_title, ix, tid, row_offset in blocks:
@@ -1163,51 +1182,54 @@ def plot_decomposition_for_dataset(results_dir, dataset_folder_name, quantile, q
 
             # --- Row 1: 原始记录 ---
             ax_raw = axes[row_offset, ch]
-            ax_raw.plot(times, raw_bc[ch], color=DECOMPOSITION_COLORS['raw'], lw=1.2, label='原始通道 (基线对齐)')
+            ax_raw.plot(times, raw_bc[ch], color=DECOMPOSITION_COLORS['raw'], lw=1.2, label='降噪前')
             ax_raw.axvline(0, color='black', lw=0.8, ls='--')
             ax_raw.axvspan(250, 500, color=DECOMPOSITION_COLORS['p300_span'], alpha=0.6, label='P300 分析窗 (250–500 ms)')
-            ax_raw.set_title(f'{cue_title} · {ch_name} · 试次 #{tid} [原始]', fontsize=10.5, fontweight='bold', pad=4)
-            ax_raw.grid(True, alpha=0.25, ls=':')
+            ax_raw.set_title(f'{cue_title} {ch_name} 试次{tid} 降噪前', fontsize=10.5, fontweight='bold', pad=4)
+            ax_raw.grid(True)
             if ch == 0:
-                ax_raw.set_ylabel('原始记录\n(电位单位)', fontsize=9.5, fontweight='bold')
+                ax_raw.set_ylabel('原始信号\n（电位单位）', fontsize=9.5, fontweight='bold')
             if row_offset == 0 and ch == 0:
                 ax_raw.legend(loc='upper right', fontsize=8, framealpha=0.9)
 
             # --- Row 2: V7 校正后 ---
             ax_clean = axes[row_offset + 1, ch]
-            ax_clean.plot(times, clean[ch], color=DECOMPOSITION_COLORS['clean'], lw=1.5, label='V7 校正后波形')
+            ax_clean.plot(times, clean[ch], color=DECOMPOSITION_COLORS['clean'], lw=1.5, label='降噪后')
             ax_clean.axvline(0, color='black', lw=0.8, ls='--')
             ax_clean.axvspan(250, 500, color=DECOMPOSITION_COLORS['p300_span'], alpha=0.6)
-            ax_clean.set_title(f'{ch_name} · V7 校正后波形', fontsize=10.5, fontweight='bold', pad=4)
-            ax_clean.grid(True, alpha=0.25, ls=':')
+            ax_clean.set_title(f'{ch_name} 降噪后', fontsize=10.5, fontweight='bold', pad=4)
+            ax_clean.grid(True)
             if ch == 0:
-                ax_clean.set_ylabel('V7 校正后\n(电位单位)', fontsize=9.5, fontweight='bold')
+                ax_clean.set_ylabel('降噪后\n（电位单位）', fontsize=9.5, fontweight='bold')
             if row_offset == 0 and ch == 0:
                 ax_clean.legend(loc='upper right', fontsize=8, framealpha=0.9)
 
             # --- Row 3: 原始基线对齐波形与 V7 的处理差值 ---
             ax_art = axes[row_offset + 2, ch]
-            ax_art.plot(times, removed_component[ch], color=DECOMPOSITION_COLORS['artifact'], lw=1.1, label='处理差值 (原始 - V7)')
+            ax_art.plot(times, removed_component[ch], color=DECOMPOSITION_COLORS['artifact'], lw=1.1, label='处理差值')
             ax_art.axvline(0, color='black', lw=0.8, ls='--')
             ax_art.axvspan(250, 500, color=DECOMPOSITION_COLORS['p300_span'], alpha=0.6)
-            ax_art.set_title(f'{ch_name} · 处理差值 (原始 - V7)', fontsize=10.5, fontweight='bold', pad=4)
-            ax_art.grid(True, alpha=0.25, ls=':')
+            ax_art.set_title(f'{ch_name} 处理差值', fontsize=10.5, fontweight='bold', pad=4)
+            ax_art.grid(True)
             if ch == 0:
-                ax_art.set_ylabel('处理差值\n(电位单位)', fontsize=9.5, fontweight='bold')
+                ax_art.set_ylabel('处理差值\n（电位单位）', fontsize=9.5, fontweight='bold')
             if row_offset == 0 and ch == 0:
                 ax_art.legend(loc='upper right', fontsize=8, framealpha=0.9)
             if row_offset == 3:
-                ax_art.set_xlabel('相对刺激提示时间 (ms)', fontsize=10, fontweight='bold')
+                ax_art.set_xlabel('相对提示时间（ms）', fontsize=10, fontweight='bold')
 
     # 主标题与副标题
-    dataset_display = dataset_folder_name.replace('_', ' · ')
-    fig.suptitle(f'{dataset_display} · {quantile_label}三栏处理前后与差值图\n原始基线对齐波形 = V7波形 + 处理差值；差值不等于纯伪影',
+    dataset_display = display_name(dataset_folder_name)
+    fig.suptitle(f'{dataset_display} {quantile_label}降噪分解',
                  fontsize=13.5, fontweight='bold', y=0.995)
 
     fig.tight_layout(rect=[0, 0.01, 1, 0.985])
 
     out_file = results_dir / dataset_folder_name / filename
-    fig.savefig(out_file, dpi=200)
+    temporary=out_file.parent/'.__plot_tmp.png'
+    fig.savefig(temporary, dpi=200)
+    out_file.unlink(missing_ok=True)
+    temporary.replace(out_file)
     print(f"成功生成并写入 eeg_v7_results: {out_file}")
 
     plt.close(fig)
@@ -1216,10 +1238,10 @@ def plot_decomposition_for_dataset(results_dir, dataset_folder_name, quantile, q
 def plot_outcome_dashboard(out,datasets,group_intervals):
     """三个独立坐标上的点与分方向试次重采样区间，便于在A4页面阅读。"""
     frame=pd.DataFrame(group_intervals)
-    names=[item['name'] for item in datasets.values()]
-    metrics=(('proxy_MAE_reduction_pct','代理 MAE 降幅','% 相对预处理',0,(-8,24)),
-             ('SNR_proxy_gain_dB','SNR 代理增量','dB 相对预处理',0,(-1.2,1.8)),
-             ('left_right_retention_ratio','左右差分幅度比','比值，相对预处理',1,(0,1.45)))
+    names=[display_name(item['name']) for item in datasets.values()]
+    metrics=(('proxy_MAE_reduction_pct','参考误差降幅','相对预处理（%）',0,(-8,24)),
+             ('SNR_proxy_gain_dB','信噪比增量','相对预处理（dB）',0,(-1.2,1.8)),
+             ('left_right_retention_ratio','左右差异保留率','相对预处理',1,(0,1.45)))
     fig,axes=plt.subplots(3,1,figsize=(8.5,8.2),layout='constrained')
     for ax,(metric,title,xlabel,baseline,limits) in zip(axes,metrics):
         ax.axvline(baseline,color='#657480',ls='--',lw=1,zorder=0)
@@ -1227,17 +1249,15 @@ def plot_outcome_dashboard(out,datasets,group_intervals):
             row=frame[(frame.dataset==ds)&(frame.stage=='V7')&(frame.metric==metric)].iloc[0]
             ax.errorbar(row.point,i,xerr=[[row.point-row.low],[row.high-row.point]],
                         fmt='o',color=COLORS['V7'],markersize=6,capsize=3,
-                        elinewidth=1.7,label='V7' if i==0 else None,zorder=3)
+                        elinewidth=1.7,label='降噪后' if i==0 else None,zorder=3)
         ax.set_title(title,fontsize=12,pad=10)
         ax.set_xlabel(xlabel,fontsize=10)
         ax.set_xlim(*limits)
         ax.set_yticks(range(len(names)),names)
         ax.invert_yaxis()
-        ax.grid(axis='x',alpha=.17)
-        ax.spines[['top','right']].set_visible(False)
+        ax.grid(axis='x')
     axes[0].legend(loc='lower right',frameon=False,fontsize=9)
-    fig.suptitle('四组数据：V7 相对预处理的点估计与95%试次重采样区间\n'
-                 '模型及训练代理参考固定；区间仅表示本组试次抽样波动',fontsize=13)
+    fig.suptitle('问题一降噪效果与形状特征保留',fontsize=13)
     save_fig(fig,out/'汇总与说明/去噪与特征保留联合评价.png')
 
 
@@ -1377,9 +1397,9 @@ def main():
         with plt.rc_context({'font.sans-serif': ['Noto Sans CJK SC', 'WenQuanYi Zen Hei', 'Noto Sans SC', 'SimHei', 'DejaVu Sans'],
                              'axes.unicode_minus': False}):
             for item in datasets.values():
-                plot_decomposition_for_dataset(out,item['name'],.75,'典型较高伪影试次 (75% 分位)',
+                plot_decomposition_for_dataset(out,item['name'],.75,'较高伪影试次（75%分位）',
                                                '较高伪影试次_三栏分解图.png')
-                plot_decomposition_for_dataset(out,item['name'],.50,'中位伪影试次 (50% 分位)',
+                plot_decomposition_for_dataset(out,item['name'],.50,'中位伪影试次（50%分位）',
                                                '中位伪影试次_三栏分解图.png')
     write_report(out,datasets,summary,spatial,synthetic,fits,group_intervals,stability)
     manifest['csv_sha256']={str(p.relative_to(out)):sha(p) for p in sorted(out.rglob('*.csv'))}

@@ -17,76 +17,84 @@ def table(df,digits=4):
     return '\n'.join(lines)
 
 
-def save(fig,path,caption,bottom=.19):
-    fig.subplots_adjust(bottom=bottom,top=.86,wspace=.3,hspace=.44)
-    fig.text(.5,.035,caption,ha='center',va='bottom',fontsize=9,color='#444444',wrap=True)
-    fig.savefig(str(path)+'.png',dpi=170,facecolor='white')
-    fig.savefig(str(path)+'.pdf',facecolor='white');plt.close(fig)
+def save(fig,path,caption=None,bottom=.12):
+    fig.subplots_adjust(bottom=bottom,top=.88,wspace=.3,hspace=.44)
+    png=path.with_suffix('.png');temp_png=path.parent/'.__plot_tmp.png'
+    fig.savefig(temp_png,dpi=170,facecolor='white');png.unlink(missing_ok=True);temp_png.replace(png)
+    pdf=path.with_suffix('.pdf');temp_pdf=path.parent/'.__plot_tmp.pdf'
+    fig.savefig(temp_pdf,facecolor='white');pdf.unlink(missing_ok=True);temp_pdf.replace(pdf);plt.close(fig)
 
 
 def render(out):
     plt.rcParams.update({'font.sans-serif':['Noto Sans CJK JP','Noto Sans CJK SC','Microsoft YaHei','SimHei','DejaVu Sans'],
-                        'axes.unicode_minus':False,'font.size':10,'axes.spines.top':False,'axes.spines.right':False})
+                        'axes.unicode_minus':False,'font.size':10,
+                        'figure.facecolor':'white','axes.facecolor':'white',
+                        'axes.edgecolor':'#333333','axes.linewidth':.9,
+                        'axes.spines.top':True,'axes.spines.right':True,
+                        'axes.axisbelow':True,'axes.grid':True,
+                        'grid.color':'#D9DEE3','grid.linestyle':'--',
+                        'grid.linewidth':.7,'grid.alpha':.75,
+                        'legend.frameon':True})
     figs=out/'figures';figs.mkdir(exist_ok=True)
     events=pd.read_csv(out/'event_audit.csv');summary=pd.read_csv(out/'summary.csv')
     dec=pd.read_csv(out/'decision_summary.csv');curves=pd.read_csv(out/'decision_cumulative.csv')
     sens=pd.read_csv(out/'window_sensitivity.csv');states=np.load(out/'cognitive_states.npz')
     paths=np.load(out/'decision_paths.npz');surv=pd.read_csv(out/'observed_response_survival.csv')
-    fig,axes=plt.subplots(1,2,figsize=(12,5.2));fig.suptitle('V3 应答状态与观察窗：保留未知，区分代理和真实点击',fontsize=15)
+    fig,axes=plt.subplots(1,2,figsize=(12,5.2));fig.suptitle('图1  应答标记与认知信号截窗',fontsize=15)
     for j,(status,label,color) in enumerate([('explicit_click','独立点击',BLUE),('platform_end_proxy','平台末端代理',ORANGE),('unobserved','无明确标记',GRAY)]):
         counts=[int(((events.dataset==k)&(events.response_status==status)).sum()) for k in KEYS]
         axes[0].bar(np.arange(4)+(j-1)*.22,counts,width=.21,label=label,color=color)
-    axes[0].set(xticks=range(4),xticklabels=KEYS,ylabel='原始事件数',ylim=(0,120),title='400次事件，不以正误筛选');axes[0].legend(fontsize=9)
-    ax=axes[1];ax.set(xlim=(-.2,2.5),ylim=(-.7,2.7),yticks=[2,1,0],yticklabels=['明确应答','Task-1代理','无应答标记'],xlabel='相对候选目标时间（秒）',title='示意窗：2秒为工程上限，不是真实超时阈值')
+    axes[0].set(xticks=range(4),xticklabels=KEYS,ylabel='事件数',ylim=(0,120),title='应答标记类型');axes[0].legend(fontsize=9)
+    ax=axes[1];ax.set(xlim=(-.2,2.5),ylim=(-.7,2.7),yticks=[2,1,0],yticklabels=['明确点击','项目1代理','标记缺失'],xlabel='相对目标出现时间（s）',title='认知信号截窗规则')
     for y,end,c in [(2,1.3,BLUE),(1,1.3,ORANGE),(0,2.,GRAY)]:ax.plot([0,end],[y,y],c=c,lw=8,solid_capstyle='butt')
     for y in [2,1]:
-        ax.plot([1.4,1.4],[y-.22,y+.22],c='#333333');ax.text(1.45,y,'应答/代理\n前100 ms截断',fontsize=9,va='center')
-    ax.axvline(0,c='#999999',ls=':');ax.text(2.05,0,'行政截断\n正误与超时未知',fontsize=9,va='center')
-    save(fig,figs/'01_事件与截窗','左图为实测标记审计；右图为规则示意。无标记不等于未应答，不能自动进入行为生存分析。')
+        ax.plot([1.4,1.4],[y-.22,y+.22],c='#333333');ax.text(1.45,y,'应答前\n100 ms',fontsize=9,va='center')
+    ax.axvline(0,c='#999999',ls=':');ax.text(2.05,0,'观察上限\n2 s',fontsize=9,va='center')
+    save(fig,figs/'01_事件与截窗','实测标记审计与截窗规则；标记缺失不等同于未应答。')
 
-    fig,axes=plt.subplots(2,2,figsize=(12,8));fig.suptitle('保留 V2 神经模型：从保存参数重建 V3 外层 EEG 预测',fontsize=15)
+    fig,axes=plt.subplots(2,2,figsize=(12,8));fig.suptitle('图2  认知模型预测与实测脑电',fontsize=15)
     for ax,key in zip(axes.flat,KEYS):
         z=np.load(out/f'{key}_stimulus_waves.npz');past=np.load(out/f'{key}_past_waves.npz');mask=np.isfinite(z['x'][:,:,0]);n=mask.sum(0)
-        for a,label,color in [(z['x'],'观测','#333333'),(z['N2'],'事件输入 N2',BLUE),(past['N2'],'背景辅助 N2',ORANGE)]:
+        for a,label,color in [(z['x'],'实测脑电','#333333'),(z['N2'],'认知模型预测',BLUE),(past['N2'],'背景辅助预测',ORANGE)]:
             mean=np.where(mask,a[:,:,0],0).sum(0)/np.maximum(n,1);mean[n<10]=np.nan
             ax.plot(TIME,mean,label=label,c=color,lw=1.3)
-        ax.set(title=f'{key} · n={len(z["ids"])}',xlim=(-.25,4.3),xlabel='提示后时间（秒）',ylabel='Fz 原始记录单位')
+        ax.set(title=f'{key}组（{len(z["ids"])}次）',xlim=(-.25,4.3),xlabel='相对提示时间（s）',ylabel='Fz电位（原始单位）')
         ax.axvline(np.median(z['target']),c='#999999',ls=':')
     axes[0,0].legend(fontsize=8)
-    save(fig,figs/'02_EEG继承与重建','268次主队列与V2一致；这是冻结参数复算，不是新拟合。末段仅包含较慢试次；背景收益不能归因于记忆。')
+    save(fig,figs/'02_EEG继承与重建','同一主队列的冻结参数预测；虚线标出目标出现时刻。')
 
-    fig,axes=plt.subplots(1,3,figsize=(14,5.4));fig.suptitle('同一 V2 认知状态连接 EEG 与决策层',fontsize=15)
-    for name,label,color in [('nominal','基准',BLUE),('weak_memory','短保持',ORANGE),('retrieval_off','关闭提取',GRAY)]:
+    fig,axes=plt.subplots(1,3,figsize=(14,5.4));fig.suptitle('图3  记忆—认知—决策状态',fontsize=15)
+    for name,label,color in [('nominal','基准',BLUE),('weak_memory','短记忆',ORANGE),('retrieval_off','无提取',GRAY)]:
         axes[0].plot(TIME,states[name+'_m'][:,1],label=label,c=color)
         axes[1].plot(TIME,states[name+'_p'][:,1],label=label,c=color)
         axes[2].plot(paths[name+'_time'],paths[name+'_drift'],label=label,c=color)
-    for ax,title in zip(axes,['提示差分记忆 m','差分认知状态 p','方向对齐后的累积漂移']):
-        ax.set(title=title,ylabel='模型内部单位',xlabel='提示后时间（秒）' if ax!=axes[2] else '目标后时间（秒）');ax.legend(fontsize=8)
+    for ax,title in zip(axes,['记忆状态 $m$','认知状态 $p$','决策累积量']):
+        ax.set(title=title,ylabel='模型状态（无量纲）',xlabel='相对提示时间（s）' if ax!=axes[2] else '相对目标时间（s）');ax.legend(fontsize=8)
     for ax in axes[:2]:ax.set_xlim(0,4.5);ax.axvline(568/256,c='#999999',ls=':')
-    save(fig,figs/'03_统一认知与决策','状态均调用V2同一方程。仿真方向映射与决策参数是给定假设，不是实测海马信号或拟合行为。')
+    save(fig,figs/'03_统一认知与决策','记忆与认知状态经同一方程驱动决策；曲线均为模型仿真。')
 
-    fig,axes=plt.subplots(1,2,figsize=(13,5.8));fig.suptitle('统一模型产生正确、错误与截止时仍未决的轨迹',fontsize=15)
+    fig,axes=plt.subplots(1,2,figsize=(13,5.8));fig.suptitle('图4  认知模型的三类决策结果',fontsize=15)
     bottom=np.zeros(len(dec))
     for col,label,color in [('correct_rate','正确',BLUE),('error_rate','错误',RED),('unresolved_rate','未越界（删失）',GRAY)]:
         axes[0].bar(np.arange(len(dec)),dec[col],bottom=bottom,color=color,label=label);bottom+=dec[col]
-    axes[0].set(xticks=np.arange(len(dec)),xticklabels=dec.label,ylim=(0,1.05),ylabel='仿真比例',title='每场景6000次，场景之间使用共同随机数')
-    axes[0].tick_params(axis='x',rotation=20);axes[0].legend(fontsize=8,loc='upper center',bbox_to_anchor=(.5,-.2),ncol=3)
+    axes[0].set(xticks=np.arange(len(dec)),xticklabels=dec.label,ylim=(0,1.05),ylabel='轨迹比例',title='正确、错误与未决比例')
+    axes[0].tick_params(axis='x',rotation=20);axes[0].legend(fontsize=8,loc='upper left',ncol=1)
     for name,label,color in [('nominal','基准',BLUE),('weak_memory','短保持',ORANGE),('high_noise','高噪声',RED)]:
         part=curves[curves.scenario==name]
         axes[1].plot(part.time_s,part.unresolved_survival,label=label,c=color)
-    axes[1].set(xlabel='目标后决策时间（秒）',ylabel='尚未触界的比例',ylim=(0,1.05),title='未触界试次没有可观测决策时间');axes[1].legend()
-    save(fig,figs/'04_正确错误与删失','全部为V3新生成的模型仿真；未拟合实测正确率/超时率，不包含运动耗时。删失试次的决策时间保存为空。',bottom=.28)
+    axes[1].set(xlabel='相对目标时间（s）',ylabel='未决比例',ylim=(0,1.05),title='未决比例随时间变化');axes[1].legend()
+    save(fig,figs/'04_正确错误与删失')
 
-    fig,axes=plt.subplots(1,2,figsize=(12,5.4));fig.suptitle('行政观察上限敏感性与实际点击时间描述',fontsize=15)
+    fig,axes=plt.subplots(1,2,figsize=(12,5.4));fig.suptitle('图5  观察窗敏感性与实测点击时间',fontsize=15)
     for key,color in zip(KEYS,[BLUE,ORANGE,GRAY,RED]):
         s=sens[(sens.dataset==key)&(sens.stage=='retrieval')&(sens.control=='N3')]
         axes[0].plot(s.horizon_s,100*s.S,'o-',c=color,label=key)
-    axes[0].axhline(0,c='#888888',ls=':');axes[0].set(xlabel='目标后观察上限（秒）',ylabel='N2 相对 N3 的 MSE 改善（%）',title='冻结模型；各上限使用与主分析共有的合格试次');axes[0].legend(ncol=2)
+    axes[0].axhline(0,c='#888888',ls=':');axes[0].set(xlabel='目标后观察上限（s）',ylabel='相对慢趋势的均方误差改善（%）',title='观察窗敏感性');axes[0].legend(ncol=2)
     for key,color in [('A2',BLUE),('B2',ORANGE)]:
         s=surv[(surv.dataset==key)&(surv.horizon_s==2)]
         axes[1].step(np.r_[0,s.time_s],np.r_[1,s.survival],where='post',label=key,c=color)
-    axes[1].set(xlabel='候选目标到点击（秒）',ylabel='尚未记录点击的比例',title='仅Task-2独立点击；不区分实测正误',ylim=(0,1.05));axes[1].legend()
-    save(fig,figs/'05_观察窗敏感性','观察上限不是实验截止时间。右图使用全部事件有效的独立点击，不以EEG质量筛选，不解释为纯认知决策时长。')
+    axes[1].set(xlabel='目标出现至点击（s）',ylabel='尚未点击比例',title='项目2实测点击时间',ylim=(0,1.05));axes[1].legend()
+    save(fig,figs/'05_观察窗敏感性','观察上限不是实验超时阈值；点击时间包含认知与运动过程。')
 
     counts=events.groupby(['dataset','response_status']).size().unstack(fill_value=0).reset_index()
     counts['EEG保留']=[int(events[(events.dataset==k)&events.retained].shape[0]) for k in counts.dataset]

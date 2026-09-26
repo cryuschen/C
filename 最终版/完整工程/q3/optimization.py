@@ -145,10 +145,12 @@ def render(out):
     for ax,key in zip(axes.flat,KEYS):
         for held,g in p[p.dataset==key].groupby('held_block'):
             ax.plot(g.tau_m,g.held_retrieval_MSE,'o-',label=f'块{held+1}')
-        ax.set(xscale='log',title=key,xlabel='固定记忆时间常数 / s',ylabel='留出提取阶段 MSE')
+        ax.set(xscale='log',title=f'{key}组',xlabel='记忆时间常数（s）',ylabel='留出均方误差')
         from matplotlib.ticker import NullLocator
         ax.set_xticks(TAUS,[str(t) for t in TAUS]);ax.xaxis.set_minor_locator(NullLocator());ax.legend(fontsize=7)
-    fig.savefig(out/'优化_参数剖面.png',dpi=180);plt.close(fig)
+    fig.suptitle('记忆时间常数的留出误差',fontsize=14)
+    target=out/'优化_参数剖面.png';temporary=out/'.__plot_tmp.png'
+    fig.savefig(temporary,dpi=180);target.unlink(missing_ok=True);temporary.replace(target);plt.close(fig)
     r=pd.read_csv(out/'优化_恢复网格.csv');s=pd.read_csv(out/'优化_新拟合区间.csv');gap=pd.read_csv(out/'优化_截窗区间.csv')
     recovery_summary=r.groupby('noise')[['exact_tau','exact_dynamics','NRMSE']].mean().reset_index()
     # Compare new and frozen N2 on exactly matched trials and stages.

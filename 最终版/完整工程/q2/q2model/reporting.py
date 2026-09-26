@@ -12,9 +12,9 @@ from .data import TIMES, WEIGHTS, NAMES
 
 BLUE='#2667a5';RED='#c44e52';GREY='#687782';GREEN='#28816b'
 CHANNELS=('Fz','F3','F4')
-FEATURE_NAMES={'amplitude':'均值振幅','peak_latency':'峰幅与潜伏期','spatial':'加入侧化',
-               'projection6':'六维机制投影','direction3':'三维方向投影','mechanism':'加入机制','covariance':'协方差基线','past_only':'刺激前',
-               'previous_cue':'前次标签','post_given_past':'扣除过去'}
+FEATURE_NAMES={'amplitude':'均值振幅','peak_latency':'峰值特征','spatial':'侧化特征',
+               'projection6':'六维机制投影','direction3':'三维方向投影','mechanism':'机制特征','covariance':'协方差基线','past_only':'刺激前',
+               'previous_cue':'前次标签','post_given_past':'刺激后增量'}
 MODEL_NAMES={'full':'完整模型','no_shape':'取消形状','no_recurrence':'取消跨群复发','symmetric_readout':'对称观测',
              'gamma':'六时间核','step':'平滑阶跃','ramp':'慢斜坡','zero':'零方向差'}
 
@@ -27,7 +27,13 @@ def setup():
     plt.rcParams.update({'font.family':chosen,'axes.unicode_minus':False,'font.size':9,
                          'axes.titlesize':10,'axes.labelsize':9,'legend.fontsize':8,
                          'pdf.fonttype':42,'ps.fonttype':42,'savefig.dpi':240,
-                         'axes.spines.top':False,'axes.spines.right':False})
+                         'figure.facecolor':'white','axes.facecolor':'white',
+                         'axes.edgecolor':'#333333','axes.linewidth':.9,
+                         'axes.spines.top':True,'axes.spines.right':True,
+                         'axes.axisbelow':True,'axes.grid':True,
+                         'grid.color':'#D9DEE3','grid.linestyle':'--',
+                         'grid.linewidth':.7,'grid.alpha':.75,
+                         'legend.frameon':True})
 
 
 def save(fig,out,name):
@@ -39,8 +45,8 @@ def save(fig,out,name):
 def decorate(ax,ylabel=True):
     ax.axvline(0,color=GREY,lw=.6);ax.axhline(0,color=GREY,lw=.5,alpha=.5)
     ax.axvspan(250,500,color='#e5d6a6',alpha=.24)
-    ax.set_xlim(-250,800);ax.set_xlabel('刺激后时间 / ms')
-    if ylabel: ax.set_ylabel('记录幅值单位')
+    ax.set_xlim(-250,800);ax.set_xlabel('相对提示时间（ms）')
+    if ylabel: ax.set_ylabel('电位（原始单位）')
 
 
 def render_all(out):
@@ -54,16 +60,15 @@ def render_all(out):
     for i,label in enumerate(labels):
         ax=fig.add_subplot(gs[0,i]);im=shape['images'][i];ys,xs=np.nonzero(shape['images'][:2].sum(0))
         ax.imshow(im[max(0,ys.min()-5):ys.max()+6,max(0,xs.min()-5):xs.max()+6],cmap='Blues',vmin=0,vmax=1)
-        ax.set_title(label+f"\n选择群输入 ({shape['inputs'][i,0]:.3f}, {shape['inputs'][i,1]:.3f})")
+        ax.set_title(label)
         ax.axis('off')
-    ax=fig.add_subplot(gs[1,:]);ax.axis('off');ax.set_xlim(0,1);ax.set_ylim(0,1)
-    boxes=[('局部对比与\n边缘空间组合',.07),('LGN\n三路中继',.25),('早期视觉 → 形状整合 → 额区\n每级三个形状/共同 E–I 群体',.52),('突触等效源\n共享观测矩阵 L',.78),('Fz\nF3 / F4',.94)]
+    ax=fig.add_subplot(gs[1,:]);ax.axis('off');ax.grid(False);ax.set_xlim(0,1);ax.set_ylim(0,1)
+    boxes=[('边缘与空间组合',.07),('LGN\n三路中继',.25),('视觉皮层三级响应\nE–I神经群',.52),('突触源与\n头皮观测',.78),('Fz\nF3 / F4',.94)]
     for text,x in boxes:
         ax.text(x,.62,text,ha='center',va='center',fontsize=10,bbox=dict(boxstyle='round,pad=.6',fc='#eef3f7',ec=BLUE))
     for x1,x2 in ((.14,.2),(.3,.36),(.68,.72),(.84,.9)):
         ax.annotate('',xy=(x2,.62),xytext=(x1,.62),arrowprops=dict(arrowstyle='->',color=GREY,lw=1.5))
-    ax.text(.5,.16,'左右条件共享网络与观测参数；差异由图像输入进入。\n形状偏好 ≠ 视野位置 ≠ 半球定位；示意图像素不是校准刺激记录。',ha='center',va='center')
-    fig.suptitle('图1  从三角空间结构到额区 EEG 的可计算路径',fontsize=13)
+    fig.suptitle('图1  左右三角形状编码与脑电形成路径',fontsize=13)
     save(fig,out,'图1_机制与形状编码')
     for key in NAMES:
         suffix='' if key=='A1' else f'_补图_{key}'
@@ -78,20 +83,20 @@ def render_all(out):
                     axes[stage,0].plot(t,s[cond,3+stage*3+group],color=color,ls=style,lw=1)
                     axes[stage,1].plot(t,s[cond,12+stage*3+group],color=color,ls=style,lw=1)
                     axes[stage,2].plot(t,q[cond,stage,group],color=color,ls=style,lw=1,
-                                       label=f'{("左刺激","右刺激")[cond]} / {gname}')
+                                       label=f'{("左三角","右三角")[cond]} / {gname}')
             for col,ct in enumerate(('兴奋群 E','抑制群 I','突触等效源 q')):
-                axes[stage,col].set_title(name+' · '+ct);axes[stage,col].set_xlim(-100,1100)
+                axes[stage,col].set_title(name+' '+ct);axes[stage,col].set_xlim(-100,1100)
                 axes[stage,col].axvspan(0,203.125,color=GREY,alpha=.1)
-                axes[stage,col].set_xlabel('时间 / ms');axes[stage,col].set_ylabel('模型单位')
+                axes[stage,col].set_xlabel('相对提示时间（ms）');axes[stage,col].set_ylabel('模型响应（无量纲）')
         axes[0,2].legend(fontsize=6,ncol=2)
-        fig.suptitle(f'图2  {key} 同一左形状偏好群对左右刺激的响应（模型内部量）',fontsize=12)
+        fig.suptitle(f'图2  {key}组皮层形状选择响应',fontsize=12)
         save(fig,out,'图2_皮层内部响应'+suffix)
         # Dedicated LGN inset supplement keeps main figure readable.
         fig,ax=plt.subplots(figsize=(7,3),layout='constrained')
         for cond,color in enumerate((BLUE,RED)):
             for g,style in enumerate(('-','--',':')):
-                ax.plot(t,s[cond,g],color=color,ls=style,label=f'{("左","右")[cond]}刺激·群{g+1}')
-        ax.set(xlim=(-100,600),xlabel='时间 / ms',ylabel='模型单位',title=f'{key} LGN 中继动态');ax.legend(ncol=3)
+                ax.plot(t,s[cond,g],color=color,ls=style,label=f'{("左三角","右三角")[cond]} 通路{g+1}')
+        ax.set(xlim=(-100,600),xlabel='相对提示时间（ms）',ylabel='模型响应（无量纲）',title=f'{key}组 LGN中继响应');ax.legend(ncol=3)
         save(fig,out,f'附图_LGN_{key}')
         fig,axes=plt.subplots(2,3,figsize=(12,6.5),sharex=True,layout='constrained')
         pairs=[(w[f'{key}_strict_all_observed'],w[f'{key}_strict_all_predicted'],'同样本描述拟合'),
@@ -100,10 +105,10 @@ def render_all(out):
             for ch in range(3):
                 ax=axes[row,ch]
                 for cond,color in enumerate((BLUE,RED)):
-                    ax.plot(ms,obs[cond,ch],color=color,label=f'{("左","右")[cond]}·实测')
-                    ax.plot(ms,pred[cond,ch],color=color,ls='--',label=f'{("左","右")[cond]}·模型')
-                decorate(ax);ax.set_title(f'{title} · {CHANNELS[ch]}')
-        axes[0,0].legend(ncol=2);fig.suptitle(f'图3  {key} 左右 ERP 的描述拟合与独立时间块预测',fontsize=12)
+                    ax.plot(ms,obs[cond,ch],color=color,label=f'{("左三角","右三角")[cond]} 实测')
+                    ax.plot(ms,pred[cond,ch],color=color,ls='--',label=f'{("左三角","右三角")[cond]} 预测')
+                decorate(ax);ax.set_title(f'{title} {CHANNELS[ch]}')
+        axes[0,0].legend(ncol=2);fig.suptitle(f'图3  {key}组左右三角ERP拟合与留出预测',fontsize=12)
         save(fig,out,'图3_ERP拟合与留出'+suffix)
         # Q1 dual-track supplementary figure.
         fig,axes=plt.subplots(2,3,figsize=(12,6),layout='constrained')
@@ -113,8 +118,8 @@ def render_all(out):
                 for cond,color in enumerate((BLUE,RED)):
                     ax.plot(ms,w[f'{key}_{stage}_observed'][cond,ch],color=color)
                     ax.plot(ms,w[f'{key}_{stage}_predicted'][cond,ch],color=color,ls='--')
-                decorate(ax);ax.set_title(f'{stage} · {CHANNELS[ch]}')
-        fig.suptitle(f'{key} Q1 衔接：实线为条件均值，虚线为同样本描述拟合（不计入预测证据）')
+                decorate(ax);ax.set_title(f'{"降噪前" if stage=="q1_before" else "降噪后"} {CHANNELS[ch]}')
+        fig.suptitle(f'{key}组问题一与问题二输入衔接')
         save(fig,out,f'附图_Q1衔接_{key}')
     # Figure 4: all recordings and all channels, not selected successes.
     fig,axes=plt.subplots(4,3,figsize=(12,10),sharex=True,layout='constrained')
@@ -123,10 +128,10 @@ def render_all(out):
         ci=w[f'{key}_delta_ci'];score=summary[(summary.dataset==key)&(summary.model=='full')].iloc[0]
         for ch in range(3):
             ax=axes[r,ch];ax.fill_between(ms,ci[0,ch],ci[1,ch],color=BLUE,alpha=.17,label='实测点态95%区间')
-            ax.plot(ms,obs[1,ch]-obs[0,ch],color=BLUE,label='实测 R−L')
-            ax.plot(ms,pred[1,ch]-pred[0,ch],color=RED,ls='--',label='留出预测 R−L')
-            decorate(ax);ax.set_title(f'{key} · {CHANNELS[ch]}'+(f'    SΔ={score.S_delta:+.3f}' if ch==0 else ''))
-    axes[0,0].legend(fontsize=7);fig.suptitle('图4  四组数据的方向差分留出预测；阴影不是模型预测区间',fontsize=12)
+            ax.plot(ms,obs[1,ch]-obs[0,ch],color=BLUE,label='实测：右−左')
+            ax.plot(ms,pred[1,ch]-pred[0,ch],color=RED,ls='--',label='预测：右−左')
+            decorate(ax);ax.set_title(f'{key}组 {CHANNELS[ch]}'+(f'（SΔ={score.S_delta:+.3f}）' if ch==0 else ''))
+    axes[0,0].legend(fontsize=7);fig.suptitle('图4  左右三角ERP差异波的留出预测',fontsize=12)
     save(fig,out,'图4_左右差异波')
     # Figure 5: descriptive LI, unnormalized lateral difference, and trial distributions.
     fig,axes=plt.subplots(4,3,figsize=(12,10),layout='constrained');lirows=[]
@@ -137,7 +142,7 @@ def render_all(out):
         trial_li=(amp[:,2]-amp[:,1])/np.maximum(abs(amp[:,1])+abs(amp[:,2]),floor)
         for cond,color in enumerate((BLUE,RED)):
             for waves,style,label in ((obs,'-','实测'),(pred,'--','预测')):
-                axes[row,0].plot(ms,waves[cond,2]-waves[cond,1],color=color,ls=style,label=f'{("左","右")[cond]}·{label}')
+                axes[row,0].plot(ms,waves[cond,2]-waves[cond,1],color=color,ls=style,label=f'{("左","右")[cond]} {label}')
                 a=waves[cond];li=(a[2]-a[1])/np.maximum(abs(a[1])+abs(a[2]),floor)
                 axes[row,1].plot(ms,li,color=color,ls=style)
             chosen=y==(-1 if cond==0 else 1)
@@ -145,11 +150,11 @@ def render_all(out):
                                LI_mean=trial_li[chosen].mean(),LI_SD=trial_li[chosen].std(ddof=1),
                                LI_floor=floor,amplitude_F4_minus_F3=(amp[chosen,2]-amp[chosen,1]).mean(),
                                role='descriptive_all_data'))
-        decorate(axes[row,0]);decorate(axes[row,1],False);axes[row,1].set_ylabel('稳定化侧化指数')
-        axes[row,0].set_title(f'{key} · F4−F3');axes[row,1].set_title(f'{key} · 时变侧化指数')
+        decorate(axes[row,0]);decorate(axes[row,1],False);axes[row,1].set_ylabel('侧化指数')
+        axes[row,0].set_title(f'{key}组 F4−F3');axes[row,1].set_title(f'{key}组 侧化指数')
         axes[row,2].boxplot([trial_li[y==-1],trial_li[y==1]],tick_labels=['左','右'],showfliers=False)
-        axes[row,2].set_title(f'{key} · 250–500 ms 试次 LI');axes[row,2].axhline(0,color=GREY,lw=.5)
-    axes[0,0].legend(ncol=2);fig.suptitle('图5  额区侧化的实测与预测；稳定项为全数据描述值',fontsize=12)
+        axes[row,2].set_title(f'{key}组 P300窗侧化指数');axes[row,2].axhline(0,color=GREY,lw=.5)
+    axes[0,0].legend(ncol=2);fig.suptitle('图5  额区侧化特征的实测与预测',fontsize=12)
     save(fig,out,'图5_空间侧化')
     pd.DataFrame(lirows).to_csv(out/'Q2_侧化统计.csv',index=False,encoding='utf-8-sig')
     # Figure 6: both re-fitted ablations and fixed interventions.
@@ -160,23 +165,23 @@ def render_all(out):
         offset=(j-1.5)*.18
         axes[0,0].bar(np.arange(len(model_order))+offset,vals.S_delta,width=.18,label=key)
     axes[0,0].set_xticks(np.arange(len(model_order)),[MODEL_NAMES[m] for m in model_order],rotation=30,ha='right')
-    axes[0,0].set_title('训练内重新拟合后的留出 SΔ');axes[0,0].axhline(0,color=GREY,lw=.8);axes[0,0].legend(ncol=4)
+    axes[0,0].set_title('各模型留出预测增益');axes[0,0].set_ylabel('差异波预测增益 $S_\\Delta$');axes[0,0].axhline(0,color=GREY,lw=.8);axes[0,0].legend(ncol=4)
     fixed=pd.read_csv(out/'Q2_固定参数消融.csv')
     agg=fixed.groupby(['dataset','intervention'])[['delta_MSE','full_delta_MSE']].mean()
     for j,ab in enumerate(('no_shape','no_recurrence','symmetric_readout')):
         val=agg.xs(ab,level=1);relative=(val.delta_MSE-val.full_delta_MSE)/val.full_delta_MSE
         axes[0,1].bar(np.arange(4)+(j-1)*.24,relative,width=.24,label=MODEL_NAMES[ab])
-    axes[0,1].set_xticks(range(4),NAMES);axes[0,1].set_title('固定参数干预：差分 MSE 相对变化');axes[0,1].axhline(0,color=GREY,lw=.8);axes[0,1].legend(fontsize=7)
+    axes[0,1].set_xticks(range(4),NAMES);axes[0,1].set_title('机制消融的误差变化');axes[0,1].set_ylabel('差异波MSE相对变化');axes[0,1].axhline(0,color=GREY,lw=.8);axes[0,1].legend(fontsize=7)
     sensitivity=pd.read_csv(out/'Q2_参数敏感性.csv')
     for j,p in enumerate(('time_scale','recurrence','F4_readout')):
         s=sensitivity[sensitivity.parameter==p].groupby('factor').S_delta.mean()
         axes[1,0].plot(s.index,s.values,marker='o',label=p)
-    axes[1,0].set(title='参数 ±20%：20 折 SΔ 等权均值',xlabel='乘数',ylabel='SΔ');axes[1,0].legend()
+    axes[1,0].set(title='参数敏感性',xlabel='参数倍数',ylabel='差异波预测增益 $S_\\Delta$');axes[1,0].legend()
     vals=summary[summary.model=='full'];axes[1,1].errorbar(np.arange(4),vals.S_delta,
         yerr=np.array([np.maximum(vals.S_delta-vals.S_low,0),np.maximum(vals.S_high-vals.S_delta,0)]),fmt='o',color=BLUE,capsize=4)
     axes[1,1].set_xticks(range(4),vals.dataset);axes[1,1].axhline(0,color=GREY,lw=.8)
-    axes[1,1].set_title('完整模型：时间块重采样95%范围');axes[1,1].set_ylabel('SΔ')
-    fig.suptitle('图6  模型比较、机制消融和敏感性；负收益和无改善均保留',fontsize=12)
+    axes[1,1].set_title('完整模型的95%重采样区间');axes[1,1].set_ylabel('差异波预测增益 $S_\\Delta$')
+    fig.suptitle('图6  模型消融与参数敏感性',fontsize=12)
     save(fig,out,'图6_消融与敏感性')
     # Figure 7: training-fitted PCA + out-of-fold diagnostics and actual null.
     pca=pd.read_csv(out/'Q2_训练参考PCA.csv');null=pd.read_csv(out/'Q2_置换分布.csv')
@@ -186,23 +191,23 @@ def render_all(out):
             for role,marker in (('train','.'),('test','^')):
                 p=points[(points.cue==direction)&(points.role==role)]
                 axes[0,0].scatter(p.PC1,p.PC2,c=color,marker=marker,s=22 if role=='train' else 45,
-                                   alpha=.45 if role=='train' else .95,label=f'{("左" if direction==-1 else "右")}·{role}')
-        axes[0,0].legend(ncol=2,fontsize=7);axes[0,0].set(title=f'{key} 固定第5块留出 PCA',xlabel='PC1',ylabel='PC2')
+                                   alpha=.45 if role=='train' else .95,label=f'{("左三角" if direction==-1 else "右三角")} {("训练" if role=="train" else "测试")}')
+        axes[0,0].legend(ncol=2,fontsize=7);axes[0,0].set(title='主成分投影（第5块留出）',xlabel='主成分1',ylabel='主成分2')
         m=metric[metric.dataset==key].set_index('features').loc[list(FEATURE_NAMES)]
         axes[0,1].errorbar(np.arange(len(m)),m.BA,yerr=[np.maximum(m.BA-m.BA_low,0),np.maximum(m.BA_high-m.BA,0)],fmt='o',capsize=3)
         axes[0,1].axhline(.5,color=GREY,ls='--');axes[0,1].set_ylim(0,1)
         axes[0,1].set_xticks(range(len(m)),[FEATURE_NAMES[x] for x in m.index],rotation=35,ha='right')
-        axes[0,1].set(title=f'{key} 全部外层留出 BA',ylabel='平衡准确率')
+        axes[0,1].set(title='各特征的留出判别',ylabel='平衡准确率')
         row=m.loc['mechanism'];cm=np.array([[row.TN,row.FP],[row.FN,row.TP]])
         axes[1,0].imshow(cm,cmap='Blues');axes[1,0].set_xticks([0,1],['预测左','预测右']);axes[1,0].set_yticks([0,1],['实际左','实际右'])
         for i in range(2):
             for j in range(2): axes[1,0].text(j,i,str(int(cm[i,j])),ha='center',va='center',fontsize=15,
                                             color='white' if cm[i,j]>(cm.max()+cm.min())/2 else 'black')
-        axes[1,0].set_title(f'{key} 机制特征混淆矩阵')
+        axes[1,0].grid(False);axes[1,0].set_title('机制特征混淆矩阵')
         n=null[(null.dataset==key)&(null.features=='mechanism')&(null.kind=='block_permutation')]
         axes[1,1].hist(n.BA,bins=20,color=GREY,alpha=.65);axes[1,1].axvline(row.BA,color=RED,lw=2)
-        axes[1,1].set(title=f'块内置换：maxT p={row.block_permutation_maxT_p:.3f}',xlabel='置换 BA',ylabel='次数')
-        fig.suptitle(f'图7  {key} 特征可视化与未知方向判别（二维散点不作为显著性证据）',fontsize=12)
+        axes[1,1].set(title=f'块内置换检验（校正$p$={row.block_permutation_maxT_p:.3f}）',xlabel='置换平衡准确率',ylabel='频数')
+        fig.suptitle(f'图7  {key}组左右三角判别特征',fontsize=12)
         save(fig,out,'图7_特征与判别'+('' if key=='A1' else f'_补图_{key}'))
     # Pooled summary, still retaining per-recording main figures and metrics.
     fig,ax=plt.subplots(figsize=(9,4),layout='constrained')
@@ -210,7 +215,7 @@ def render_all(out):
         sub=metric[(metric.dataset==key)&metric.features.isin(['amplitude','mechanism','projection6','direction3','past_only'])]
         ax.plot(range(len(sub)),sub.BA,marker='o',label=key)
     ax.set_xticks(range(len(sub)),[FEATURE_NAMES[s] for s in sub.features]);ax.axhline(.5,color=GREY,ls='--')
-    ax.set(ylabel='平衡准确率',title='逐组与合并留出判别结果');ax.legend(ncol=5)
+    ax.set(ylabel='平衡准确率',title='左右三角留出判别汇总');ax.legend(ncol=5)
     save(fig,out,'附图_判别汇总')
     w.close();data.close();shape.close()
 

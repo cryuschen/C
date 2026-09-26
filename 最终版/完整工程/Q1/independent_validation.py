@@ -164,10 +164,15 @@ def render(out,summary):
     for i,origin in enumerate(('semisynthetic','synthetic')):
         for j,family in enumerate(('asymmetric_burst','direction_step')):
             part=summary[(summary.origin==origin)&(summary.family==family)]
-            for method,g in part.groupby('method'):axes[i,j].plot(g.level,g.normalized_RMSE,'o-',label=method)
-            axes[i,j].set(title=f'{origin} / {family}',xlabel='注入强度',ylabel='恢复 NRMSE')
+            method_names={'uncorrected':'未校正','V7':'基准方法','shrink':'模板收缩','gated':'保守门控'}
+            for method,g in part.groupby('method'):axes[i,j].plot(g.level,g.normalized_RMSE,'o-',label=method_names.get(method,method))
+            origin_name={'semisynthetic':'半合成','synthetic':'全合成'}.get(origin,origin)
+            family_name={'asymmetric_burst':'非对称高频扰动','direction_step':'方向相关阶跃'}.get(family,family)
+            axes[i,j].set(title=f'{origin_name} {family_name}',xlabel='伪影强度',ylabel='归一化恢复误差')
             axes[i,j].legend(fontsize=8)
-    fig.savefig(out/'独立验证_污染恢复.png',dpi=180);plt.close(fig)
+    fig.suptitle('问题一降噪方法的独立污染恢复检验',fontsize=14)
+    target=out/'独立验证_污染恢复.png';temporary=out/'.__plot_tmp.png'
+    fig.savefig(temporary,dpi=180);target.unlink(missing_ok=True);temporary.replace(target);plt.close(fig)
     (out/'独立验证_报告.md').write_text('# 第一问独立恢复验证\n\n三通道原始数据在独立时间块内预处理；275次队列与历史371次分开。所有方法共用训练、测试、污染与目标。\n\n'
         '训练只使用原有污染生成器，留出测试使用非对称高频衰减和方向相关缓慢阶跃。合成目标有已知形状与潜伏期变化；半合成目标是可能仍含原伪影的实测背景。\n\n'
         '保守方案在训练内选择校正比例与门控，同时限制零注入背景和差分误差各不超过0.05归一化单位。简单模板收缩也在训练内选强度。没有根据测试组选择方法。\n\n'

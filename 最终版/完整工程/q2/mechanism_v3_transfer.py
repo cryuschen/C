@@ -182,6 +182,14 @@ def plot_comparison(summary: pd.DataFrame, pre_summary: pd.DataFrame,
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    plt.rcParams.update({'font.sans-serif':['Microsoft YaHei','SimHei','DejaVu Sans'],
+                         'axes.unicode_minus':False,'figure.facecolor':'white',
+                         'axes.facecolor':'white','axes.edgecolor':'#333333',
+                         'axes.linewidth':.9,'axes.spines.top':True,
+                         'axes.spines.right':True,'axes.axisbelow':True,
+                         'axes.grid':True,'grid.color':'#D9DEE3',
+                         'grid.linestyle':'--','grid.linewidth':.7,
+                         'grid.alpha':.75,'legend.frameon':True})
     keys = list(NAMES)
     fig, (ax, table_ax) = plt.subplots(2, 1, figsize=(11, 6.8),
                                      gridspec_kw={'height_ratios': [3.5, 1.4]},
@@ -192,15 +200,16 @@ def plot_comparison(summary: pd.DataFrame, pre_summary: pd.DataFrame,
     for j, name in enumerate(names):
         subset = summary.set_index(['dataset','model'])
         ax.bar(x + (j-1)*.23, [subset.loc[(k,name),'S_delta'] for k in keys],
-               width=.21, label=name, color=colors[j])
+               width=.21, label={'visual_neural_mass': '视觉神经群模型', 'ocular_step': '眼动阶跃', 'slow_ramp': '慢漂移'}[name], color=colors[j])
     ax.plot(x, [pre_summary.set_index('dataset').loc[k,'S_delta'] for k in keys],
-            color='#8f3b8f', marker='d', linestyle='--', label='prestim only control')
+            color='#8f3b8f', marker='d', linestyle='--', label='仅刺激前对照')
     ax.axhline(0., color='black', linewidth=.9)
     ax.set_xticks(x, [f'{k}\nn={counts[k]}' for k in keys])
-    ax.set_ylabel('Held-out direction contrast S_delta')
-    ax.set_title('VisCue 50–750 ms, three equal-weight windows: held-out right-minus-left EEG')
+    ax.set_ylabel('差异波预测增益 $S_\\Delta$')
+    ax.set_title('左右三角差异波的留出预测')
     ax.legend(fontsize=8, ncol=2)
     table_ax.set_axis_off()
+    table_ax.grid(False)
     lookup = intervals.set_index(['dataset', 'model'])
     columns = ['visual_neural_mass', 'ocular_step', 'slow_ramp',
                'prestim_only_polynomial']
@@ -208,12 +217,12 @@ def plot_comparison(summary: pd.DataFrame, pre_summary: pd.DataFrame,
               f"{lookup.loc[(k,m),'bootstrap_95_high']:.2f}]"
               for m in columns] for k in keys]
     tab = table_ax.table(cellText=cells, rowLabels=keys,
-                         colLabels=['Neural', 'Ocular', 'Ramp', 'Pre only'],
+                         colLabels=['神经群', '眼动', '慢漂移', '刺激前'],
                          loc='center', cellLoc='center')
     tab.auto_set_font_size(False)
     tab.set_fontsize(8)
     tab.scale(1, 1.25)
-    table_ax.set_title('95% descriptive fold-resampling ranges (5 blocks per group)',
+    table_ax.set_title('五个时间块重采样95%区间',
                        fontsize=9, pad=4)
     fig.savefig(path, dpi=180)
     plt.close(fig)

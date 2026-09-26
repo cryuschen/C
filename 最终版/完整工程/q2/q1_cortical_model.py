@@ -280,10 +280,18 @@ def make_figure(output: Path, recordings: list[Recording], mechanism: pd.DataFra
 
     plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
     plt.rcParams["axes.unicode_minus"] = False
+    plt.rcParams.update({"figure.facecolor":"white","axes.facecolor":"white",
+                         "axes.edgecolor":"#333333","axes.linewidth":.9,
+                         "axes.spines.top":True,"axes.spines.right":True,
+                         "axes.axisbelow":True,"axes.grid":True,
+                         "grid.color":"#D9DEE3","grid.linestyle":"--",
+                         "grid.linewidth":.7,"grid.alpha":.75,
+                         "legend.frameon":True})
     fig, axes = plt.subplots(2, 2, figsize=(13, 9), layout="constrained")
     ax = axes[0, 0]
     ax.axis("off")
-    chain = ["三角边缘对比", "LGN中继", "V1方向选择", "皮层复发/情境更新", "Fz·F3·F4"]
+    ax.grid(False)
+    chain = ["三角边缘对比", "LGN中继", "V1方向选择", "皮层复发/情境更新", "Fz、F3、F4"]
     for index, label in enumerate(chain):
         x = .08 + index * .21
         ax.text(x, .55, label, ha="center", va="center", fontsize=10,
@@ -291,8 +299,6 @@ def make_figure(output: Path, recordings: list[Recording], mechanism: pd.DataFra
         if index < len(chain) - 1:
             ax.annotate("", xy=(x + .13, .55), xytext=(x + .08, .55),
                         arrowprops=dict(arrowstyle="->", color="#4f7185"))
-    ax.text(.5, .22, "固定级联时间核 + 训练数据估计的头皮增益",
-            ha="center", fontsize=10)
     ax.set_title("A  LGN→皮层→头皮的计算路径")
 
     ax = axes[0, 1]
@@ -304,17 +310,17 @@ def make_figure(output: Path, recordings: list[Recording], mechanism: pd.DataFra
         ax.plot(rec.times_ms[chosen], waves[f"A1_fitted"][channel, chosen],
                 color=color, lw=1.1, ls="--", label=f"{CHANNELS[channel]} 模型")
     ax.axhline(0, color="#999", lw=.6)
-    ax.set_title("B  A1右减左条件差：Q1 V7与机制拟合")
-    ax.set_xlabel("提示后时间（ms）")
-    ax.set_ylabel("原始电位单位")
+    ax.set_title("B  A1组左右三角差异波拟合")
+    ax.set_xlabel("相对提示时间（ms）")
+    ax.set_ylabel("电位（原始单位）")
     ax.legend(fontsize=8, ncol=2)
 
     ax = axes[1, 0]
     order = list(NAMES) + ["pooled"]
     width = .35
     x = np.arange(len(order))
-    for offset, stage, label, color in [(-width / 2, "before", "Q1预处理（主分析）", "#2f75a5"),
-                                         (width / 2, "v7", "Q1 V7（标签知情敏感性）", "#cf6a32")]:
+    for offset, stage, label, color in [(-width / 2, "before", "降噪前", "#2f75a5"),
+                                         (width / 2, "v7", "降噪后", "#cf6a32")]:
         values = metrics[metrics.stage == stage].set_index("dataset").loc[order, "BA"]
         ax.bar(x + offset, values, width, label=label, color=color)
     ax.axhline(.5, color="#555", ls="--", lw=1)
@@ -332,7 +338,7 @@ def make_figure(output: Path, recordings: list[Recording], mechanism: pd.DataFra
     ax.set_ylabel("次数")
     ax.set_title("D  主分析固定流程的置换分布")
     ax.legend()
-    fig.suptitle("第二问：基于Q1结果的级联机制与头皮空间协方差判别模型", fontsize=15)
+    fig.suptitle("问题二：视觉脑电形成与左右三角判别", fontsize=15)
     fig.savefig(output / "第二问_Q1数据新模型.png", dpi=180)
     plt.close(fig)
 

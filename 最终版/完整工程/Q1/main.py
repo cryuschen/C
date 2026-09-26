@@ -35,6 +35,18 @@ def configure_plotting() -> None:
         "font.size": 10,
         "axes.titlesize": 11,
         "axes.labelsize": 10,
+        "figure.facecolor": "white",
+        "axes.facecolor": "white",
+        "axes.edgecolor": "#333333",
+        "axes.linewidth": 0.9,
+        "axes.spines.top": True,
+        "axes.spines.right": True,
+        "axes.axisbelow": True,
+        "grid.color": "#D9DEE3",
+        "grid.linestyle": "--",
+        "grid.linewidth": 0.7,
+        "grid.alpha": 0.75,
+        "legend.frameon": True,
         "savefig.dpi": 240,
     })
 
@@ -97,8 +109,15 @@ def basic_axes(ax: plt.Axes, times: np.ndarray) -> None:
     ax.axhline(0, color="#B6C0C7", lw=0.7, zorder=1)
     ax.set_xlim(float(times[0]), float(times[-1]))
     ax.set_xticks([-200, 0, 200, 400, 600, 800])
-    ax.grid(axis="y", color="#E4E9ED", lw=0.7)
-    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(True)
+
+
+def save_png(fig: plt.Figure, path: Path) -> None:
+    """先完整写入临时文件，再替换目标，避免覆盖期间出现半成品。"""
+    temporary = path.with_name(".__plot_tmp.png")
+    fig.savefig(temporary, facecolor="white")
+    path.unlink(missing_ok=True)
+    temporary.replace(path)
 
 
 def draw_figure_4_channel(ax: plt.Axes, times: np.ndarray, channel: str,
@@ -107,9 +126,9 @@ def draw_figure_4_channel(ax: plt.Axes, times: np.ndarray, channel: str,
     for label in ("Raw", "Decon", "V7"):
         ax.plot(times, curves[label], color=COLORS[label],
                 ls=LINESTYLES[label], lw=1.45 if label != "V7" else 1.8,
-                label="本文方法 V7" if label == "V7" else label,
+                label={"Raw": "降噪前", "Decon": "设备滤波", "V7": "降噪后"}[label],
                 zorder=3 if label == "V7" else 2)
-    ax.set_ylabel("原始电位单位")
+    ax.set_ylabel("电位（原始单位）")
     ax.text(0.015, 0.96, channel, transform=ax.transAxes, va="top",
             ha="left", fontsize=11, fontweight="bold",
             bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.78})
@@ -121,26 +140,21 @@ def save_figure_4() -> None:
     for ax, channel in zip(axes, CHANNELS):
         draw_figure_4_channel(ax, times, channel, curves[channel])
     axes[0].legend(loc="upper right", frameon=True, ncol=3, fontsize=9)
-    axes[-1].set_xlabel("相对视觉提示时间 / ms")
-    fig.suptitle("图4  同一试次的三通道 Raw／设备 Decon／V7 波形", fontsize=15, y=0.99)
-    fig.text(0.5, 0.947, f"受试者 A · 项目一 · 左提示 · 原始试次 #{trial_id}（预先固定的中位伪影示例）",
-             ha="center", fontsize=10, color="#435260")
-    fig.text(0.5, 0.025,
-             "三条曲线均以刺激前中位数作显示对齐；蓝色区域为 250–500 ms。Decon 仅作展示对照，未参与 V7 训练或输入。",
-             ha="center", fontsize=8.7, color="#435260")
-    fig.subplots_adjust(left=0.105, right=0.985, top=0.91, bottom=0.12, hspace=0.18)
-    fig.savefig(OUTPUT / "图4_Raw_Decon_V7_三通道.png", facecolor="white")
+    axes[-1].set_xlabel("相对提示时间（ms）")
+    fig.suptitle(f"图4  A1试次{trial_id}三通道降噪对比", fontsize=15, y=0.98)
+    fig.subplots_adjust(left=0.105, right=0.985, top=0.92, bottom=0.09, hspace=0.18)
+    save_png(fig, OUTPUT / "图4_Raw_Decon_V7_三通道.png")
     plt.close(fig)
 
     for channel in CHANNELS:
         fig, ax = plt.subplots(figsize=(8.2, 3.6))
         draw_figure_4_channel(ax, times, channel, curves[channel])
-        ax.set_xlabel("相对视觉提示时间 / ms")
+        ax.set_xlabel("相对提示时间（ms）")
         ax.legend(loc="upper right", frameon=True, ncol=3, fontsize=8.4)
-        fig.suptitle(f"图4 {channel}：Raw／设备 Decon／V7 · A 项目一试次 #{trial_id}",
+        fig.suptitle(f"图4  A1试次{trial_id}{channel}通道降噪对比",
                      fontsize=12, y=0.98)
         fig.subplots_adjust(left=0.13, right=0.985, top=0.84, bottom=0.18)
-        fig.savefig(OUTPUT / f"图4_{channel}_Raw_Decon_V7.png", facecolor="white")
+        save_png(fig, OUTPUT / f"图4_{channel}_Raw_Decon_V7.png")
         plt.close(fig)
 
 
@@ -165,14 +179,14 @@ def draw_erp(ax: plt.Axes, data: dict[str, np.ndarray], channel: str) -> tuple[i
     raw_left, raw_right, v7_left, v7_right, n_left, n_right = erp_curves(data, channel)
     basic_axes(ax, times)
     ax.plot(times, raw_left, color="#72A7AD", ls=(0, (4, 2)), lw=1.3,
-            label="原始·左", zorder=2)
+            label="降噪前 左三角", zorder=2)
     ax.plot(times, raw_right, color="#D8A087", ls=(0, (4, 2)), lw=1.3,
-            label="原始·右", zorder=2)
+            label="降噪前 右三角", zorder=2)
     ax.plot(times, v7_left, color=COLORS["左提示"], lw=1.85,
-            label="V7·左", zorder=3)
+            label="降噪后 左三角", zorder=3)
     ax.plot(times, v7_right, color=COLORS["右提示"], lw=1.85,
-            label="V7·右", zorder=3)
-    ax.set_title(f"{channel}   左 n={n_left} · 右 n={n_right}", pad=6)
+            label="降噪后 右三角", zorder=3)
+    ax.set_title(f"{channel}（左{n_left}次，右{n_right}次）", pad=6)
     return n_left, n_right
 
 
@@ -185,26 +199,22 @@ def save_figure_5(subject: str) -> None:
             ax = axes[row, col]
             draw_erp(ax, data, channel)
             if col == 0:
-                ax.set_ylabel(f"项目{'一' if task == 1 else '二'}\n原始电位单位")
+                ax.set_ylabel(f"项目{task}\n电位（原始单位）")
             if row == 1:
-                ax.set_xlabel("相对视觉提示时间 / ms")
+                ax.set_xlabel("相对提示时间（ms）")
     handles = [
-        Line2D([0], [0], color="#72A7AD", ls=(0, (4, 2)), lw=1.5, label="原始·左"),
-        Line2D([0], [0], color=COLORS["左提示"], lw=2, label="V7·左"),
-        Line2D([0], [0], color="#D8A087", ls=(0, (4, 2)), lw=1.5, label="原始·右"),
-        Line2D([0], [0], color=COLORS["右提示"], lw=2, label="V7·右"),
+        Line2D([0], [0], color="#72A7AD", ls=(0, (4, 2)), lw=1.5, label="降噪前 左三角"),
+        Line2D([0], [0], color=COLORS["左提示"], lw=2, label="降噪后 左三角"),
+        Line2D([0], [0], color="#D8A087", ls=(0, (4, 2)), lw=1.5, label="降噪前 右三角"),
+        Line2D([0], [0], color=COLORS["右提示"], lw=2, label="降噪后 右三角"),
     ]
     fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.025),
                ncol=4, frameon=False)
-    fig.suptitle(f"图5{'A' if subject == 'A' else 'B'}  受试者 {subject}：左右提示 ERP 的原始与 V7 对照",
+    fig.suptitle(f"图5{'A' if subject == 'A' else 'B'}  受试者{subject}左右三角提示的ERP对比",
                  fontsize=15, y=0.99)
-    fig.text(0.5, 0.945,
-             "同批保留试次；原始曲线作刺激前基线对齐；Raw→V7 含预处理与校正；阴影为 250–500 ms（纵轴独立）",
-             ha="center", fontsize=9.5, color="#435260")
-    fig.subplots_adjust(left=0.085, right=0.985, top=0.88, bottom=0.125,
+    fig.subplots_adjust(left=0.085, right=0.985, top=0.91, bottom=0.125,
                         wspace=0.24, hspace=0.39)
-    fig.savefig(OUTPUT / f"图5{'A' if subject == 'A' else 'B'}_受试者{subject}_左右提示ERP.png",
-                facecolor="white")
+    save_png(fig, OUTPUT / f"图5{'A' if subject == 'A' else 'B'}_受试者{subject}_左右提示ERP.png")
     plt.close(fig)
 
     for task in (1, 2):
@@ -212,14 +222,13 @@ def save_figure_5(subject: str) -> None:
         for channel in CHANNELS:
             fig, ax = plt.subplots(figsize=(7.8, 3.9))
             draw_erp(ax, data, channel)
-            ax.set_xlabel("相对视觉提示时间 / ms")
-            ax.set_ylabel("原始电位单位")
+            ax.set_xlabel("相对提示时间（ms）")
+            ax.set_ylabel("电位（原始单位）")
             ax.legend(loc="best", frameon=True, ncol=2, fontsize=8.5)
-            fig.suptitle(f"图5{'A' if subject == 'A' else 'B'}  受试者 {subject} · 项目{task} · {channel}",
+            fig.suptitle(f"图5{'A' if subject == 'A' else 'B'}  受试者{subject}项目{task}{channel}通道ERP",
                          fontsize=12, y=0.98)
             fig.subplots_adjust(left=0.12, right=0.985, top=0.82, bottom=0.18)
-            fig.savefig(OUTPUT / f"图5{'A' if subject == 'A' else 'B'}_项目{task}_{channel}_左右提示ERP.png",
-                        facecolor="white")
+            save_png(fig, OUTPUT / f"图5{'A' if subject == 'A' else 'B'}_项目{task}_{channel}_左右提示ERP.png")
             plt.close(fig)
 
 

@@ -164,6 +164,14 @@ def make_plot(output: Path, observed: pd.DataFrame, bootstrap: pd.DataFrame,
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    plt.rcParams.update({'font.sans-serif':['Microsoft YaHei','SimHei','DejaVu Sans'],
+                         'axes.unicode_minus':False,'figure.facecolor':'white',
+                         'axes.facecolor':'white','axes.edgecolor':'#333333',
+                         'axes.linewidth':.9,'axes.spines.top':True,
+                         'axes.spines.right':True,'axes.axisbelow':True,
+                         'axes.grid':True,'grid.color':'#D9DEE3',
+                         'grid.linestyle':'--','grid.linewidth':.7,
+                         'grid.alpha':.75,'legend.frameon':True})
     colors = {'past_only': '#8A8A8A', 'post_erp': '#2F75A5', 'post_given_past': '#E08932'}
     joined = observed
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.6), layout='constrained')
@@ -173,24 +181,25 @@ def make_plot(output: Path, observed: pd.DataFrame, bootstrap: pd.DataFrame,
         part = joined[joined.model == model].set_index('dataset').loc[groups]
         xx = np.arange(len(groups)) + (j - 1) * .23
         yy = part.BA.to_numpy()
-        ax.bar(xx, yy, width=.21, color=colors[model], label=model)
+        ax.bar(xx, yy, width=.21, color=colors[model],
+               label={'past_only': '刺激前', 'post_erp': '刺激后ERP', 'post_given_past': '刺激后增量'}[model])
         ax.errorbar(xx, yy, yerr=np.vstack([yy - part.BA_low.to_numpy(), part.BA_high.to_numpy() - yy]),
                     fmt='none', color='black', capsize=2, lw=.8)
     ax.axhline(.5, ls='--', color='#333333', lw=.9)
     ax.set_xticks(np.arange(len(groups)), [f'{key}\n(n={int(joined[joined.dataset==key].n.iloc[0])})' for key in groups])
-    ax.set_ylabel('Held-out balanced accuracy (95% block bootstrap CI)')
+    ax.set_ylabel('留出平衡准确率（95%区间）')
     ax.set_ylim(0, 1); ax.legend(fontsize=8)
-    ax.set_title('Six DCT coefficients × three scalp modes')
+    ax.set_title('18维时空特征的方向判别')
     ax = axes[1]
     vals = null[(null.dataset == 'pooled') & (null.model == 'post_given_past')].BA.to_numpy()
     ax.hist(vals, bins=30, color='#C9D7DF', edgecolor='white')
     line = float(observed[(observed.dataset == 'pooled') &
                           (observed.model == 'post_given_past')].BA.iloc[0])
-    ax.axvline(line, color=colors['post_given_past'], lw=2, label=f'observed = {line:.3f}')
-    ax.set_xlabel('Permutation balanced accuracy'); ax.set_ylabel('Number of permutations')
-    ax.set_title('Past-adjusted post-cue ERP, within-block null')
+    ax.axvline(line, color=colors['post_given_past'], lw=2, label=f'实测值={line:.3f}')
+    ax.set_xlabel('置换平衡准确率'); ax.set_ylabel('频数')
+    ax.set_title('刺激后增量特征的块内置换检验')
     ax.legend(fontsize=9)
-    fig.suptitle('VisCue 50–750 ms post cue vs strictly past-only −250–0 ms; exploratory')
+    fig.suptitle('左右三角提示方向的留出判别')
     fig.savefig(output / 'decoder_v3_erp.png', dpi=180)
     plt.close(fig)
 
