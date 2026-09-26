@@ -1,0 +1,24 @@
+{
+  "status": "passed_for_checked_images",
+  "decoded_PNG_count": 32,
+  "visually_inspected": [
+    {
+      "path": "eeg_v7_results/独立验证_污染恢复.png",
+      "sha256": "e568f1aaa5da1cf65c2fa079e619af753baaca15726c590748d68f766ab2cb46"
+    },
+    {
+      "path": "q2_result/Q2_图7_特征与判别.png",
+      "sha256": "d06c6106954fe1c38abc9df0ae7224b00953c85955581e6bb7b320d2ba108ae9"
+    },
+    {
+      "path": "q3_result_v3/优化_参数剖面.png",
+      "sha256": "597b0b1dcd8c27dd113da6bf2db2847ddf133ffbddc87794cea6296fa12fddb0"
+    },
+    {
+      "path": "q3_result_v3/figures/04_正确错误与删失.png",
+      "sha256": "9e7dbe9fa5c3d2a8f3ef35b7dd43426807e7108806e1a886fc51688e1390adee"
+    }
+  ],
+  "corrected": "Q3 profile log-axis tick labels overlapped; changed to six fixed labels and inspected again",
+  "scope": "Four current key PNGs visually inspected; remaining PNGs decoded only; PDFs not separately raster inspected"
+}

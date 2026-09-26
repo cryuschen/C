@@ -1,0 +1,15 @@
+﻿feature,dimension,formula,meaning
+amplitude,3,"mean(X_c(t)), t in [250,500)ms",关键窗有符号均值
+positive_peak,3,max valid local peak; prominence >= 0.5*prestim_SD; value>0,有效正峰幅值；不自动称为P300
+latency,3,time of selected valid peak (ms),有效峰潜伏期；无峰记缺失
+missing_flag,3,1(no valid peak),缺失标记；填充值仅由训练折估计
+LI,1,"(A_F4-A_F3)/max(|A_F4|+|A_F3|,train_q10)",稳定化窗口侧化指数
+lateral_difference,1,A_F4-A_F3,有符号空间差值
+mechanism_projection,6,"ridge projection onto train-fitted common and R-L templates, each channel",条件未知也能计算；不是源定位
+projection6,6,"b_Fz_common,b_Fz_delta,b_F3_common,b_F3_delta,b_F4_common,b_F4_delta",六维机制投影固定对照
+direction3,3,"b_Fz_delta,b_F3_delta,b_F4_delta",三维方向投影固定对照
+mechanism_residual,3,"RMS(X_c - reconstructed X_c), 50–750ms",前向模板不能解释的剩余波动
+covariance_baseline,24,4 windows x (3 log variances + 3 correlations),旧空间协方差基线
+past_only,18,first 6 DCT coefficients x 3 scalp modes,仅刺激前信号
+previous_cue,1,direction of immediately preceding original trial,序列对照；不使用当前方向
+post_given_past,23,mechanism features minus train-ridge prediction from past features,扣除过去线性可预测信息

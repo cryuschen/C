@@ -1,0 +1,1862 @@
+{
+  "source_before": {
+    "q3/behavior.py": "0964d82b052c15d2f418c612195f6206c6653d0969d57e3d1602340956b50f4d",
+    "q3/reporting.py": "8e5c5e417d33fb92e5aa1f00ef37138cb717da503b3dbd5cf6732e0e1a2ee314",
+    "q3/validation.py": "a26c7add2445a886f09af330ed3ff3874c98d796728fe32b2bcd08d14c4e8606",
+    "q3/model.py": "f2e46d0e7b1823af1416d7ca30af4cfa00b7bf378b283cb1294d69dbfbca1e3d",
+    "q3/fit.py": "82b93f7ef65061926b28e81df2603bd1878ac35e847beee0f7468dd5f04b72e3",
+    "q3/__init__.py": "784abaca84ce382ec4f4797c9b97fac28148524d240a175dbf058d9cc25f49a4",
+    "q3/main.py": "8b43a50083b96c35e7f09ce1ed39adce8507b6bc5213642b2e06d6253cd6f482",
+    "q3/data.py": "6cd078d2d9307b1b46ac3f48babebfb74094fc6c17aba7a7d3e1e6d25f8e4a02",
+    "q3/audit_results.py": "87df2bb88d585738364e521b8301cb55987d959ae0886cbb1aa47a3aaab9b0cc",
+    "q3/tests/test_q3.py": "4c6169e560da530deba572fec8f19805f9148ff5c827dbd948b562fe71349c72",
+    "q3/tests/test_q3_v2.py": "f14eb25f07676555dc56f8dfe54514135e272b40eb9936e8c2c79d65d55d0e08",
+    "q3/v2/run.py": "19b5a780d89000d718242e72b57fc9760a97d049c3e58814248b0fecd293cba6",
+    "q3/v2/recovery.py": "fdb85827883fd1a62fcd5ba8f6b5ea8f2dc500d6065b61be4221da1ba9be3591",
+    "q3/v2/behavior.py": "cd1e20bac7a7872a05115d0375c63214532c84488516c1389fe4546dfbab53d5",
+    "q3/v2/model.py": "02deb023d93bebfcc97f03063582e1ac043fbb3e9a95f9578fb903e1407d1781",
+    "q3/v2/fit.py": "fe76b6bf4b96f878009db4c2fcaa721e75512d72144458de5a30c445ee7f66d6",
+    "q3/v2/__init__.py": "cff796b7b4bb6768406ad60942fe0b928e121860049d817a25a3af31b84f08e3",
+    "q3/v2/report.py": "355a8ad96d76d4b6510cbc2dfe624ba38d804ad4c643de59b2dc2a89f375ed29",
+    "q3/v2/data.py": "012386c3df1248b4d2965747395a10e3ebef84163ee4468ec6954dea17f58407",
+    "q3/v2/audit.py": "05c30dae8a86bc56f9fe1086f25f585c33a59e8f7198b3fcf7f08ce88f7fa4b1",
+    "q3_v3/run.py": "77af3f3cc1e706a4903407b591efafb5dabb42339250d54a23e6a37c5685ce22",
+    "q3_v3/optimization.py": "72d317724c24d1630c08c0d3199fba06a976b69c2ccff423c8638f32ecf7d5c7",
+    "q3_v3/model.py": "d14971547a96a5f5bad0df371cf9ee7fe20ce954cbfa65fd562f9f8911a9d26e",
+    "q3_v3/common.py": "66d9ede57fd2b6246ba278c5c7b9227696ee7f7366aff88ca509a2bc30b881dd",
+    "q3_v3/__init__.py": "4dd5329e8e013675ec0d4b1fec6d4fba4e06bf4972afd07b51bc52c92287c1c3",
+    "q3_v3/report.py": "88c14658375bfeaf5b29fa306dd5d862999f2cc7bcfd79f106d0958028d49f0a",
+    "q3_v3/events.py": "3e3949c99106a23deb907231412697f4d2ae7b2588434f2c07c3d5d0cad26e7d",
+    "q3_v3/decision.py": "6cc27fde6a46859351409debe2e3c4afb71bafad4fa472828c5c45b1869bad5c",
+    "q3_v3/audit.py": "0c4b3ea53e4b943cf79d0221a95983e3caa03e4a4380e6ba5ceb3f47a2a7b82b",
+    "q3_v3/tests/test_v3.py": "522c0cf8ed300690aae1acd0942823408cea21c3553d55130bd54c81f5e52cb9",
+    "q3_v3/tests/test_optimization.py": "9716495f61dc30861a3aa7c4d770bcfd45cbc37f3265072b1f666af27986cb4f"
+  },
+  "main_manifest_before": {
+    "status": "numerically_verified",
+    "version": "V3",
+    "source_hashes": {
+      "q3_v3/__init__.py": "4dd5329e8e013675ec0d4b1fec6d4fba4e06bf4972afd07b51bc52c92287c1c3",
+      "q3_v3/audit.py": "0c4b3ea53e4b943cf79d0221a95983e3caa03e4a4380e6ba5ceb3f47a2a7b82b",
+      "q3_v3/common.py": "66d9ede57fd2b6246ba278c5c7b9227696ee7f7366aff88ca509a2bc30b881dd",
+      "q3_v3/decision.py": "6cc27fde6a46859351409debe2e3c4afb71bafad4fa472828c5c45b1869bad5c",
+      "q3_v3/events.py": "3e3949c99106a23deb907231412697f4d2ae7b2588434f2c07c3d5d0cad26e7d",
+      "q3_v3/model.py": "d14971547a96a5f5bad0df371cf9ee7fe20ce954cbfa65fd562f9f8911a9d26e",
+      "q3_v3/optimization.py": "72d317724c24d1630c08c0d3199fba06a976b69c2ccff423c8638f32ecf7d5c7",
+      "q3_v3/report.py": "88c14658375bfeaf5b29fa306dd5d862999f2cc7bcfd79f106d0958028d49f0a",
+      "q3_v3/run.py": "77af3f3cc1e706a4903407b591efafb5dabb42339250d54a23e6a37c5685ce22",
+      "q3_v3/tests/test_optimization.py": "9716495f61dc30861a3aa7c4d770bcfd45cbc37f3265072b1f666af27986cb4f",
+      "q3_v3/tests/test_v3.py": "522c0cf8ed300690aae1acd0942823408cea21c3553d55130bd54c81f5e52cb9",
+      "q3_v3/README.md": "7eae6755465308f1841b5dd342793a3454bbdc3238a537940f4d298fd0ca7466",
+      "q3_v3/requirements.txt": "b8c8f4a9991af24ff5023c558e7dc51f8242e0f19c018dd3087291e8bd364836",
+      "q2/q2model/__init__.py": "bc322b3456760b71f7944771607a75a001717942bbe004448dca46ee749dbb03",
+      "q2/q2model/data.py": "4488dd05021738fd9be42086da6be586e11bcf86d6edd748cbe4f6f3e0bfe263",
+      "q2/q2model/generative.py": "9b84a603aff09b59ef66bbfe81d9787b0e1419b9385e931dda8596fc3ca22b60",
+      "q2/q2model/mechanism.py": "17dd6a87308d2d0bf81b4c3f1d24aba1a6f559a446e16f6178e43e1ec5c4b93c",
+      "q2/q2model/reporting.py": "5d766d92554ad8a9f0e4721e6ef292a867261b39c8e81372d0641f25fd5bff19",
+      "q2/q2model/stimulus_shape.py": "27a20467e478dfd7114ae9dc93c3ef07f8052b2fcdb06797fc2a63725b9b8d21",
+      "q2/q2model/validation.py": "6940c1af6da60cac579867b2d828bf70e02d264f93ee0f7e7ebea835d72f6b2f",
+      "data/VisualCogA_Task-1.mat": "02a8167b243815c3d048763528641f002eeef3b3903a31ea130b1f4e0cfc6b33",
+      "data/VisualCogA_Task-2.mat": "c120ef16ed6bd1a2f1e86e0ab030c6306d08e555a71359cf455744a9904cb748",
+      "data/VisualCogB_Task-1.mat": "e6fb2684bddeed0f43e541a52928ce73c690a9b1f91e23a6404e0537f0ef0fc9",
+      "data/VisualCogB_Task-2.mat": "c58c998880682027119548029ba92240604b9ecf4138e6c4ea3efe4522212e9d",
+      "服务于脑机接口与精神性疾病诊断的脑电图计算模型.docx": "440494e17914f704657838b23ebb1f44ec371e4f3c7209bc9581091b1dab01f8"
+    },
+    "inherited_hashes": {
+      "B2_past_waves.npz": "f9d54af230951b1ec21f5ed212d64ee6ed12ee4c97ca8ef11841895bc51bf821",
+      "behavior_audit.csv": "8dfc528b51607f6dc32a2e44e57cc25e2e4abac017b98d7be07da293dc00da1f",
+      "B1_stimulus_waves.npz": "5fabd8744344f82683e2f7d704836dad0e465868c25085ac9560f16698fdc3ef",
+      "A2_past_choices.json": "4ff3de3a5da1c211416571e3ae41b7cd3b28aa4f4a26d1c973aee8b465b26737",
+      "B1_past_choices.json": "dcbeab517b3425796a56ac445d957a59f3d5356668be8d80f60c850bf2cab20a",
+      "behavior_predictions.csv": "1423edc8209be8ac94941cc127da0e1a5aa1142696edccf3ec5040868b8e7e07",
+      "A1_past_waves.npz": "76204c6fe6d223c9c82daec6c91cbf45f0bdf0b4af94d22aa063400cbc3cc071",
+      "A2_past_metrics.csv": "3d11e1cf4b91d1e90eaadc740fbbfbb1088509511dfe0a87c6480106666aab58",
+      "验证说明.md": "9a79fc8960ca37a6953906730b1251b125a54d7267b6aec3ae40768b142b87be",
+      "A1_stimulus_waves.npz": "7e70726172d5db840f2223a34861d117056b7aae39c05f2ee34aefaf5ffbfd72",
+      "A1_stimulus_contrasts.csv": "43842b070551e57a720a1a809242a6e1c28b10a42c874dd930d466e431169c2c",
+      "selected_parameters.csv": "4d4fe9d1a303fbc856a571ec6ce37c06551b3c9b986c6232cc986531459fac54",
+      "visual_qa.json": "5aa3721724b1227016c3a8b86e3b64f5eac07125a514f950e6cf14050e411ac8",
+      "B1_past_waves.npz": "4bb1c1576fd7e441a12c674d5cd822e31d1d292e543ef204d0e4063f428ee47a",
+      "context_intervals.csv": "aa0ae363e0d9710244e4ee3b6af602fc8ba6aa1a477a5fd0c4c373c54cf5e7b4",
+      "behavior_features.csv": "59697991c46bbac633b040f92ca47b338003d64316987d18a8c686402da6871a",
+      "A2_past_waves.npz": "2bbf69fecf146d9cc8b5956742a63183c526a0bb49633740c5b91e6840b4f768",
+      "测试验收.txt": "cd560be2238f631be3c2d75c0d22b7991e00f968dce85e4b564c6af01f978633",
+      "B1_past_contrasts.csv": "16476420012287061815e08db507e5d7b9fac53f81e05baa5e1b554faf771c53",
+      "B2_stimulus_waves.npz": "d3cf868c91aeb35a90ba1881175f51f2aced4e49dddfef42c386f76c7472c5df",
+      "B2_stimulus_choices.json": "302dacff1b7afa39446fdd1e2fda5f73c88104a59350ca7334ef64b46bad6208",
+      "B2_past_contrasts.csv": "472520c5336d65a25b9f83ec4d19b5eca62ff0feb655a9a15766f51097eb6115",
+      "behavior_choices.json": "88357165888dae0bf62dda1a8f2d0549ee47556fc1ba7986c129a67c9190e7c3",
+      ".run.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "A2_past_contrasts.csv": "3e2d9bb1d17dff4c0a239edf6c8d421efbd4cdc320e9e86367581709cd44d52f",
+      "behavior_null_distribution.json": "f9a1dce5724bb76b1b3f5e05aad38af8ac2ac2b9b46049b8c3d7947b1d005add",
+      "B2_stimulus_contrasts.csv": "61f4daefc43bd369fb86409892fdef2f3f49d278181072abd0889e530ac76d90",
+      "A1_past_metrics.csv": "9c490192315a25de37e4a81cf25bccfefd2c4e0c611725a4f5f14bdbc7d000c6",
+      "A2_stimulus_choices.json": "ba3f0c46b5e11548fb50916f616d019fa7bede797b22675768606bf65e3cfe89",
+      "B2_past_choices.json": "28dbc5a602f7a296a543f14b95fc2cb0f2d080ebe9b61b6ac971e27fa4690354",
+      "B1_stimulus_contrasts.csv": "11efbf2a4e3f40d772d32ee6eb63408c50fa4c572dfe56bca652a47d322cdb12",
+      "A1_past_choices.json": "424ad7c167c7d552d1addc5122707c5bb122d97cbb9ca7ecdbff506ff70bd1f1",
+      "behavior_v1_comparison.csv": "231e5bc3b8e491e1cdfcad15be61b02fdb04d3d8094ffba2eb6607a1f41a33dc",
+      "recovery_choices.json": "04114ac7c61e0f9aa7a83d608e9955d6df4cc65566fc7de2fb24f4517f1d7fbd",
+      "B2_past_metrics.csv": "95264b0b02a4bcac6a66819d58a6b5c8d96637dc81589bd84fddbb875bdd02ff",
+      "A1_stimulus_choices.json": "7a70d3f7bbd4dbd4808065c9ef5d1dde30fe53d65f85abe9cf9a3604acf58d13",
+      "B1_stimulus_choices.json": "22781ab5d30b95a3de201a328f0ea60116a26076234b1d909722f2f6853b0878",
+      "B1_stimulus_metrics.csv": "512edd3c36f64dfe770a700c46a0e69cfd25db7d381319eab9287ec7823a3656",
+      "behavior_permutation.csv": "72424db3dedbf094f7ab3ca621c88d8604122a620b1749e030b6503013990c40",
+      "A2_stimulus_contrasts.csv": "11b70e48379a71ad2a92b942443eb137f02ccb654a581de366dab92ecc1b79bb",
+      "trial_metrics.csv": "5ff44237d3c2eed6f755065cd0ac3d88d06b03f1378385a6dfc49afdc407d93c",
+      "B2_stimulus_metrics.csv": "2f482493345ff233120054b8c8f5f615154a1babf6b41f4bb381437bc5dbb7dc",
+      ".gitignore": "9b88bc3797f7b4277208f5adcc8147cdcca659dc273fa99fc3da7d3d4d978a09",
+      "recovery.csv": "77f832a5fc16f725b36359b7d21be4584fb02df98050864c48d026bd1a392f23",
+      "behavior_intervals.csv": "68ff2fb6cd4af8a0150edd486d73c17eff08e7da01f44520afaed8d7da40fe0d",
+      "第三问_V2优化报告.md": "988406a4c7e5311cc049d64ed4a381b8cdc7be9f7977a9d182d0b1ad1ea31b19",
+      "独立复核.json": "219311e19e434e70ff954d0f85164529da5b1293229f95c7b3f678cf1e7ab3f2",
+      "event_audit.csv": "6e79d968e45c45606168027f31cc6f8a26da700f723c20d0087c735606fb9293",
+      "A1_stimulus_metrics.csv": "55a80af0631d050d02f4633bbd0f314f5c93cc38cca9371385ddcd53a7a0b0d0",
+      "manifest.json": "9832391eb2d34b4b5673c728ed1311cc853edb8e6619f3075358e9c05321440c",
+      "B1_past_metrics.csv": "d8f28b1b9122509d86b3fd6f4793e9b9bb24f9381eb3224355e78b7b55c667f2",
+      "diagnostics.csv": "a29f831891c9d32e135093e7da2a1a7093315b39a59798ab50267bf61e9ac6db",
+      "intervals.csv": "34ef9c1e26818be9df82ea6eac48e7632ad6c3cf090ed9d021bba610dd8c0af2",
+      "summary.csv": "b370e67c1409e091edd677a069c7f6c2ddd5846b436a839aeb4d70acf19ccd5a",
+      "README.md": "15f266c84ccbf3e4a27c3747834f290f579f56154be3ca5ead65679d8629fbd2",
+      "A2_stimulus_metrics.csv": "908cb275634d220ca24ceded72c52482d2156e3803db20a34ca42642610b18e4",
+      "A2_stimulus_waves.npz": "8962b5e31d92c6fe982d39f40afb81cb107334ea0a5e082995bcb6d5af8d9fdc",
+      "behavior_metrics.csv": "90ec1a6cd988b1faf995b57d2654ac2f418a7d57fde51762772a77498cfa79df",
+      "A1_past_contrasts.csv": "b75f7387ee22a19ca6ffe7c7adacfaf9df952c9c0780b41ac51ccf7087d02203",
+      "figures/03_背景与认知分离.pdf": "a30f6ff9b40a2ef0a293a51ae26a6e9155609c20543ff745c7ae810fb7a42913",
+      "figures/02_新旧模型与认知增量.png": "5d0822dd6019838b051c4fc9c99fec7335943e5000ab5a2d676553d88d618fe3",
+      "figures/06_消融与恢复.png": "76e7a91a0c93770c9929d2356710f25ff8e7734f5f7eb775f636ca952b0fb575",
+      "figures/02_新旧模型与认知增量.pdf": "d925e3e65ab768ac2f147185ca9f4f0dc9cd28cac1a77ef11e3972e9dabb93d7",
+      "figures/05_反应时验证.png": "bf976dc2d64a44d7cddd02d54bdc1959b74ac391fb7477ffc8b5f46760083a7d",
+      "figures/04_外层波形.pdf": "ef822da67df2e52817bd63601125c6d76fb8f16a5be5f7e813681cd3248fa0e9",
+      "figures/01_慢变化诊断.pdf": "eb7f6da1197a939331e1461f532d94bbd749f1a54d97eab9e5c578ae22b37a48",
+      "figures/01_慢变化诊断.png": "247fef7d107719639a4ba095d85c45d6bf3347de6f3d9637ea9b9f19fa84dc17",
+      "figures/05_反应时验证.pdf": "929e4b5ee7776e4d6f1a16bdc691326dfa99e2616fece2c279fc3a47978c0ed3",
+      "figures/06_消融与恢复.pdf": "591ed1c1a93a13ee15d2192ff40154d2d4a227265359d0dae5d72fe94dfae836",
+      "figures/04_外层波形.png": "e6bdc0e94b0839c89931164c4a6149f229507e01512ce7cc4f8afce98e2cc18a",
+      "figures/03_背景与认知分离.png": "ebc7e30967ce5e8b768d7580173ae41c5c1460f0ef8a3309d3859f963ed51872"
+    },
+    "analysis": "frozen_V2_EEG_reconstruction_plus_V3_response_handling_and_V2_state_decisions",
+    "original_data_modified": false,
+    "refit_EEG": false,
+    "rerun_RT_permutations": false,
+    "seed": 202609263,
+    "administrative_horizon_s": 2.0,
+    "horizon_sensitivity": [
+      1.5,
+      2.0,
+      2.5
+    ],
+    "documentation_refresh": {
+      "path": "q3_v3/README.md",
+      "original_sha256": "914fe550d386879c3d9e5c8cec8cf93fde3929902e606b4f54653c85e050ac64",
+      "current_sha256": "7eae6755465308f1841b5dd342793a3454bbdc3238a537940f4d298fd0ca7466",
+      "reason": "Portable commands and new validation entry documented after numerical computation; no numerical source changes"
+    },
+    "output_hashes": {
+      "A1_past_waves.npz": "76204c6fe6d223c9c82daec6c91cbf45f0bdf0b4af94d22aa063400cbc3cc071",
+      "A1_stimulus_waves.npz": "f4a16538ce2c79ecf64acca2e5ac940f3358fc5c4dc142504e4b86c8ff59ccff",
+      "A2_past_waves.npz": "2bbf69fecf146d9cc8b5956742a63183c526a0bb49633740c5b91e6840b4f768",
+      "A2_stimulus_waves.npz": "23f572819a38a419ee993293e350ef9231fab399b231959184b62ca3096b8c86",
+      "B1_past_waves.npz": "4bb1c1576fd7e441a12c674d5cd822e31d1d292e543ef204d0e4063f428ee47a",
+      "B1_stimulus_waves.npz": "95f12a5a9dc912632c069d1e371512d5cdfc91e42c916fd25d496fa7fa345fe9",
+      "B2_past_waves.npz": "f9d54af230951b1ec21f5ed212d64ee6ed12ee4c97ca8ef11841895bc51bf821",
+      "B2_stimulus_waves.npz": "073ba2268bb3d02f89bf7a30c5492a6f1bad2179645d1c712d167226ca143f97",
+      "README.md": "576c0daac2698b1ad1f98c9c7fb109c3b0e22e435a52fbec49831e1ee215071f",
+      "cognitive_states.npz": "2bb8c8437933cb83a5d051e618d480f0d2019cea34858d2fd9a22af26da88dbc",
+      "decision_cumulative.csv": "5f77264019b45b78569152ff3947fae3fa27a5f020dddb3528b8ce11b54b6267",
+      "decision_paths.npz": "72380e222c73f015531e13ea4436032acd1cd18ba3bf34eb21d3fb1193ad79ea",
+      "decision_specification.json": "40330738c7509eb06d47af05f18f82f668d1ebf5eae552147a1318989cb4f0ea",
+      "decision_summary.csv": "2e9ee0625035a9b48dfdac5db6208576b7e8313c7de4a9431d95cfe4c7fba5b8",
+      "decision_time_step_sensitivity.csv": "0b14c56426843e14ed2c25631487ce9c82cc4526e07fbfbcb192df3dcc8a9c76",
+      "decision_trials.csv": "78f95c4fed2dba93af80c6ce7e4f4ccbcbf643b3796c132415ca4329ac7da403",
+      "event_audit.csv": "f79f047a3e7737bdc674098d26538ab429bab549d9b6f326672d14e32f40d176",
+      "figures/01_事件与截窗.pdf": "a399b317c235c557559b3266c8c65d9240f2593713372462e24e0a05403a9c43",
+      "figures/01_事件与截窗.png": "f398b99237a482d25812980bde8763f779719d5b22e69f5c045f1c1996b55029",
+      "figures/02_EEG继承与重建.pdf": "9c5c6ef08a29853efa417140c82a5b87f6cd15b91dd399ca1fe61388828ada25",
+      "figures/02_EEG继承与重建.png": "fe29dddb7c4d6646e95ce5cbb9963f363baf95e19e0f821139a6c693c2482256",
+      "figures/03_统一认知与决策.pdf": "2d9ead0da1a1029e2edc42825c7de266482321fb890effbfda2c972f2cdf934b",
+      "figures/03_统一认知与决策.png": "b7bfd624def6d6b49186955c1b188c1fdec23806cfba627e0fec5dffd9f314bb",
+      "figures/04_正确错误与删失.pdf": "a8ee0711e718d92e8653bbbfdafd5e3f88e8e17bfb69dbee9aa5e284291194b5",
+      "figures/04_正确错误与删失.png": "9e7dbe9fa5c3d2a8f3ef35b7dd43426807e7108806e1a886fc51688e1390adee",
+      "figures/05_观察窗敏感性.pdf": "366225e5d64b4253f0fa93ae9fcdb1dc6790b3a89ec43e4cfad99fe1962cae36",
+      "figures/05_观察窗敏感性.png": "179189509b56bf4825ecd05be3ce3e344dafa5e98b0fc6e9fdf007bff0c89b3e",
+      "lineage.csv": "f8f14f5d5b6eaa44821ad67baf0e22cd4ae815722f8241029043a2c937e8034b",
+      "observed_response_survival.csv": "cff8662d5f2303f96dc5030027607fe99cd87eacb55d27ec435b027845dee4c8",
+      "prediction_reconstruction.csv": "c0fc8a87e14cbc6bf94130ea652f7a5eceba7850722fefac29677c8cc224a6e8",
+      "selected_parameter_decisions.csv": "34ecfab7f760bd44482ee296b5b4d8e34bc1967bbd761d4a32a69df23474782a",
+      "summary.csv": "4f664f9bd1a82b0feb2a00bf4e491107ffdc328664a64e775ea4312944ad1552",
+      "synthetic_marker_stress.csv": "365a39697b3b106f6de91a4f63be18419b5f5ac83720ff7323cc36736f2d5a75",
+      "synthetic_marker_stress.npz": "26c7af6698ab4927ebad7c33ee40cd36018f330726ede5de445168f881348e4c",
+      "trial_metrics.csv": "7cda51e7137899d638b4203d74d601483e986af958ed05ed45a3f9b7bbd08470",
+      "window_sensitivity.csv": "20ff1c2c22e909792fe73359013225724b1a0c35bd40f634884126029b90d5f1",
+      "window_sensitivity_trials.csv": "7411f01636f26aaf51c5e889bc2da855381e03ceb9510021537a68654281c0ef",
+      "优化_参数剖面.csv": "c7e87891cf7615fe27e55d08c521a54d199770216d06d7cf13d9aa444e11221d",
+      "优化_参数剖面.png": "597b0b1dcd8c27dd113da6bf2db2847ddf133ffbddc87794cea6296fa12fddb0",
+      "优化_恢复真值.npz": "0188f82e61fb67c9435f4f80408f009bcd3fbf2fde19f36d0cf427b06f983ad0",
+      "优化_恢复网格.csv": "7be5ca83cf4c6912008d37c45f07cc09da8daa687a2c9f26f35c9e58064506f6",
+      "优化_恢复选择.json": "2f33fd11ae1f5a03788cb97597c85b665c8280456729e4bf4398ae80b600a083",
+      "优化_截窗区间.csv": "1490a42a7df074951913422bdc3024b203f3e8001094816bb1b054c56fafc131",
+      "优化_截窗逐试次.csv": "1fd460331cc445bd5af3fc90b74c79dadaf315bdca016af334cb141b588b77bc",
+      "优化_截窗队列.json": "3c1b8b153be108bd6d1a9d6ba79420cfc70874daa13f265d4d2dc974ed5790b6",
+      "优化_新拟合区间.csv": "c9dee285fc3835c83fec5b720de9703135f51bbc25eee077f4b5664987c8b5b4",
+      "优化_新拟合波形.npz": "2addfba2e07459455e48f990a1ae6d54c711cd26a1754ee3122eebe551ceabbf",
+      "优化_新拟合选择.json": "cc080fe8e215f5b31eea684eee792d4cb97fb84a780f211fa7f90e76cfdb07e4",
+      "优化_新拟合逐试次.csv": "24e00b5900d0b60072ba70333fd2f48229323663e175b571bea9db2eaf83db75",
+      "优化_新旧N2比较.csv": "efd153946a3b69edff20ee8387725a99f41c8d1830d6cb6324f83ce1d7178a83",
+      "优化_机制验证报告.md": "76c73ddf5facee9a065a1fc675af069534fb25db6ec865ff0d10928296088c19",
+      "优化_清单.json": "034c9ff5e74a2e48abf9e5b6d8f0e046c2763acef7107d2cc945c85ddaf137ec",
+      "优化_目标匹配仿真.csv": "a78beb950ab02759384c13262060cea9c72c60860e1fdd405005bdb97f0f09e3",
+      "优化_目标匹配试次.csv": "501a7fb1dfc21195c90b8fe54c12d5137b65dd2b20992ed4421330923c0e9f1c",
+      "优化_设计诊断.csv": "9910aa59ae330d10a1a8fc1dfb4be8fa4cd20833e53e1ecae76b19eed560e8e2",
+      "优化_运行日志.txt": "def4335a5dc324c95debcb418555bceaeadb22dc0585b67c94c26c08f069ec41",
+      "优化前复核日志.txt": "65c0e95fb5665acb277384f43985d7fde80eb11f4eb1c4fc9c9920848eb450a0",
+      "第三问_V3完整报告.md": "ed48c73c3539e233a64983736b4063e3ba19548881db558885dccbb0b3bf784e",
+      "验收说明.md": "279852c0e1e53ca477fe78a69b47576a6a775fd4ff7cd9dedafe989fc08c9bb6"
+    },
+    "presentation_refreshes": [
+      {
+        "path": "q3_v3/optimization.py",
+        "statistical_sha256": "b0912a1ce48d4a81f261892df8347c7eb035f85e0373d6a3b7ab217aebe5872a",
+        "current_sha256": "c0f1d4a808fc01c6ac39319cbe8c3e8a23aee20780ad410aa3493e43e8817df5",
+        "change": "render() only: use six fixed log-axis tick labels to avoid overlap; saved numerical results unchanged"
+      },
+      {
+        "path": "q3_v3/optimization.py",
+        "statistical_sha256": "c0f1d4a808fc01c6ac39319cbe8c3e8a23aee20780ad410aa3493e43e8817df5",
+        "current_sha256": "72d317724c24d1630c08c0d3199fba06a976b69c2ccff423c8638f32ecf7d5c7",
+        "change": "render() adds paired comparison with saved original N2, using already saved predictions; no new training"
+      }
+    ]
+  },
+  "optimization_manifest_before": {
+    "status": "complete",
+    "identity": "new_refits_and_conditional_recovery",
+    "source_hashes": {
+      "q3_v3/optimization.py": "72d317724c24d1630c08c0d3199fba06a976b69c2ccff423c8638f32ecf7d5c7",
+      "q3_v3/model.py": "d14971547a96a5f5bad0df371cf9ee7fe20ce954cbfa65fd562f9f8911a9d26e",
+      "q3/v2/fit.py": "fe76b6bf4b96f878009db4c2fcaa721e75512d72144458de5a30c445ee7f66d6",
+      "q3_v3/decision.py": "6cc27fde6a46859351409debe2e3c4afb71bafad4fa472828c5c45b1869bad5c"
+    },
+    "original_V2_results_changed": false,
+    "real_correctness_available": false,
+    "configuration": "优化计划/本轮实验配置.json",
+    "presentation_refreshes": [
+      {
+        "path": "q3_v3/optimization.py",
+        "statistical_sha256": "b0912a1ce48d4a81f261892df8347c7eb035f85e0373d6a3b7ab217aebe5872a",
+        "current_sha256": "c0f1d4a808fc01c6ac39319cbe8c3e8a23aee20780ad410aa3493e43e8817df5",
+        "change": "render() only: use six fixed log-axis tick labels to avoid overlap; saved numerical results unchanged"
+      },
+      {
+        "path": "q3_v3/optimization.py",
+        "statistical_sha256": "c0f1d4a808fc01c6ac39319cbe8c3e8a23aee20780ad410aa3493e43e8817df5",
+        "current_sha256": "72d317724c24d1630c08c0d3199fba06a976b69c2ccff423c8638f32ecf7d5c7",
+        "change": "render() adds paired comparison with saved original N2, using already saved predictions; no new training"
+      }
+    ]
+  },
+  "removed_files": [
+    {
+      "path": "q3/behavior.py",
+      "bytes": 10081,
+      "sha256": "0964d82b052c15d2f418c612195f6206c6653d0969d57e3d1602340956b50f4d",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/reporting.py",
+      "bytes": 36022,
+      "sha256": "8e5c5e417d33fb92e5aa1f00ef37138cb717da503b3dbd5cf6732e0e1a2ee314",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/validation.py",
+      "bytes": 7455,
+      "sha256": "a26c7add2445a886f09af330ed3ff3874c98d796728fe32b2bcd08d14c4e8606",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/model.py",
+      "bytes": 6611,
+      "sha256": "f2e46d0e7b1823af1416d7ca30af4cfa00b7bf378b283cb1294d69dbfbca1e3d",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/fit.py",
+      "bytes": 9529,
+      "sha256": "82b93f7ef65061926b28e81df2603bd1878ac35e847beee0f7468dd5f04b72e3",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/__init__.py",
+      "bytes": 79,
+      "sha256": "784abaca84ce382ec4f4797c9b97fac28148524d240a175dbf058d9cc25f49a4",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/main.py",
+      "bytes": 8791,
+      "sha256": "8b43a50083b96c35e7f09ce1ed39adce8507b6bc5213642b2e06d6253cd6f482",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/requirements.txt",
+      "bytes": 83,
+      "sha256": "b8c8f4a9991af24ff5023c558e7dc51f8242e0f19c018dd3087291e8bd364836",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/README.md",
+      "bytes": 4681,
+      "sha256": "29741ed3149cad1bdcd70d80dadc847190f0b9cdf139d0fabd494406b44f4bc9",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/data.py",
+      "bytes": 9867,
+      "sha256": "6cd078d2d9307b1b46ac3f48babebfb74094fc6c17aba7a7d3e1e6d25f8e4a02",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/audit_results.py",
+      "bytes": 6603,
+      "sha256": "87df2bb88d585738364e521b8301cb55987d959ae0886cbb1aa47a3aaab9b0cc",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/tests/test_q3.py",
+      "bytes": 7133,
+      "sha256": "4c6169e560da530deba572fec8f19805f9148ff5c827dbd948b562fe71349c72",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/tests/test_q3_v2.py",
+      "bytes": 3213,
+      "sha256": "f14eb25f07676555dc56f8dfe54514135e272b40eb9936e8c2c79d65d55d0e08",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/v2/run.py",
+      "bytes": 7874,
+      "sha256": "19b5a780d89000d718242e72b57fc9760a97d049c3e58814248b0fecd293cba6",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/v2/recovery.py",
+      "bytes": 2302,
+      "sha256": "fdb85827883fd1a62fcd5ba8f6b5ea8f2dc500d6065b61be4221da1ba9be3591",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/v2/behavior.py",
+      "bytes": 8371,
+      "sha256": "cd1e20bac7a7872a05115d0375c63214532c84488516c1389fe4546dfbab53d5",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/v2/model.py",
+      "bytes": 4868,
+      "sha256": "02deb023d93bebfcc97f03063582e1ac043fbb3e9a95f9578fb903e1407d1781",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/v2/fit.py",
+      "bytes": 7134,
+      "sha256": "fe76b6bf4b96f878009db4c2fcaa721e75512d72144458de5a30c445ee7f66d6",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/v2/__init__.py",
+      "bytes": 73,
+      "sha256": "cff796b7b4bb6768406ad60942fe0b928e121860049d817a25a3af31b84f08e3",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/v2/report.py",
+      "bytes": 18626,
+      "sha256": "355a8ad96d76d4b6510cbc2dfe624ba38d804ad4c643de59b2dc2a89f375ed29",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/v2/README.md",
+      "bytes": 2296,
+      "sha256": "d400c6cfc8455804ad8309208eeb74a2f3bcc1521ae7a28566eddab863baec75",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/v2/data.py",
+      "bytes": 1807,
+      "sha256": "012386c3df1248b4d2965747395a10e3ebef84163ee4468ec6954dea17f58407",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3/v2/audit.py",
+      "bytes": 6095,
+      "sha256": "05c30dae8a86bc56f9fe1086f25f585c33a59e8f7198b3fcf7f08ce88f7fa4b1",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/behavior_audit.csv",
+      "bytes": 62453,
+      "sha256": "8dfc528b51607f6dc32a2e44e57cc25e2e4abac017b98d7be07da293dc00da1f",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B1_summary.csv",
+      "bytes": 3349,
+      "sha256": "68c4941b017bdb1a1ce139a2fc8db22dcbb8ed984808f207d8242a9224730795",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A2_summary.csv",
+      "bytes": 3312,
+      "sha256": "f3d4db0c5d4f4209095372d4ad4bb04b9b77c04380cd79381dba8038320f88bf",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/behavior_predictions.csv",
+      "bytes": 10636,
+      "sha256": "c5ba01a48017d1a48f5bff7e166dab19a4f446cf489607ace7ccd8864e9607e6",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/图表说明.md",
+      "bytes": 2194,
+      "sha256": "a249a40dd3fd3d88341048550978b9ba9e09b8430e8dfdd6eba76115f5328b27",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A2_choices.json",
+      "bytes": 110207,
+      "sha256": "192a8e1dfcd72dd387bbc515939473e1f8b65bd1f09154c1fa1035c71edf470e",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/验证说明.md",
+      "bytes": 1328,
+      "sha256": "989a7d8a08fa9dde31b32b4fea130bfccdcd484883f38acb65ed51aaee2b105c",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A1_summary.csv",
+      "bytes": 3304,
+      "sha256": "a21ab9682694b5511bafe2fb533209b921285cdc9ded3b72fb6736878f87e774",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A2_trial_metrics.csv",
+      "bytes": 400859,
+      "sha256": "1639dc13bfe7b29fdfcc346f2bb4c7a46de3b948493af8f87e00d288b0b4d301",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A1_trial_metrics.csv",
+      "bytes": 383712,
+      "sha256": "78add175bb0a925d0c6fc72556cae422790c8638c17c5b8228477168cded7f07",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/selected_parameters.csv",
+      "bytes": 2660,
+      "sha256": "ac1a5c7234878a52aa3b1fa1b4532b231bb9f47d9e61ea58e7c64b42d5ce848a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/visual_qa.json",
+      "bytes": 1155,
+      "sha256": "2d36f0e86a0ab94f745a1387ebda3d21733ceb4cf808082dccfc41dab2ba3d7e",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/第三问_建模与验证报告.md",
+      "bytes": 16300,
+      "sha256": "076c6524d00deab7d530e9f5f44705cacecfd3e1c69a2ffca1bf740c2d962636",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/behavior_features.csv",
+      "bytes": 52698,
+      "sha256": "5b91cc8b70d4912696888bc1f7d450176e85827e7ed641ac758e521b0c8db37a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/测试验收.txt",
+      "bytes": 4237,
+      "sha256": "9d23d8a08419128f0fc61d0d424f71ece1609f983c6431c15aecc24fd1b657a5",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B2_choices.json",
+      "bytes": 111672,
+      "sha256": "0bff60f5db59b7cb6b87e582a2db46c5a73baa763522c1f2a4fe76aaf5f2ff07",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B1_cognitive_intervals.csv",
+      "bytes": 1499,
+      "sha256": "b2cd4296da14256f2a2e91f7bce62b5511359e87eb0a2d1e2430320c0a278180",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/decision_summary.csv",
+      "bytes": 525,
+      "sha256": "24104f1994b994cb95cd926e829ad4e3142448c2e7d942c005f831f7b9baf3fc",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B2_contrasts.csv",
+      "bytes": 7608,
+      "sha256": "7ad9c107d5956036c07f16c2ede3aeac8b2e668a00dfac47a32b3a8c91683698",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B2_trial_metrics.csv",
+      "bytes": 418299,
+      "sha256": "9b0da5d2e72345564567399831c68fac8b2a853101e5fc02680c8746edf1a68f",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A1_cognitive_intervals.csv",
+      "bytes": 1489,
+      "sha256": "428fe3a2b92fc63d4f3be777d2bf30f0dead4770aa6104fcdd70cdd6fd9aaf0a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/decision_paths.npz",
+      "bytes": 65924,
+      "sha256": "1e154d093a13450cfd2702c15fac55afe31920e51da0c9b36446e523c9b8c59b",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/behavior_choices.json",
+      "bytes": 11313,
+      "sha256": "f2795895703698467a0172177355597f02b90128bc3d827a7c6b3616429aa02d",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/.run.lock",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A1_waves.npz",
+      "bytes": 10787339,
+      "sha256": "08e7f2320022651947b7ba679b34b7e4411ccfa30139a0efbdefb6dca216c559",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B1_endpoint_sensitivity.csv",
+      "bytes": 297468,
+      "sha256": "c24675cdcbb07938a3b98eef95f2cd275c4e49d98571525f462d70e1c70556e0",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B1_contrasts.csv",
+      "bytes": 7746,
+      "sha256": "8f8261e8f88e94a62b7885ef2beadc338e45c2b88ae79cf0bea1b1d49d26957f",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A2_contrasts.csv",
+      "bytes": 7660,
+      "sha256": "fb06d9d873f8104d827f3f2c37126fccce3ea3edffdfb72207d79d08499e9c8a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/behavior_null_distribution.json",
+      "bytes": 348015,
+      "sha256": "397504531800028a6a85ff30fa91a17940a90451630cb38b9ee560385d1c51b3",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A2_endpoint_sensitivity.csv",
+      "bytes": 316177,
+      "sha256": "5a95007194139d7a045e95f06453083f80a96c8c5893c0f5bf776507422a4b95",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A2_waves.npz",
+      "bytes": 10523831,
+      "sha256": "99f582186ecd532ff69020425d8258d31800dc340d35c1a90dc145d5fb704860",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B2_endpoint_sensitivity.csv",
+      "bytes": 330072,
+      "sha256": "bf6fadb023f2fd07c487d94840cd152a3175899da7fc11d0b3f8490e08344a26",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B2_cognitive_intervals.csv",
+      "bytes": 1466,
+      "sha256": "977a5f9ebd3e5b6d5b622775db5e8a6d39197b66bd5c2709419840854c08390a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B2_waves.npz",
+      "bytes": 12402298,
+      "sha256": "5dc73d312226d68fcfb53017e2892275b84ed72b44209fb1c49d14eeb4521499",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B2_event_audit.csv",
+      "bytes": 33926,
+      "sha256": "a3bd47b04f60cf3eafa4b7e977f6bbf491f2d29707e6bc971f9c6782f1885a38",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A1_choices.json",
+      "bytes": 107788,
+      "sha256": "f854527103a9af02b6e764da45611fc760d8b896ec71231baab8ec6210e648f1",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A1_event_audit.csv",
+      "bytes": 33739,
+      "sha256": "b24e2bbb85e3ed2dafae4c5a66dae6362f4d15ac684fe93460924830aaf3dcc5",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/decision_trials.csv",
+      "bytes": 718096,
+      "sha256": "2edb9b9dc2d2b9d7861225d3d1fa4ae3f3e093b67a3ff30ac7d650180b9ad8c3",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/eeg_summary.csv",
+      "bytes": 12950,
+      "sha256": "132d1921b2f6003807f8eb3ae6c524b98e75b6d360b9ef79e62a08ee870488e9",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/recovery_profiles.csv",
+      "bytes": 1619,
+      "sha256": "bd78f7c2ead8a630e7c6b13ae87bdf39b9dde6113728f1aa7f088fb3f90afbef",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A2_cognitive_intervals.csv",
+      "bytes": 1435,
+      "sha256": "f9644fc6589ccf13671ae9b87eaa2ee5ca9c9ce2598e9b44610e8f04d7e90519",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/behavior_permutation.csv",
+      "bytes": 578,
+      "sha256": "8d67491683b844fd2cff1a9c2bd22803375196589ccf741a6c8897020b47fda1",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/trial_metrics.csv",
+      "bytes": 1580814,
+      "sha256": "8e52e4cb5de78211b9ccd07121975e8d3d22cf7b090ad95e596378f428797dd5",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A1_contrasts.csv",
+      "bytes": 7655,
+      "sha256": "d2cebdab9a7e5d644197e9ad6e5177cec8cbdb7a18fe76959c69393f3fb3660a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/recovery.json",
+      "bytes": 2720,
+      "sha256": "2555e54356d90807ac88070a4857fa6859ead6f5ba64b8f5b1902d1bb1d148c8",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/.gitignore",
+      "bytes": 10,
+      "sha256": "9b88bc3797f7b4277208f5adcc8147cdcca659dc273fa99fc3da7d3d4d978a09",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B1_event_audit.csv",
+      "bytes": 33764,
+      "sha256": "f7f4d0873219497274bde1faa823f034bc72ad9e9950da0c9b1b994f4a3af466",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/behavior_intervals.csv",
+      "bytes": 636,
+      "sha256": "676fe15b9e09c3d63655d6ba0d76fd26b02c0ab2a6254d94156198e695197e13",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B1_choices.json",
+      "bytes": 107899,
+      "sha256": "92389455a2b9c2bfb58217030f60d3b6984107ab3612cf8458c6f5340569c00c",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/独立复核.json",
+      "bytes": 1043,
+      "sha256": "8cef3a4735b62403fda069713221e427915907e17bc815234c923d68e445aad9",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A2_event_audit.csv",
+      "bytes": 33951,
+      "sha256": "0624031628a480878869c7dd41114af59668145d02d9d946e3632db8f194f8f2",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/cognitive_intervals.csv",
+      "bytes": 5683,
+      "sha256": "b7e8fef0eedc8aadb615d3d5d37f5051f419ec9e1c0c98dea8f4231107b3e94a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/event_audit.csv",
+      "bytes": 134710,
+      "sha256": "6e79d968e45c45606168027f31cc6f8a26da700f723c20d0087c735606fb9293",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B1_waves.npz",
+      "bytes": 10355557,
+      "sha256": "3a424c3028c3283741d431d1e86d6ea2557d315686a61aeab8eab3de075bc25a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/manifest.json",
+      "bytes": 2865,
+      "sha256": "14c9f17ead18eeb3be0ff86d02dc4d8e573d28debd1ea95f023050a401eb42f7",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/A1_endpoint_sensitivity.csv",
+      "bytes": 302300,
+      "sha256": "982492f736ebf39c6ce76635a7b0890c408e8a18bfa03d38c70cc44fce56184a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B1_trial_metrics.csv",
+      "bytes": 378247,
+      "sha256": "b78d849445ab44ab8f9505203453bf40482a89b49d274ccc2caa6e7262559868",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/B2_summary.csv",
+      "bytes": 3309,
+      "sha256": "71a84c01f5a13fe8b5caf34127b97d134e3cc0d9039f4094cdbea019fa719a5a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/README.md",
+      "bytes": 988,
+      "sha256": "11dfcb8653d74281125f28822f9dff07076a52ff46845f8ea9b29ab3a38c214d",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/behavior_metrics.csv",
+      "bytes": 1076,
+      "sha256": "f0c17efb1a6c36fc76777a1e85d973f71e77d8bd630e3ff10fcb29e524f8a8ae",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_zero_phase_audit.csv",
+      "bytes": 34122,
+      "sha256": "49f701fed5c9b2494648b7b3b30e59a42422a25c6154e887bf31e168d3a48b0f",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_zero_phase_choices.json",
+      "bytes": 70746,
+      "sha256": "d995fa59628e448cb65fabdd33aaf8e36a76346558155d9477444236f3771426",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B2_zero_phase_waves.npz",
+      "bytes": 9843639,
+      "sha256": "89cd93535b30c76a13dbf07b8b443322c18f54b1c173c4f75270b60b19a30eda",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A2_zero_phase_summary.csv",
+      "bytes": 2146,
+      "sha256": "cbb00e7467b99e0b17065767da7c65c5b69363e8ab46fb548926d750d8a1c326",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_zero_phase_contrasts.csv",
+      "bytes": 4895,
+      "sha256": "d716dbd0b1b8baefb38c02854a1e07ea6aff754015be112184842bdd5e8ad727",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B2_zero_phase_audit.csv",
+      "bytes": 34313,
+      "sha256": "292cbd773f76cd3d828868a9397370b97e46a8b4a0a1af841bbc7fef3d9a2aff",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_pretarget_intervals.csv",
+      "bytes": 607,
+      "sha256": "b304076cf0dec39b727b0cafbe79f8e592de09ff8df58105f61d0aa7e2518d7a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_pretarget_trial_metrics.csv",
+      "bytes": 165735,
+      "sha256": "3bf3d0eb6090a465021c9d8acce34ed89e8c6bc058295d857d4e66a5b6c99d36",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B2_zero_phase_contrasts.csv",
+      "bytes": 4843,
+      "sha256": "9840e5199615e263f1ad1272e7122815dbfbc1e7aec72f8116e459cd9a0a0089",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B2_zero_phase_summary.csv",
+      "bytes": 2173,
+      "sha256": "f9da159215f0cfb34b64db33322e647741acefdeb7c151dd6f82f769a54df68e",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A2_zero_phase_waves.npz",
+      "bytes": 8590579,
+      "sha256": "1d235c0ccb71d527abbb0ae74682f7b40f883e3a9012a433e08e125f0292ad47",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_zero_phase_summary.csv",
+      "bytes": 2176,
+      "sha256": "e42383de475b9d3c7c8687c1b639c3f138ff0b2340b849e2f19b179b6f06df1e",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_zero_phase_contrasts.csv",
+      "bytes": 4882,
+      "sha256": "7ac5fe241e72ac1ca40cb02c5c2ed115531b50a6e14d90e294da72cb6ab2a57c",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A2_zero_phase_choices.json",
+      "bytes": 72519,
+      "sha256": "17ba0762fee4aff0da1de73c93bd00f95a6db55004c5c2d4f7b89d0a6295e423",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_pretarget_contrasts.csv",
+      "bytes": 3288,
+      "sha256": "b7be1a913e9b4fe51c1ca15bd0646d995853bd3b81b43e3fbd9c702ef2dc963b",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_pretarget_choices.json",
+      "bytes": 70261,
+      "sha256": "7ee780d62ec978169c49a651657620eaad2a365662fdd4e0b136452d05e3bb38",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_pretarget_summary.csv",
+      "bytes": 1504,
+      "sha256": "7265a993f6be637e513f15503e7a8b84a9123e6beaa87c1199b05004dcf60600",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_zero_phase_intervals.csv",
+      "bytes": 866,
+      "sha256": "29392d667ccb8d8e0133ecd2caa0b71e1bbb13c7a42817487c5832fbae806352",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_pretarget_summary.csv",
+      "bytes": 1506,
+      "sha256": "755bf95841bea86d15bf55e9a1bb6deafb32d2374d6e5414dec3a5d9e4b12c28",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_zero_phase_choices.json",
+      "bytes": 71050,
+      "sha256": "52030ec2c9dadc36a0132481f22dd771b3d1205e81b7daa612a462f7896cc32f",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_pretarget_trial_metrics.csv",
+      "bytes": 160969,
+      "sha256": "a50b407023ef6deb5884ad2716bc2315197fbc24e2084452990314b1a20e9c40",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A2_zero_phase_trial_metrics.csv",
+      "bytes": 255470,
+      "sha256": "f3f73fa55bed8ad69829ebfcca989181a51e713b431a55b3d62798d2e8738c02",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_pretarget_intervals.csv",
+      "bytes": 600,
+      "sha256": "efdd0d9f2cfaf7b3d43599ed38ca96e3274feeda6e0f09c51889644ade0320fa",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B2_zero_phase_choices.json",
+      "bytes": 73019,
+      "sha256": "868e5b116d161fd26202f02e75e0ca4327f226b0fe0950e8c3f7fed32c02e8fd",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A2_zero_phase_contrasts.csv",
+      "bytes": 4820,
+      "sha256": "fa2b2aff52600af7d86cfa85648f0999a7bb89e5e6dc5d44c6d714367a5fd0c8",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_pretarget_contrasts.csv",
+      "bytes": 3264,
+      "sha256": "be05eb20209ddc530dab216c5c9fd3ed0328ee6d8dddadefc7cfbc732499413a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_pretarget_waves.npz",
+      "bytes": 6971799,
+      "sha256": "04228d780a7ed7db7ec784759bab2eeeca3cbe60a636859230f1fa54e3b0d8ce",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_zero_phase_trial_metrics.csv",
+      "bytes": 241286,
+      "sha256": "4f53321fdf9506ca653b833dc160ae4b3c2afe72034f7dec87b8aea14c5be802",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_pretarget_choices.json",
+      "bytes": 70515,
+      "sha256": "6f0c63a5953677d6bc04fcf36d30d8168e4867d7c7897f89c393b4214ce3381b",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B2_zero_phase_intervals.csv",
+      "bytes": 835,
+      "sha256": "2001e628617d0142ccb12ffb2113e2bf700763fd7c5aecd1a8d162dfdf882f7f",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B2_zero_phase_trial_metrics.csv",
+      "bytes": 266715,
+      "sha256": "3f12b5cacf072c01ab8e8b0e297d62f3be033ed6309f3b36602cb88b21ef1a07",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A2_zero_phase_intervals.csv",
+      "bytes": 840,
+      "sha256": "64a38b8f898fa6aac234407eba5ff76ba0dbce0e119e08f2d214676360b5cc51",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_pretarget_audit.csv",
+      "bytes": 33613,
+      "sha256": "4e895e1f2106472f3b44101cf7e60c7dbf4a37f774cd9b47355beee38a902049",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_pretarget_waves.npz",
+      "bytes": 7416740,
+      "sha256": "9d3d0a9d4798d19246fe70a63e315f62656063473f7f426cdd3ba9458021e25d",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A2_zero_phase_audit.csv",
+      "bytes": 34344,
+      "sha256": "0c4e88cbd64155d3b125a8967f8498fd03209618ce60954a06c059dec8ef307c",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_zero_phase_intervals.csv",
+      "bytes": 861,
+      "sha256": "9fdb152a2df663e3eba154611b58c44fcc5dbc33da0d0a7c6beacc315c8fec85",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_zero_phase_summary.csv",
+      "bytes": 2182,
+      "sha256": "8074339a58d6b7f63b19585ed1e8d0339b0e6ae8420ffa5ff8e7410db274eb6d",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_zero_phase_waves.npz",
+      "bytes": 8758810,
+      "sha256": "c04e5b58543d97ead98a1e98d9e4996327a2ed284015d109cc0536b89053a11e",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_pretarget_audit.csv",
+      "bytes": 33621,
+      "sha256": "8f022a92606249a1829c4ed3424496e871ed8d3afb6785d4e4ed1fbe73e88ebc",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/A1_zero_phase_trial_metrics.csv",
+      "bytes": 244429,
+      "sha256": "469f77723cc4fdbc22fe29ecdb8cde1bc67d307b3904926feaaa1ddc32841c4c",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_zero_phase_waves.npz",
+      "bytes": 8252960,
+      "sha256": "e8825b060fbef721fc224a8deaaa6fd22d7cecbbf64a6f7cb0f38e5ab0ddd107",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/sensitivity/B1_zero_phase_audit.csv",
+      "bytes": 34145,
+      "sha256": "7730f3e3cf8822a1d0ae10f66cc0a4ac9f02f12edb2cd4f252367121aea4dfe0",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/07_正确错误与超时仿真.pdf",
+      "bytes": 72211,
+      "sha256": "b9f7f0c14e7dcca5b6faec2a8a902f89f8d3e27c156666b7bd42497fc35dce7d",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/06_反应时预测与增量.pdf",
+      "bytes": 66230,
+      "sha256": "940f8520385393136ca6d478b9f6eeda5b95176503a62ed95538e4b7a901592a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/09_截断与滤波敏感性.png",
+      "bytes": 148149,
+      "sha256": "7a254670b15ac1663274371c783a38ba6819f2df79dce800d03231be95ca3120",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/03_三阶段EEG留出预测.pdf",
+      "bytes": 328983,
+      "sha256": "6b4884e5037fd041183b3f4be1f8a5296e4affc58f24943b6f2a43a4a65de2cc",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/05_认知增量与对照.pdf",
+      "bytes": 49822,
+      "sha256": "59962d56606cd0e38f89a915fa3ec3b094579e4a1eb819da456b6bc2499ed6b8",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/08_半合成恢复与可辨识性.png",
+      "bytes": 103802,
+      "sha256": "01bfc6e625f1dc7be3ff778e24682bd3f2ac751da59065d1b466705d54f4eaa1",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/07_正确错误与超时仿真.png",
+      "bytes": 193739,
+      "sha256": "a9f51f3886f92112760a707b85e205807bb26e98096575eb4444acefe2c1a4d0",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/08_半合成恢复与可辨识性.pdf",
+      "bytes": 49067,
+      "sha256": "744668611eef5fb920ab4da2764bcdc7d6bf6711bca7189e8a3a4304dd6e4c60",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/05_认知增量与对照.png",
+      "bytes": 121484,
+      "sha256": "e20704752e4458147bce2ccc172d8abe1e67067d3ba7df82f2835bc488ea526b",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/04_左右差分留出预测.pdf",
+      "bytes": 299234,
+      "sha256": "3df78f03c807d00aa2f4ba3edfdbcea3e25c65ebf1bf0e89a5071e5b34ddcfec",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/09_截断与滤波敏感性.pdf",
+      "bytes": 57606,
+      "sha256": "f09edbe07705e5a94d1b42068000eebd2a68d424cf3d12a84f57e5d9cec3b0a2",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/03_三阶段EEG留出预测.png",
+      "bytes": 626999,
+      "sha256": "b7fc82d6b3379395b02641eecc6096ff5a6a48a39835b484755d07b3077f15e3",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/04_左右差分留出预测.png",
+      "bytes": 496403,
+      "sha256": "367e9d48dccf3a7192b1bcf9bba321a61f49331cb315ff4eaba2cc99341d0d63",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/02_宏观模型与内部活动.png",
+      "bytes": 305686,
+      "sha256": "c43618a8ebf1d9f9025c5a4b0f5a71ea1497ce5ded910bc53d72868e3910a507",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/01_事件时间轴.png",
+      "bytes": 256170,
+      "sha256": "da4711719c09c75ac3c89702e5ecaf678fd268def97c81a11072f7acf67c2f4c",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/06_反应时预测与增量.png",
+      "bytes": 215242,
+      "sha256": "fa70887133a875908d5cea9149e872888cd10a2f4119858ece35f3afbe509d08",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/02_宏观模型与内部活动.pdf",
+      "bytes": 74756,
+      "sha256": "4b630058c15373549c1fba613ec07c6eb2973cd313aad959ae77d22cd282cef5",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/figures/01_事件时间轴.pdf",
+      "bytes": 62003,
+      "sha256": "c48839848006ee10931b8f6f8bec2bea37030363653cffe715419ebfc675272d",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B2_past_waves.npz",
+      "bytes": 11702170,
+      "sha256": "f9d54af230951b1ec21f5ed212d64ee6ed12ee4c97ca8ef11841895bc51bf821",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/behavior_audit.csv",
+      "bytes": 62453,
+      "sha256": "8dfc528b51607f6dc32a2e44e57cc25e2e4abac017b98d7be07da293dc00da1f",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B1_stimulus_waves.npz",
+      "bytes": 14895247,
+      "sha256": "5fabd8744344f82683e2f7d704836dad0e465868c25085ac9560f16698fdc3ef",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A2_past_choices.json",
+      "bytes": 126719,
+      "sha256": "4ff3de3a5da1c211416571e3ae41b7cd3b28aa4f4a26d1c973aee8b465b26737",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B1_past_choices.json",
+      "bytes": 125759,
+      "sha256": "dcbeab517b3425796a56ac445d957a59f3d5356668be8d80f60c850bf2cab20a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/behavior_predictions.csv",
+      "bytes": 10660,
+      "sha256": "1423edc8209be8ac94941cc127da0e1a5aa1142696edccf3ec5040868b8e7e07",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A1_past_waves.npz",
+      "bytes": 10815578,
+      "sha256": "76204c6fe6d223c9c82daec6c91cbf45f0bdf0b4af94d22aa063400cbc3cc071",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A2_past_metrics.csv",
+      "bytes": 335058,
+      "sha256": "3d11e1cf4b91d1e90eaadc740fbbfbb1088509511dfe0a87c6480106666aab58",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/验证说明.md",
+      "bytes": 1194,
+      "sha256": "9a79fc8960ca37a6953906730b1251b125a54d7267b6aec3ae40768b142b87be",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A1_stimulus_waves.npz",
+      "bytes": 15522272,
+      "sha256": "7e70726172d5db840f2223a34861d117056b7aae39c05f2ee34aefaf5ffbfd72",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A1_stimulus_contrasts.csv",
+      "bytes": 11643,
+      "sha256": "43842b070551e57a720a1a809242a6e1c28b10a42c874dd930d466e431169c2c",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/selected_parameters.csv",
+      "bytes": 23898,
+      "sha256": "4d4fe9d1a303fbc856a571ec6ce37c06551b3c9b986c6232cc986531459fac54",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/visual_qa.json",
+      "bytes": 834,
+      "sha256": "5aa3721724b1227016c3a8b86e3b64f5eac07125a514f950e6cf14050e411ac8",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B1_past_waves.npz",
+      "bytes": 10556017,
+      "sha256": "4bb1c1576fd7e441a12c674d5cd822e31d1d292e543ef204d0e4063f428ee47a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/context_intervals.csv",
+      "bytes": 2734,
+      "sha256": "aa0ae363e0d9710244e4ee3b6af602fc8ba6aa1a477a5fd0c4c373c54cf5e7b4",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/behavior_features.csv",
+      "bytes": 53275,
+      "sha256": "59697991c46bbac633b040f92ca47b338003d64316987d18a8c686402da6871a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A2_past_waves.npz",
+      "bytes": 11303923,
+      "sha256": "2bbf69fecf146d9cc8b5956742a63183c526a0bb49633740c5b91e6840b4f768",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/测试验收.txt",
+      "bytes": 4935,
+      "sha256": "cd560be2238f631be3c2d75c0d22b7991e00f968dce85e4b564c6af01f978633",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B1_past_contrasts.csv",
+      "bytes": 5981,
+      "sha256": "16476420012287061815e08db507e5d7b9fac53f81e05baa5e1b554faf771c53",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B2_stimulus_waves.npz",
+      "bytes": 17822203,
+      "sha256": "d3cf868c91aeb35a90ba1881175f51f2aced4e49dddfef42c386f76c7472c5df",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B2_stimulus_choices.json",
+      "bytes": 150681,
+      "sha256": "302dacff1b7afa39446fdd1e2fda5f73c88104a59350ca7334ef64b46bad6208",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B2_past_contrasts.csv",
+      "bytes": 5954,
+      "sha256": "472520c5336d65a25b9f83ec4d19b5eca62ff0feb655a9a15766f51097eb6115",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/behavior_choices.json",
+      "bytes": 11276,
+      "sha256": "88357165888dae0bf62dda1a8f2d0549ee47556fc1ba7986c129a67c9190e7c3",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/.run.lock",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A2_past_contrasts.csv",
+      "bytes": 5994,
+      "sha256": "3e2d9bb1d17dff4c0a239edf6c8d421efbd4cdc320e9e86367581709cd44d52f",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/behavior_null_distribution.json",
+      "bytes": 347630,
+      "sha256": "f9a1dce5724bb76b1b3f5e05aad38af8ac2ac2b9b46049b8c3d7947b1d005add",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B2_stimulus_contrasts.csv",
+      "bytes": 11582,
+      "sha256": "61f4daefc43bd369fb86409892fdef2f3f49d278181072abd0889e530ac76d90",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A1_past_metrics.csv",
+      "bytes": 320298,
+      "sha256": "9c490192315a25de37e4a81cf25bccfefd2c4e0c611725a4f5f14bdbc7d000c6",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A2_stimulus_choices.json",
+      "bytes": 148892,
+      "sha256": "ba3f0c46b5e11548fb50916f616d019fa7bede797b22675768606bf65e3cfe89",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B2_past_choices.json",
+      "bytes": 126884,
+      "sha256": "28dbc5a602f7a296a543f14b95fc2cb0f2d080ebe9b61b6ac971e27fa4690354",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B1_stimulus_contrasts.csv",
+      "bytes": 11819,
+      "sha256": "11efbf2a4e3f40d772d32ee6eb63408c50fa4c572dfe56bca652a47d322cdb12",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A1_past_choices.json",
+      "bytes": 125960,
+      "sha256": "424ad7c167c7d552d1addc5122707c5bb122d97cbb9ca7ecdbff506ff70bd1f1",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/behavior_v1_comparison.csv",
+      "bytes": 379,
+      "sha256": "231e5bc3b8e491e1cdfcad15be61b02fdb04d3d8094ffba2eb6607a1f41a33dc",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/recovery_choices.json",
+      "bytes": 9799,
+      "sha256": "04114ac7c61e0f9aa7a83d608e9955d6df4cc65566fc7de2fb24f4517f1d7fbd",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B2_past_metrics.csv",
+      "bytes": 350130,
+      "sha256": "95264b0b02a4bcac6a66819d58a6b5c8d96637dc81589bd84fddbb875bdd02ff",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A1_stimulus_choices.json",
+      "bytes": 144897,
+      "sha256": "7a70d3f7bbd4dbd4808065c9ef5d1dde30fe53d65f85abe9cf9a3604acf58d13",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B1_stimulus_choices.json",
+      "bytes": 146522,
+      "sha256": "22781ab5d30b95a3de201a328f0ea60116a26076234b1d909722f2f6853b0878",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B1_stimulus_metrics.csv",
+      "bytes": 620959,
+      "sha256": "512edd3c36f64dfe770a700c46a0e69cfd25db7d381319eab9287ec7823a3656",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/behavior_permutation.csv",
+      "bytes": 579,
+      "sha256": "72424db3dedbf094f7ab3ca621c88d8604122a620b1749e030b6503013990c40",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A2_stimulus_contrasts.csv",
+      "bytes": 11666,
+      "sha256": "11b70e48379a71ad2a92b942443eb137f02ccb654a581de366dab92ecc1b79bb",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/trial_metrics.csv",
+      "bytes": 3917235,
+      "sha256": "5ff44237d3c2eed6f755065cd0ac3d88d06b03f1378385a6dfc49afdc407d93c",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B2_stimulus_metrics.csv",
+      "bytes": 687015,
+      "sha256": "2f482493345ff233120054b8c8f5f615154a1babf6b41f4bb381437bc5dbb7dc",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/.gitignore",
+      "bytes": 10,
+      "sha256": "9b88bc3797f7b4277208f5adcc8147cdcca659dc273fa99fc3da7d3d4d978a09",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/recovery.csv",
+      "bytes": 231,
+      "sha256": "77f832a5fc16f725b36359b7d21be4584fb02df98050864c48d026bd1a392f23",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/behavior_intervals.csv",
+      "bytes": 631,
+      "sha256": "68ff2fb6cd4af8a0150edd486d73c17eff08e7da01f44520afaed8d7da40fe0d",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/第三问_V2优化报告.md",
+      "bytes": 12034,
+      "sha256": "988406a4c7e5311cc049d64ed4a381b8cdc7be9f7977a9d182d0b1ad1ea31b19",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/独立复核.json",
+      "bytes": 759,
+      "sha256": "219311e19e434e70ff954d0f85164529da5b1293229f95c7b3f678cf1e7ab3f2",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/event_audit.csv",
+      "bytes": 134710,
+      "sha256": "6e79d968e45c45606168027f31cc6f8a26da700f723c20d0087c735606fb9293",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A1_stimulus_metrics.csv",
+      "bytes": 630045,
+      "sha256": "55a80af0631d050d02f4633bbd0f314f5c93cc38cca9371385ddcd53a7a0b0d0",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/manifest.json",
+      "bytes": 3208,
+      "sha256": "9832391eb2d34b4b5673c728ed1311cc853edb8e6619f3075358e9c05321440c",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/B1_past_metrics.csv",
+      "bytes": 315941,
+      "sha256": "d8f28b1b9122509d86b3fd6f4793e9b9bb24f9381eb3224355e78b7b55c667f2",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/diagnostics.csv",
+      "bytes": 704,
+      "sha256": "a29f831891c9d32e135093e7da2a1a7093315b39a59798ab50267bf61e9ac6db",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/intervals.csv",
+      "bytes": 15635,
+      "sha256": "34ef9c1e26818be9df82ea6eac48e7632ad6c3cf090ed9d021bba610dd8c0af2",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/summary.csv",
+      "bytes": 30985,
+      "sha256": "b370e67c1409e091edd677a069c7f6c2ddd5846b436a839aeb4d70acf19ccd5a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/README.md",
+      "bytes": 252,
+      "sha256": "15f266c84ccbf3e4a27c3747834f290f579f56154be3ca5ead65679d8629fbd2",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A2_stimulus_metrics.csv",
+      "bytes": 658552,
+      "sha256": "908cb275634d220ca24ceded72c52482d2156e3803db20a34ca42642610b18e4",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A2_stimulus_waves.npz",
+      "bytes": 15025029,
+      "sha256": "8962b5e31d92c6fe982d39f40afb81cb107334ea0a5e082995bcb6d5af8d9fdc",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/behavior_metrics.csv",
+      "bytes": 1081,
+      "sha256": "90ec1a6cd988b1faf995b57d2654ac2f418a7d57fde51762772a77498cfa79df",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/A1_past_contrasts.csv",
+      "bytes": 5967,
+      "sha256": "b75f7387ee22a19ca6ffe7c7adacfaf9df952c9c0780b41ac51ccf7087d02203",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/figures/03_背景与认知分离.pdf",
+      "bytes": 52833,
+      "sha256": "a30f6ff9b40a2ef0a293a51ae26a6e9155609c20543ff745c7ae810fb7a42913",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/figures/02_新旧模型与认知增量.png",
+      "bytes": 133708,
+      "sha256": "5d0822dd6019838b051c4fc9c99fec7335943e5000ab5a2d676553d88d618fe3",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/figures/06_消融与恢复.png",
+      "bytes": 126546,
+      "sha256": "76e7a91a0c93770c9929d2356710f25ff8e7734f5f7eb775f636ca952b0fb575",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/figures/02_新旧模型与认知增量.pdf",
+      "bytes": 53470,
+      "sha256": "d925e3e65ab768ac2f147185ca9f4f0dc9cd28cac1a77ef11e3972e9dabb93d7",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/figures/05_反应时验证.png",
+      "bytes": 98156,
+      "sha256": "bf976dc2d64a44d7cddd02d54bdc1959b74ac391fb7477ffc8b5f46760083a7d",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/figures/04_外层波形.pdf",
+      "bytes": 81133,
+      "sha256": "ef822da67df2e52817bd63601125c6d76fb8f16a5be5f7e813681cd3248fa0e9",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/figures/01_慢变化诊断.pdf",
+      "bytes": 51956,
+      "sha256": "eb7f6da1197a939331e1461f532d94bbd749f1a54d97eab9e5c578ae22b37a48",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/figures/01_慢变化诊断.png",
+      "bytes": 113546,
+      "sha256": "247fef7d107719639a4ba095d85c45d6bf3347de6f3d9637ea9b9f19fa84dc17",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/figures/05_反应时验证.pdf",
+      "bytes": 50642,
+      "sha256": "929e4b5ee7776e4d6f1a16bdc691326dfa99e2616fece2c279fc3a47978c0ed3",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/figures/06_消融与恢复.pdf",
+      "bytes": 59472,
+      "sha256": "591ed1c1a93a13ee15d2192ff40154d2d4a227265359d0dae5d72fe94dfae836",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/figures/04_外层波形.png",
+      "bytes": 299685,
+      "sha256": "e6bdc0e94b0839c89931164c4a6149f229507e01512ce7cc4f8afce98e2cc18a",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result_v2/figures/03_背景与认知分离.png",
+      "bytes": 106927,
+      "sha256": "ebc7e30967ce5e8b768d7580173ae41c5c1460f0ef8a3309d3859f963ed51872",
+      "reason": "旧实现和重复旧结果；必要拟合器与冻结参考已转入最终版"
+    },
+    {
+      "path": "q3_result/reference/behavior_audit.csv",
+      "bytes": 62453,
+      "sha256": "8dfc528b51607f6dc32a2e44e57cc25e2e4abac017b98d7be07da293dc00da1f",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/behavior_predictions.csv",
+      "bytes": 10660,
+      "sha256": "1423edc8209be8ac94941cc127da0e1a5aa1142696edccf3ec5040868b8e7e07",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/A2_past_metrics.csv",
+      "bytes": 335058,
+      "sha256": "3d11e1cf4b91d1e90eaadc740fbbfbb1088509511dfe0a87c6480106666aab58",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/验证说明.md",
+      "bytes": 1194,
+      "sha256": "9a79fc8960ca37a6953906730b1251b125a54d7267b6aec3ae40768b142b87be",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/A1_stimulus_contrasts.csv",
+      "bytes": 11643,
+      "sha256": "43842b070551e57a720a1a809242a6e1c28b10a42c874dd930d466e431169c2c",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/selected_parameters.csv",
+      "bytes": 23898,
+      "sha256": "4d4fe9d1a303fbc856a571ec6ce37c06551b3c9b986c6232cc986531459fac54",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/visual_qa.json",
+      "bytes": 834,
+      "sha256": "5aa3721724b1227016c3a8b86e3b64f5eac07125a514f950e6cf14050e411ac8",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/context_intervals.csv",
+      "bytes": 2734,
+      "sha256": "aa0ae363e0d9710244e4ee3b6af602fc8ba6aa1a477a5fd0c4c373c54cf5e7b4",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/behavior_features.csv",
+      "bytes": 53275,
+      "sha256": "59697991c46bbac633b040f92ca47b338003d64316987d18a8c686402da6871a",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/测试验收.txt",
+      "bytes": 4935,
+      "sha256": "cd560be2238f631be3c2d75c0d22b7991e00f968dce85e4b564c6af01f978633",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/B1_past_contrasts.csv",
+      "bytes": 5981,
+      "sha256": "16476420012287061815e08db507e5d7b9fac53f81e05baa5e1b554faf771c53",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/B2_past_contrasts.csv",
+      "bytes": 5954,
+      "sha256": "472520c5336d65a25b9f83ec4d19b5eca62ff0feb655a9a15766f51097eb6115",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/behavior_choices.json",
+      "bytes": 11276,
+      "sha256": "88357165888dae0bf62dda1a8f2d0549ee47556fc1ba7986c129a67c9190e7c3",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/.run.lock",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/A2_past_contrasts.csv",
+      "bytes": 5994,
+      "sha256": "3e2d9bb1d17dff4c0a239edf6c8d421efbd4cdc320e9e86367581709cd44d52f",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/figures/03_背景与认知分离.pdf",
+      "bytes": 52833,
+      "sha256": "a30f6ff9b40a2ef0a293a51ae26a6e9155609c20543ff745c7ae810fb7a42913",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/figures/02_新旧模型与认知增量.png",
+      "bytes": 133708,
+      "sha256": "5d0822dd6019838b051c4fc9c99fec7335943e5000ab5a2d676553d88d618fe3",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/figures/06_消融与恢复.png",
+      "bytes": 126546,
+      "sha256": "76e7a91a0c93770c9929d2356710f25ff8e7734f5f7eb775f636ca952b0fb575",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/figures/02_新旧模型与认知增量.pdf",
+      "bytes": 53470,
+      "sha256": "d925e3e65ab768ac2f147185ca9f4f0dc9cd28cac1a77ef11e3972e9dabb93d7",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/figures/05_反应时验证.png",
+      "bytes": 98156,
+      "sha256": "bf976dc2d64a44d7cddd02d54bdc1959b74ac391fb7477ffc8b5f46760083a7d",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/figures/04_外层波形.pdf",
+      "bytes": 81133,
+      "sha256": "ef822da67df2e52817bd63601125c6d76fb8f16a5be5f7e813681cd3248fa0e9",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/figures/01_慢变化诊断.pdf",
+      "bytes": 51956,
+      "sha256": "eb7f6da1197a939331e1461f532d94bbd749f1a54d97eab9e5c578ae22b37a48",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/figures/01_慢变化诊断.png",
+      "bytes": 113546,
+      "sha256": "247fef7d107719639a4ba095d85c45d6bf3347de6f3d9637ea9b9f19fa84dc17",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/figures/05_反应时验证.pdf",
+      "bytes": 50642,
+      "sha256": "929e4b5ee7776e4d6f1a16bdc691326dfa99e2616fece2c279fc3a47978c0ed3",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/figures/06_消融与恢复.pdf",
+      "bytes": 59472,
+      "sha256": "591ed1c1a93a13ee15d2192ff40154d2d4a227265359d0dae5d72fe94dfae836",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/figures/04_外层波形.png",
+      "bytes": 299685,
+      "sha256": "e6bdc0e94b0839c89931164c4a6149f229507e01512ce7cc4f8afce98e2cc18a",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/figures/03_背景与认知分离.png",
+      "bytes": 106927,
+      "sha256": "ebc7e30967ce5e8b768d7580173ae41c5c1460f0ef8a3309d3859f963ed51872",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/behavior_null_distribution.json",
+      "bytes": 347630,
+      "sha256": "f9a1dce5724bb76b1b3f5e05aad38af8ac2ac2b9b46049b8c3d7947b1d005add",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/B2_stimulus_contrasts.csv",
+      "bytes": 11582,
+      "sha256": "61f4daefc43bd369fb86409892fdef2f3f49d278181072abd0889e530ac76d90",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/A1_past_metrics.csv",
+      "bytes": 320298,
+      "sha256": "9c490192315a25de37e4a81cf25bccfefd2c4e0c611725a4f5f14bdbc7d000c6",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/B1_stimulus_contrasts.csv",
+      "bytes": 11819,
+      "sha256": "11efbf2a4e3f40d772d32ee6eb63408c50fa4c572dfe56bca652a47d322cdb12",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/behavior_v1_comparison.csv",
+      "bytes": 379,
+      "sha256": "231e5bc3b8e491e1cdfcad15be61b02fdb04d3d8094ffba2eb6607a1f41a33dc",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/recovery_choices.json",
+      "bytes": 9799,
+      "sha256": "04114ac7c61e0f9aa7a83d608e9955d6df4cc65566fc7de2fb24f4517f1d7fbd",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/B2_past_metrics.csv",
+      "bytes": 350130,
+      "sha256": "95264b0b02a4bcac6a66819d58a6b5c8d96637dc81589bd84fddbb875bdd02ff",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/B1_stimulus_metrics.csv",
+      "bytes": 620959,
+      "sha256": "512edd3c36f64dfe770a700c46a0e69cfd25db7d381319eab9287ec7823a3656",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/behavior_permutation.csv",
+      "bytes": 579,
+      "sha256": "72424db3dedbf094f7ab3ca621c88d8604122a620b1749e030b6503013990c40",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/A2_stimulus_contrasts.csv",
+      "bytes": 11666,
+      "sha256": "11b70e48379a71ad2a92b942443eb137f02ccb654a581de366dab92ecc1b79bb",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/B2_stimulus_metrics.csv",
+      "bytes": 687015,
+      "sha256": "2f482493345ff233120054b8c8f5f615154a1babf6b41f4bb381437bc5dbb7dc",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/.gitignore",
+      "bytes": 10,
+      "sha256": "9b88bc3797f7b4277208f5adcc8147cdcca659dc273fa99fc3da7d3d4d978a09",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/recovery.csv",
+      "bytes": 231,
+      "sha256": "77f832a5fc16f725b36359b7d21be4584fb02df98050864c48d026bd1a392f23",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/behavior_intervals.csv",
+      "bytes": 631,
+      "sha256": "68ff2fb6cd4af8a0150edd486d73c17eff08e7da01f44520afaed8d7da40fe0d",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/第三问_V2优化报告.md",
+      "bytes": 12034,
+      "sha256": "988406a4c7e5311cc049d64ed4a381b8cdc7be9f7977a9d182d0b1ad1ea31b19",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/独立复核.json",
+      "bytes": 759,
+      "sha256": "219311e19e434e70ff954d0f85164529da5b1293229f95c7b3f678cf1e7ab3f2",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/event_audit.csv",
+      "bytes": 134710,
+      "sha256": "6e79d968e45c45606168027f31cc6f8a26da700f723c20d0087c735606fb9293",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/A1_stimulus_metrics.csv",
+      "bytes": 630045,
+      "sha256": "55a80af0631d050d02f4633bbd0f314f5c93cc38cca9371385ddcd53a7a0b0d0",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/manifest.json",
+      "bytes": 3208,
+      "sha256": "9832391eb2d34b4b5673c728ed1311cc853edb8e6619f3075358e9c05321440c",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/B1_past_metrics.csv",
+      "bytes": 315941,
+      "sha256": "d8f28b1b9122509d86b3fd6f4793e9b9bb24f9381eb3224355e78b7b55c667f2",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/diagnostics.csv",
+      "bytes": 704,
+      "sha256": "a29f831891c9d32e135093e7da2a1a7093315b39a59798ab50267bf61e9ac6db",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/summary.csv",
+      "bytes": 30985,
+      "sha256": "b370e67c1409e091edd677a069c7f6c2ddd5846b436a839aeb4d70acf19ccd5a",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/README.md",
+      "bytes": 252,
+      "sha256": "15f266c84ccbf3e4a27c3747834f290f579f56154be3ca5ead65679d8629fbd2",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/A2_stimulus_metrics.csv",
+      "bytes": 658552,
+      "sha256": "908cb275634d220ca24ceded72c52482d2156e3803db20a34ca42642610b18e4",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/behavior_metrics.csv",
+      "bytes": 1081,
+      "sha256": "90ec1a6cd988b1faf995b57d2654ac2f418a7d57fde51762772a77498cfa79df",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    },
+    {
+      "path": "q3_result/reference/A1_past_contrasts.csv",
+      "bytes": 5967,
+      "sha256": "b75f7387ee22a19ca6ffe7c7adacfaf9df952c9c0780b41ac51ccf7087d02203",
+      "reason": "冻结参考不再引用的历史报告、图表或重复中间结果"
+    }
+  ]
+}

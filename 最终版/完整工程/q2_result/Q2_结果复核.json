@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "decoder_metric_rows": 50,
+  "mechanism_summary_rows": 32,
+  "unique_trials": 275,
+  "checks": [
+    "independent metric recomputation",
+    "difference-score recomputation",
+    "unique trial lineage"
+  ]
+}

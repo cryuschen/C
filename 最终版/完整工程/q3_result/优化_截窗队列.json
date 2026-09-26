@@ -1,0 +1,86 @@
+[
+  {
+    "dataset": "A1",
+    "gap_s": 0.05,
+    "n_available": 65,
+    "n_common": 65,
+    "excluded_from_common": []
+  },
+  {
+    "dataset": "A1",
+    "gap_s": 0.1,
+    "n_available": 65,
+    "n_common": 65,
+    "excluded_from_common": []
+  },
+  {
+    "dataset": "A1",
+    "gap_s": 0.15,
+    "n_available": 65,
+    "n_common": 65,
+    "excluded_from_common": []
+  },
+  {
+    "dataset": "A2",
+    "gap_s": 0.05,
+    "n_available": 68,
+    "n_common": 68,
+    "excluded_from_common": []
+  },
+  {
+    "dataset": "A2",
+    "gap_s": 0.1,
+    "n_available": 68,
+    "n_common": 68,
+    "excluded_from_common": []
+  },
+  {
+    "dataset": "A2",
+    "gap_s": 0.15,
+    "n_available": 68,
+    "n_common": 68,
+    "excluded_from_common": []
+  },
+  {
+    "dataset": "B1",
+    "gap_s": 0.05,
+    "n_available": 64,
+    "n_common": 64,
+    "excluded_from_common": []
+  },
+  {
+    "dataset": "B1",
+    "gap_s": 0.1,
+    "n_available": 64,
+    "n_common": 64,
+    "excluded_from_common": []
+  },
+  {
+    "dataset": "B1",
+    "gap_s": 0.15,
+    "n_available": 64,
+    "n_common": 64,
+    "excluded_from_common": []
+  },
+  {
+    "dataset": "B2",
+    "gap_s": 0.05,
+    "n_available": 71,
+    "n_common": 71,
+    "excluded_from_common": []
+  },
+  {
+    "dataset": "B2",
+    "gap_s": 0.1,
+    "n_available": 71,
+    "n_common": 71,
+    "excluded_from_common": []
+  },
+  {
+    "dataset": "B2",
+    "gap_s": 0.15,
+    "n_available": 71,
+    "n_common": 71,
+    "excluded_from_common": []
+  }
+]

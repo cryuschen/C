@@ -1,0 +1,2 @@
+# Preserve CSV bytes for scientific provenance hashes; CRLF is a valid CSV EOL.
+*.csv -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

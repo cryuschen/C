@@ -1,0 +1,8 @@
+Q1 independent validation: A1 semisynthetic
+Q1 independent validation: A1 synthetic
+Q1 independent validation: A2 semisynthetic
+Q1 independent validation: A2 synthetic
+Q1 independent validation: B1 semisynthetic
+Q1 independent validation: B1 synthetic
+Q1 independent validation: B2 semisynthetic
+Q1 independent validation: B2 synthetic

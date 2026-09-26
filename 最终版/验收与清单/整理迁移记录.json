@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "files_moved_and_byte_verified": 765,
+  "external_datasets_deleted": [
+    "v1.0.1",
+    "v1.0.2"
+  ],
+  "numerical_code_changed": false,
+  "raw_data_changed": false,
+  "internal_relative_paths_preserved": true
+}

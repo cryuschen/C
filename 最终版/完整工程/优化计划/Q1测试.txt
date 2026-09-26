@@ -1,0 +1,13 @@
+test_all_saved_trials_reconstruct_v7_from_fold_policy (test_eeg_v7.FinalOutputTests.test_all_saved_trials_reconstruct_v7_from_fold_policy) ... ok
+test_benchmark_baseline_and_replay_manifest (test_eeg_v7.FinalOutputTests.test_benchmark_baseline_and_replay_manifest) ... ok
+test_group_intervals_and_temporal_contrast_recompute_from_saved_trials (test_eeg_v7.FinalOutputTests.test_group_intervals_and_temporal_contrast_recompute_from_saved_trials) ... ok
+test_metrics_and_trial_lineage (test_eeg_v7.FinalOutputTests.test_metrics_and_trial_lineage) ... ok
+test_v7_imports_without_legacy_modules (test_eeg_v7.FinalOutputTests.test_v7_imports_without_legacy_modules) ... ok
+test_gate_prevents_small_deviation_changes (test_independent_validation.IndependentRecoveryTests.test_gate_prevents_small_deviation_changes) ... ok
+test_shrink_uses_training_reference (test_independent_validation.IndependentRecoveryTests.test_shrink_uses_training_reference) ... ok
+test_zero_noise_and_zero_strength_are_exact (test_independent_validation.IndependentRecoveryTests.test_zero_noise_and_zero_strength_are_exact) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 2.044s
+
+OK

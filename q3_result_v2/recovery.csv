@@ -1,4 +1,0 @@
-﻿noise_ratio,NRMSE_clean,exact_parameters,tau_m,tau_p,target_duration,direction_penalty
-0.0,0.0018323524129758167,True,1.0,0.3,0.2,1.0
-0.5,0.03340959867575153,False,4.0,0.3,0.2,10.0
-1.0,0.07005839724012426,False,4.0,0.3,0.1,10.0

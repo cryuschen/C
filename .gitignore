@@ -5,3 +5,9 @@ __pycache__/
 *.pyc
 .DS_Store
 output/*.zip
+.mplcache/
+.pytest_cache/
+fontlist-v*.json
+/整理归档/
+/三题最终版.zip
+/三题最终版.zip.tmp

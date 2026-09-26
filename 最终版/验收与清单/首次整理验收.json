@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "organization_date": "2026-09-26",
+  "scope": "在新路径运行全部67项测试、Q2/Q3数值审计与新增结果复核；本次未重新训练统计模型，也未重新进行图像视觉审查",
+  "files_moved_and_initial_sha256_verified": 765,
+  "original_python_files_unchanged": 61,
+  "raw_mat_files_unchanged": 4,
+  "missing_moved_files": [],
+  "test_counts": {
+    "Q1": 8,
+    "Q2": 22,
+    "Q3_V3": 19,
+    "Q3_historical": 18
+  },
+  "tests_total": 67,
+  "test_failures": 0,
+  "current_source_and_raw_manifests_match": true,
+  "verification_refreshed_files": 5,
+  "verification_log": "整理后验收日志.txt",
+  "file_refresh_details": "验收刷新文件.csv",
+  "external_datasets_deleted": [
+    "v1.0.1",
+    "v1.0.2"
+  ],
+  "external_datasets_in_delivery": false,
+  "previous_visual_qa": "../完整工程/优化计划/图表检查.json",
+  "numerical_audit": {
+    "status": "passed",
+    "q2_baseline_scores_unchanged": true,
+    "q1_saved_recovery_cases_recomputed": 64,
+    "q1_all_training_guardrails_verified": true,
+    "q3_new_fit_rows_recomputed": 1608,
+    "q3_max_relative_MSE_error": 2.496653084554123e-16,
+    "q3_matching_simulations_recomputed": 36000,
+    "caveat": "Arithmetic audit; no claim of physiological sources or independent population validation"
+  },
+  "portability_check": "从/tmp使用绝对路径启动最终版/main.py --stage verify成功；内部相对路径不变",
+  "package_verification": "交付清单由release.py生成；--zip先检查全部哈希并执行ZIP CRC核验，压缩包旁另附SHA256文件"
+}

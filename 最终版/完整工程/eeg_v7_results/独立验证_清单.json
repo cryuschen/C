@@ -1,0 +1,18 @@
+{
+  "status": "complete",
+  "cohort": 275,
+  "folds": "independent_blocks",
+  "not_interchangeable_with_371_trial_V7": true,
+  "semisynthetic_target": "preprocessed real EEG; may contain original artifacts",
+  "synthetic_target": "generated waveforms; no physiological validation",
+  "guardrails": {
+    "zero_NRMSE": 0.05,
+    "zero_contrast_normalized": 0.05
+  },
+  "source_hashes": {
+    "Q1/independent_validation.py": "a68469ed0eadfadaf56b9ef4c643545b7aeccb877c23e0568e5a18bbac94c5cd",
+    "EEG_P300_artifact_correction_v7.py": "e1dd837ab4793658542ca8c67f979c96c4cca08686ffe65936db6d7da7bc835b",
+    "q2/q2model/data.py": "4488dd05021738fd9be42086da6be586e11bcf86d6edd748cbe4f6f3e0bfe263"
+  },
+  "configuration": "/home/cryus/code-project/C/优化计划/本轮实验配置.json"
+}

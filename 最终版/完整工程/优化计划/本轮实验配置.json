@@ -1,0 +1,116 @@
+{
+  "commit": "7bfea5e28f0cb3f7b16a5a0b7a4d22a05f44119d",
+  "archive": "优化前基线.zip",
+  "archive_sha256": "cbfc15509aa3b8eae0abc5862a517f2d16861d7d634e5d53e7c12f7334ad6853",
+  "mode": "edit_existing_sources_and_existing_result_directories",
+  "seed": 20260926,
+  "q2": {
+    "fixed_features": [
+      "amplitude",
+      "mechanism",
+      "projection6",
+      "direction3"
+    ],
+    "permutations": 1999,
+    "circular": 199,
+    "bootstrap": 1000,
+    "primary": "BA; compare new features against amplitude; maxT across all primary features",
+    "contrast_factors": [
+      0,
+      0.25,
+      0.5,
+      1
+    ],
+    "adoption": "do not replace prior primary feature solely by highest outer score; report corrected evidence",
+    "completed_decision": "Retain original primary; projection6 and direction3 remain nonsignificant, contrast shrinkage worsened 3/4 datasets"
+  },
+  "q1": {
+    "strength": [
+      0,
+      0.05,
+      0.1,
+      0.15,
+      0.25
+    ],
+    "gates": [
+      0,
+      1,
+      2
+    ],
+    "folds": "five blocked folds; common Q2 independent preprocessing cohort",
+    "test_levels": [
+      0,
+      0.5,
+      1,
+      2
+    ],
+    "seeds": [
+      20260927,
+      20260928,
+      20260929
+    ],
+    "train_noise": "original injector",
+    "test_noise": [
+      "asymmetric_burst",
+      "direction_step"
+    ],
+    "datasets": [
+      "semisynthetic_real_background",
+      "fully_synthetic"
+    ],
+    "zero_background_constraints": {
+      "NRMSE": 0.05,
+      "contrast_normalized": 0.05
+    },
+    "inner_split": "last available training block; original candidate selection inside inner training"
+  },
+  "q3": {
+    "gaps": [
+      0.05,
+      0.1,
+      0.15
+    ],
+    "profiles_tau_m": [
+      0.25,
+      0.5,
+      1,
+      2,
+      4,
+      8
+    ],
+    "recovery_tau_m": [
+      0.5,
+      1,
+      2
+    ],
+    "noise": [
+      0,
+      0.5,
+      1
+    ],
+    "seeds": [
+      31,
+      47,
+      83
+    ],
+    "primary": "stimulus N2 versus N3 retrieval MSE",
+    "decision": "single factor low evidence plus explicit target matching simulation",
+    "profile_other_params": {
+      "tau_p": [
+        0.1,
+        0.3,
+        0.6
+      ],
+      "duration": [
+        0.1,
+        0.2,
+        0.4
+      ],
+      "direction_penalty": [
+        1,
+        10
+      ]
+    },
+    "recovery_design": "40 A2 event times, tau grid .25,.5,1,2,4,8; tau_p .1,.3,.6; target duration known .2; AR(1) noise .95"
+  }
+}

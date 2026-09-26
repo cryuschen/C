@@ -1,0 +1,75 @@
+12:18:19 A1: V2所有外层模型重建；主队列 65；事件与窗口审计完成
+12:18:22 A2: V2所有外层模型重建；主队列 68；事件与窗口审计完成
+12:18:23 B1: V2所有外层模型重建；主队列 64；事件与窗口审计完成
+12:18:26 B2: V2所有外层模型重建；主队列 71；事件与窗口审计完成
+12:18:26 基准: 正确 0.974，错误 0.001，未越界 0.025（仅仿真）
+12:18:26 短保持: 正确 0.332，错误 0.141，未越界 0.528（仅仿真）
+12:18:26 关闭提取: 正确 0.215，错误 0.231，未越界 0.554（仅仿真）
+12:18:27 高噪声: 正确 0.774，错误 0.213，未越界 0.013（仅仿真）
+12:18:27 低证据增益: 正确 0.307，错误 0.156，未越界 0.536（仅仿真）
+12:18:27 短仿真截止: 正确 0.830，错误 0.001，未越界 0.169（仅仿真）
+Q3 new fits A1 block 1
+Q3 new fits A1 block 2
+Q3 new fits A1 block 3
+Q3 new fits A1 block 4
+Q3 new fits A1 block 5
+Q3 new fits A2 block 1
+Q3 new fits A2 block 2
+Q3 new fits A2 block 3
+Q3 new fits A2 block 4
+Q3 new fits A2 block 5
+Q3 new fits B1 block 1
+Q3 new fits B1 block 2
+Q3 new fits B1 block 3
+Q3 new fits B1 block 4
+Q3 new fits B1 block 5
+Q3 new fits B2 block 1
+Q3 new fits B2 block 2
+Q3 new fits B2 block 3
+Q3 new fits B2 block 4
+Q3 new fits B2 block 5
+Q3 recovery truth tau 0.5 seed 31
+Q3 recovery truth tau 0.5 seed 47
+Q3 recovery truth tau 0.5 seed 83
+Q3 recovery truth tau 1.0 seed 31
+Q3 recovery truth tau 1.0 seed 47
+Q3 recovery truth tau 1.0 seed 83
+Q3 recovery truth tau 2.0 seed 31
+Q3 recovery truth tau 2.0 seed 47
+Q3 recovery truth tau 2.0 seed 83
+{
+  "status": "passed",
+  "n_real_events": 400,
+  "n_main_EEG_trials": 268,
+  "n_recomputed_metric_rows": 31356,
+  "max_relative_MSE_error": 3.173440452016425e-16,
+  "n_decision_simulations": 36000,
+  "max_V2_prediction_reconstruction_difference": 0.0,
+  "n_new_scenarios": 6,
+  "source_and_reference_hashes_match": true,
+  "frozen_reference_files_unchanged": true,
+  "neural_parameters_refitted": false,
+  "prior_behavior_permutations_rerun": false,
+  "time_step_absolute_rate_difference": {
+    "correct_rate": 0.0034166666666667345,
+    "error_rate": 0.0003333333333332999,
+    "unresolved_rate": 0.00375
+  },
+  "checks": [
+    "real correctness and timeout stay unknown",
+    "proxy is not observed click",
+    "same V2 observations/trials; frozen prediction reconstruction",
+    "outer training excludes held block",
+    "saved waveform MSE independently recomputed",
+    "censoring is separate from decision time",
+    "simulated correctness derived only from simulated truth",
+    "CDFs and outcome totals reconcile",
+    "window sensitivity points recomputed"
+  ],
+  "caveats": [
+    "absence of observed no-response cases limits empirical validation",
+    "marker deletion is synthetic software stress only",
+    "numeric audit does not replace visual QA"
+  ]
+}
+12:19:19 V3 计算、报告与数值审计完成

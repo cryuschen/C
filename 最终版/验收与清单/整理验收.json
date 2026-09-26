@@ -1,0 +1,47 @@
+{
+  "status": "passed",
+  "date": "2026-09-26",
+  "current_q3_source": "完整工程/q3",
+  "current_q3_results": "完整工程/q3_result",
+  "necessary_frozen_reference_files": 18,
+  "removed_legacy_directories": [
+    "q3_v3",
+    "q3_result_v2",
+    "q3_result_v3"
+  ],
+  "q3_full_pipeline_executed": true,
+  "all_current_source_and_input_hashes_match": true,
+  "tests": {
+    "Q1": 8,
+    "Q2": 22,
+    "Q3": 28
+  },
+  "tests_total": 58,
+  "test_failures": 0,
+  "test_count_change": "67-12 removed obsolete legacy tests+3 new reference tests=58; six applicable fitter tests retained",
+  "numerical_and_png_comparison": {
+    "status": "passed",
+    "npz_files": 13,
+    "npz_arrays": 213,
+    "csv_files": 24,
+    "json_numeric_files": 3,
+    "png_files": 6,
+    "max_absolute_array_difference": 0.0,
+    "new_model_fit_rerun": true,
+    "raw_mat_unchanged": 4,
+    "legacy_directories_absent": true
+  },
+  "numeric_audit": {
+    "status": "passed",
+    "q2_baseline_scores_unchanged": true,
+    "q1_saved_recovery_cases_recomputed": 64,
+    "q1_all_training_guardrails_verified": true,
+    "q3_new_fit_rows_recomputed": 1608,
+    "q3_max_relative_MSE_error": 2.496653084554123e-16,
+    "q3_matching_simulations_recomputed": 36000,
+    "caveat": "Arithmetic audit; no claim of physiological sources or independent population validation"
+  },
+  "historical_organization_record": "首次整理验收.json",
+  "q3_path_mapping": "Q3最终路径对照.csv",
+  "current_file_inventory": "最终文件清单.csv"
+}

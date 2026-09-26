@@ -1,0 +1,13 @@
+{
+  "status": "complete",
+  "identity": "new_refits_and_conditional_recovery",
+  "source_hashes": {
+    "q3/optimization.py": "f2d68ee1dbaf5c2ea2d2d40e11a20ec4e44c3a3c6137941f816d176ac2c99cdc",
+    "q3/model.py": "d14971547a96a5f5bad0df371cf9ee7fe20ce954cbfa65fd562f9f8911a9d26e",
+    "q3/fit.py": "fe76b6bf4b96f878009db4c2fcaa721e75512d72144458de5a30c445ee7f66d6",
+    "q3/decision.py": "6cc27fde6a46859351409debe2e3c4afb71bafad4fa472828c5c45b1869bad5c"
+  },
+  "original_V2_results_changed": false,
+  "real_correctness_available": false,
+  "configuration": "优化计划/本轮实验配置.json"
+}

@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "npz_files": 13,
+  "npz_arrays": 213,
+  "csv_files": 24,
+  "json_numeric_files": 3,
+  "png_files": 6,
+  "max_absolute_array_difference": 0.0,
+  "new_model_fit_rerun": true,
+  "raw_mat_unchanged": 4,
+  "legacy_directories_absent": true
+}

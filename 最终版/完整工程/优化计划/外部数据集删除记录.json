@@ -1,0 +1,34 @@
+[
+  {
+    "directory": "v1.0.1",
+    "file_count": 1969,
+    "bytes": 505889476,
+    "readme_header": [
+      "# P300 BCI EEG dataset (Chailloux Peguero et al. 2020)",
+      "",
+      "## Overview",
+      "",
+      "A P300 brain-computer interface dataset comprising EEG recordings from 19 healthy participants across 3 sessions each. The study investigates how visual stimulation conditions (standard flash vs. cartoon face stimuli) affect P300-BCI performance using an 8-channel montage sampled at 256 Hz. Data were collected using a P300 paradigm with 5 grid sizes (4-9 symbols) and include target and non-target event classifications.",
+      "",
+      "## Dataset Summary",
+      ""
+    ],
+    "reason": "用户明确要求删除外部数据集"
+  },
+  {
+    "directory": "v1.0.2",
+    "file_count": 351,
+    "bytes": 259467946,
+    "readme_header": [
+      "[![DOI](https://img.shields.io/badge/DOI-10.82901%2Fnemar.nm000188-blue)](https://doi.org/10.82901/nemar.nm000188)",
+      "",
+      "# BNCI 2014-009 P300 dataset",
+      "",
+      "BNCI 2014-009 P300 dataset.",
+      "",
+      "## Dataset Overview",
+      ""
+    ],
+    "reason": "用户明确要求删除外部数据集"
+  }
+]

@@ -1,0 +1,15 @@
+Running: q3_v3/run.py
+Traceback (most recent call last):
+  File "/home/cryus/code-project/C/run_optimization.py", line 117, in <module>
+  File "/home/cryus/code-project/C/run_optimization.py", line 111, in main
+    execute(['EEG_P300_artifact_correction_v7.py','--independent'],'eeg_v7_results/独立验证_运行日志.txt');q1_replay()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cryus/code-project/C/run_optimization.py", line 15, in execute
+    subprocess.run([sys.executable,'-B',*map(str,args)],cwd=ROOT,env=env,stdout=f,stderr=subprocess.STDOUT,check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/home/cryus/code-project/C/.venv/bin/python', '-B', 'q3_v3/run.py']' returned non-zero exit status 1.
+
+恢复记录：上述README来源哈希失败已通过单独记录文档更新解决；数值源码当时未改变。随后原V3审计和完整优化均通过，见q3_result_v3/优化前复核日志.txt及优化_运行日志.txt。

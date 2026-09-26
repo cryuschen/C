@@ -1,0 +1,5 @@
+工程目录：/home/cryus/code-project/C/最终版/完整工程
+解释器：/home/cryus/code-project/C/.venv/bin/python
+阶段：q3
+Running: q3/main.py
+阶段完成。若更新了输出，可运行 release.py --write-manifest 更新交付文件清单。

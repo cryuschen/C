@@ -1,0 +1,2 @@
+Running: EEG_P300_artifact_correction_v7.py --no-plots --output /tmp/c-q1-replay-e8kck8bk
+Original V7 numerical replay verified: 40 37 0.0
