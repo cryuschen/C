@@ -19,9 +19,11 @@
 \usepackage{amsmath,amsfonts,amsthm} % 数学公式
 \numberwithin{figure}{section}       % 图按章节编号，如图 4.1
 \usepackage{cite}           % 文献引用
+\newcommand{\upcite}[1]{\textsuperscript{\cite{#1}}} % 顺序编码制上角标引用
 \usepackage{bm}             % 数学矢量粗体
 \usepackage{mathrsfs}
 \usepackage{caption}
+\captionsetup{labelsep=space} % 图表编号与题名之间仅空一格，不使用冒号
 \usepackage{float}  % 引入强制定位宏包
 
 \usepackage{times}          % 英文与数字默认采用 Times New Roman 字体
@@ -83,14 +85,29 @@
     }
 }
 
-\cfoot{第 \thepage 页(共\pageref{LastPage}页)}
+% 目录按参考版式连续排布：各级标题之间不留额外空行，一级标题亦使用点线连接页码
+\setcounter{tocdepth}{3}
+\makeatletter
+\renewcommand*\l@section{\@dottedtocline{1}{0em}{2.5em}}
+\renewcommand*\l@subsection{\@dottedtocline{2}{2em}{2em}}
+\renewcommand*\l@subsubsection{\@dottedtocline{3}{4em}{3em}}
+\makeatother
+
+\cfoot{\thepage}
+\fancypagestyle{plain}{%
+    \fancyhf{}%
+    \cfoot{\thepage}%
+    \renewcommand{\headrulewidth}{0pt}%
+}
 
 \begin{document}
 \thispagestyle{empty} 
 \includepdf[pages=-]{华为杯封面.pdf}
 \newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
 
-
+\renewcommand{\headrulewidth}{0pt} % 正文及附录不显示页眉横线
 %% -----------------------------------------------------------------------------
 %% 模块 1：首页摘要对应段落（可直接合入 Abstract）
 %% -----------------------------------------------------------------------------
@@ -98,66 +115,59 @@
     {\zihao{-3} \heiti \textbf{摘\quad 要}}
 \end{center}
 \vspace{-0.2cm}
-\hspace*{2\ccwd}大脑活动记录技术中，非侵入式脑电图（EEG）在脑机接口与精神疾病临床诊断中展现出重大应用前景。针对前额叶电极（Fz、F3、F4）极易受高幅眼动（EOG）等生理杂音干扰，且常规滤波极易破坏反映视物形状微弱神经特征的核心难题，本文围绕视觉认知两阶段加工机制，构建了集特征保护型残差自适应去噪、微观--介观--宏观跨尺度脑电计算模型以及多脑区协同认知网络于一体的完整理论与算法体系。
+\hspace*{2\ccwd}脑电图具有无创、便捷和时间分辨率高等特点，但视觉任务中的前额脑电容易受到眼动、眨眼及运动伪影干扰，刺激信息如何经神经群体活动形成头皮电位亦难以直接观测。本文基于两名受试者在两类视觉任务下的四组 Fz、F3、F4 记录，围绕有效视觉响应提取、刺激响应机理解释和视觉认知行为刻画三个问题，建立“特征保护型伪影校正--跨尺度神经群体正向建模--视觉记忆认知决策”的递进框架，并以时间块留出、半合成扰动、结构消融和数值审计检验模型。
 
-\textbf{针对问题一}，针对前额通道信噪比极低且设备自带滤波严重破坏视物特征的痛点，设计了\textbf{特征保护型残差双分量自适应校正与三次 B 样条拟合模型}。首先，通过 60 Hz 陷波与 0.1--30 Hz 零相位四阶双向带通实现保相滤波，结合硬件截幅、极差与物理跃变等多维工程准则进行坏试次客观筛查；其次，采用五折分层交叉验证框架，从同向低伪影试次中构建中位数基底模板并分离单试次残差，解耦提取垂直瞬目与水平扫视正交分量；引入基于稳健中位数绝对偏差（MAD）的软门控激活机制与带边界约束的岭回归模型估计耦合系数，并创新性提出\textbf{“训练均值保护（Training Mean Protection）”机制}，在滤除试次间剧烈波动的同时严格约束平均诱发波形的系统性偏离；最后，采用内部结点间隔 50 ms 的三次 B 样条平滑拟合 250--500 ms 认知窗内的正向诱发电位（P300）。实测数据表明：相对预处理基线，本模型使代理 MAE 点估计下降 \textbf{5.4\%--10.0\%}（受试者 A 项目一降幅达 \textbf{10.0\% [4.9\%, 13.8\%]}）；信噪比代理量平均提升 \textbf{0.03--0.48 dB}；视物形状左右差分幅度保留比达到 \textbf{0.813--0.952}，差分波形相关性均值高于 \textbf{0.99}；在半合成人工伪影注入闭环验证中，本模型在强污染下将归一化 RMSE 显著降低 \textbf{11.5\%}，兼具优异的去噪能力与高度的特征保真性。
+\textbf{针对问题一，}建立特征保护型残差双分量自适应校正与三次 B 样条拟合模型。首先采用 60~Hz 陷波、0.1--30~Hz 零相位带通和固定工程准则筛除异常试次；随后在五折留出框架内构造同方向中位数模板，从单试次残差中提取垂直瞬目和水平扫视候选分量，并利用 MAD 软门控、带边界岭回归及训练均值保护机制限制有效响应的过度扣除；最后对条件 ERP 进行三次 B 样条拟合。四组记录的代理 MAE 降低 $5.4\%$--$10.0\%$，左右差异幅度保留率为 $0.813$--$0.952$，逐通道差分波形相关系数均值为 $0.992$--$0.998$；在 2 倍半合成污染下，归一化 RMSE 降低 $9.9\%$--$11.7\%$。结果表明，该方法在当前数据上能够抑制较强附加伪影，同时较好保留条件平均响应的主要形态。
 
-\textbf{针对问题二}，针对视觉刺激如何跨尺度传导至头皮电极的机理阐释难题，构建了\textbf{图像驱动的三级兴奋--抑制（E/I）神经元群体计算模型}。首先，基于 COSFIRE 空间边缘组合思想提取左右三角形的几何轮廓特征，建立对偶镜像偏好输入；其次，采用 Wilson--Cowan 型非线性动力学方程刻画“LGN中继 $\to$ 早期视皮层 $\to$ 形状整合 $\to$ 前额响应”的级联演化，并以突触等效电流偶极子结合岭正则化优化求解前额头皮（Fz/F3/F4）的有效观测矩阵 $\hat{\mathbf{L}}$；进而通过固定参数消融与重拟合检验，定量揭示了左右三角产生的脑电波形差异本质上源于几何轮廓非对称性在皮层网络中的非线性传导以及跨半球投射偏侧化。最后，构建融合时域统计、峰潜伏期、偏侧化指数（LI）、机制模板投影系数及残差 RMS 的 \textbf{23 维机制增强特征向量}。在严格的五时间块独立留出测试中，方向差分指标 $S_\Delta$ 在两组数据中显著优于零差基线（受试者 B2 达 0.2562），跨受试者迁移判别平衡准确率最高达 \textbf{62.31\%}（AUC 为 \textbf{0.5807}），为空间视觉线索的神经机制解释与脑电特征表征提供了科学自洽的计算模型支撑。
+\textbf{针对问题二，}构建“形状编码--LGN 中继--三级兴奋--抑制神经群--突触等效源--头皮观测”的正向计算模型。模型以定向边缘及其空间组合编码左右三角轮廓，利用 Wilson--Cowan 动力学描述视觉信息的逐级传递，并在训练时间块内估计条件共享的有效观测矩阵；进一步通过形状选择性、复发连接和观测侧化消融检验结构贡献，同时构造包含时域、峰值、侧化和机制投影信息的 23 维特征。留出结果中，A1、B2 的差异预测增益 $S_\Delta$ 分别为 $0.0581$ 和 $0.2562$；单试次特征的最高平衡准确率为 $0.5161$，其 $95\%$ 块重采样区间为 $[0.4846,0.5481]$。这说明所建模型能够给出左右刺激差异的可计算形成路径，并在部分记录上获得正向预测增益，但三通道条件下的稳定方向判别能力仍有待提高。
 
-\vspace{0.5cm}
-\thispagestyle{empty} 
+\textbf{针对问题三，}先对视觉提示、目标和点击标记进行事件审计，按照应答前约 $100~\mathrm{ms}$ 构造变长认知窗口；继而建立由视觉输入、提示保持、目标触发提取、认知整合和头皮观测组成的功能性状态模型，并以有界随机证据累积统一表示正确、错误和未决三类结局。相对普通慢趋势模型，A1、A2、B1 的目标后留出增益点估计分别为 $0.0244$、$0.0022$ 和 $0.0034$，B2 为 $-0.0148$，四组区间均跨越零点。在每种场景 6000 条轨迹的机制仿真中，基准设置得到 $97.42\%$ 正确、$0.10\%$ 错误和 $2.48\%$ 未决；高噪声使错误比例升至 $21.28\%$，短保持、关闭提取或低证据增益使未决比例升至 $52.80\%$--$55.40\%$。上述比例仅用于验证模型机制，不作为受试者实测正确率；28 项自动测试及时间步长减半检验表明，三类比例最大变化仅为 $0.00375$。
+
+本文的主要创新在于将训练均值保护、左右条件共享的跨尺度正向模型和三结局证据累积机制统一到同一脑电分析框架中，并将机理解释、波形预测和行为仿真分层验证。所建模型能够为低通道视觉脑电的离线处理与功能性解释提供参考，也可为脑机接口特征设计和精神性疾病脑电计算研究提供可扩展的建模思路。
+
+\noindent\textbf{关键词：}脑电信号；伪影校正；神经群体动力学；视觉认知；证据累积
+
+\vspace{0.3cm}
 \newpage
 
 \begingroup
-  \pagestyle{empty}                   % 隐藏目录第二页（及后续页）的页码
-  \let\oldthispagestyle\thispagestyle % 备份原命令
-  \renewcommand{\thispagestyle}[1]{}  % 屏蔽目录内部强制设置的 plain 样式
-  \tableofcontents                    % 生成目录
+\setlength{\parskip}{0pt}
+\tableofcontents
 \endgroup
-\thispagestyle{empty} 
 \newpage
 
 
-
-\pagenumbering{arabic} % 设置页码格式为阿拉伯数字（会自动重置为1）
-\setcounter{page}{1}   % 明确设置起始页码为1（双重保险）
 
 
 %% -----------------------------------------------------------------------------
 %% 模块 2：问题重述中关于问题一的部分
 %% -----------------------------------------------------------------------------
 \section{问题重述}
-\subsection{研究背景}
-大脑是自然界中最复杂的器官之一，其活动可以通过多种神经影像方法进行记录和观测。在这些方法中，皮层脑电图（ECoG）和脑电图（EEG）分别代表了侵入性和非侵入性技术的典型。尽管侵入性技术具有信号分辨率高的优势，但其伴随的手术风险以及记录信号随时间逐渐退化的缺陷，限制了其广泛应用。相比之下，非侵入性脑电图技术因其安全性高、操作便捷等特点，在探索人类大脑活动方面展现出更为广阔的应用前景。
+\subsection{问题背景}
+大脑活动的记录可分为侵入式和非侵入式。皮层脑电图虽能获取质量较高的神经电活动信息，但需要植入电极；脑电图（EEG）则直接在头皮表面采集信号，具有安全、便捷和时间分辨率高等特点。国内研究表明，脑电已由传统的临床监测逐步延伸至脑机接口编解码和大规模表征学习，可在电生理活动、计算模型与行为观测之间建立联系\upcite{ding2024bci,qiu2023bci,he2025eegmodels}。
 
-脑电图的应用范围涵盖从基础神经科学研究到临床医学的多个领域。脑电图驱动的计算模型作为连接基础神经科学研究与神经临床应用的核心桥梁，能够为科研人员与临床工作者提供可在虚拟环境中验证假说的高效平台，精准预测现实中难以直接实施的复杂实验与神经交互结果，其目标是生成可与真实实验数据进行对比的变量时间序列。当前，精神和神经系统疾病影响着越来越多的人群，带来了巨大的经济和人道主义负担。影响患者诊疗的主要障碍之一，是缺乏个体化的诊断、预后评估和治疗方案；另一个障碍则在于对精神性疾病机制——包括治疗方法起效的具体机制——普遍认知不足。根据个体可用数据调整模型参数，脑电图计算模型可实现个性化适配，为精准医疗提供可能。例如，深部脑刺激（DBS）是治疗晚期帕金森病的高效手段，但目前尚不完全清楚这种刺激如何精确抑制震颤等运动症状，而脑电图计算模型有望为此提供解释。
+脑电图是大量神经元群体活动经脑组织、颅骨和头皮传导后的叠加结果。事件相关电位通常借助事件对齐、滤波和多次平均提取稳定成分，记录与分析仍需严格控制伪影及参数选择\upcite{picton2000guidelines,han2020eeg}。眼动、眨眼伪影幅值较大，并与部分低频脑电和 P300 活动在时频域重叠，简单滤除容易损伤有效响应；已有研究分别利用二阶盲辨识和自适应模态分解改善脑电预处理效果\upcite{yang2015sobi,zhang2026ssmd}。因此，脑电处理必须兼顾伪影抑制与刺激特征保留。
 
-在脑电图的节律特征研究中，运动皮层产生的$\beta$节律在自主运动期间会受到抑制，这一现象称为运动相关$\beta$衰减（MRBD）；运动结束后，$\beta$振荡幅度会出现短暂回升，即运动后$\beta$反弹（PMBR），两者统称为$\beta$波段调制。研究表明，在精神分裂症患者中，PMBR显著减弱，且$\beta$反弹的幅度与患者当前症状的严重程度显著相关，凸显了其作为疾病生物标志物的临床价值。此外，阿尔茨海默症患者的脑电图计算模型分析显示，源于海马体的信号逐渐变得迟缓且微弱，这可能是该病的早期症状，为早期干预提供了可能。未来，理论上也可通过脑电图分析辅助精神分裂症、躁狂抑郁症等精神性疾病的诊断。
+视觉刺激经视网膜进入外侧膝状体核（LGN），再投射到大脑皮层，并由神经群体协同活动形成头皮电位。头皮电极记录的是多个内部源经容积传导后的混合结果，有限通道下的逆问题并无唯一解；非侵入式脑机接口研究同样强调，应根据任务范式和采集条件选择适当的编解码层次\upcite{qiu2023bci,ding2024bci}。因此，既要解释刺激响应的形成过程，也不能把数学拟合等同于真实脑源定位。
 
-在脑机接口（BCI）领域，最具挑战性的课题之一是探索记录到的脑活动脑电图与人体模型、生物力学机制及认知加工之间的内在关联。脑电图通过检测神经元树突突触兴奋过程中电流流动所引发的脑电活动来工作，它不仅反映大脑皮层的电活动，也包含深部脑结构发出的信息。脑电图驱动的计算模型既可为BCI系统的脑活动解码与交互控制提供理论支撑与算法框架，也能在神经机制探索、神经性疾病临床研究中承担虚拟实验平台的功能，通过仿真模拟完成实验方案预演与科学假设的定量检验，大幅降低真实实验的试错成本与伦理风险。
+视觉认知包含从感知刺激、调用记忆到形成判断的连续过程。人类神经元记录表明，海马持续活动与前额叶认知控制可通过跨脑区节律耦合共同参与工作记忆保持\upcite{daume2024control}。本题的应答仅是认知过程的外部结果，可能错误或缺失，故模型还应统一表示不同应答状态。
 
-从电生理学和网络层面研究大脑活动机理，通常采用不同空间尺度的脑电图信号计算模型。微观尺度模型以霍奇金-赫胥黎模型为代表，描述单个神经元或微电路的电活动特性；介观尺度模型如Wilson-Cowan神经质量模型，在神经集群或神经场层面建立平均场方程，描述兴奋性神经元群与抑制性神经元群之间的耦合关系；宏观尺度模型如藏本（Kuramoto）模型，通过引入序参数来描述大量弱耦合振子的同步行为，考虑脑网络中不同脑区之间的长程耦合作用及信号传输时间延迟。虽然对单神经元动作电位计算特性的研究已取得显著进展，但运动和感知通常源于大脑系统中皮层、丘脑和脊髓神经元群的集体行为，迄今为止尚无广泛接受的神经元群体集体活动的数学理论。我们的目标是通过建立脑电图计算模型明确脑电图实证数据与感知行为之间的联系。
-
-认知是大脑的重要功能，大脑前额叶是主要的认知功能区，海马结构是主要的记忆功能区。视觉刺激从视网膜传入，经外侧膝状体核（LGN）投射至大脑皮层，最终在头皮被脑电图观测到。然而，观测目标与观测脑电图数据之间的联系难以确定：一方面，脑电图数据处理与解读存在诸多技术难题，观测信号中包含大量干扰（如眼动伪迹），而与视觉刺激相关联的信号较弱；另一方面，脑电图在头皮上采集信号，如何将二维头皮空间映射到三维大脑空间仍是未解难题。此外，现有的宏观模型如藏本模型虽能反映大量神经元同步后的脑电信号，但未考虑神经元的空间分布，而不同视物在大脑皮层产生的视觉刺激响应神经元分布存在差异，进而导致观测到的脑电图信号也有差异。如何将微观的神经元模型与宏观观测脑电图结合形成脑神经计算模型，是一个具有挑战性的课题。
-
-综上所述，建立脑电图计算模型，将微观神经元模型与宏观观测脑电图相结合，揭示视觉刺激与脑电信号之间的映射关系，对于推动脑机接口技术发展、实现精神性疾病的早期诊断具有重要的科学意义和应用价值。基于此，本文围绕服务于脑机接口与精神性疾病诊断的脑电图计算模型展开研究。
+据此，利用视觉任务的多通道脑电记录，建立刺激输入、神经群体活动与头皮观测之间的计算联系，并描述信息保持、辨认与应答过程，可为脑电波形机理解释及相关量化研究提供参考。
 
 \subsection{问题重述}
-基于上述背景，本论文针对"服务于脑机接口与精神性疾病诊断的脑电图计算模型"展开研究。该问题以脑电图（EEG）为研究对象，旨在通过建立脑电图计算模型，揭示视觉刺激与脑电信号之间的内在关联机制，为脑机接口系统的脑活动解码和精神性疾病的辅助诊断提供理论支撑与算法框架。具体而言，本题需要解决以下三个子问题：
+基于上述背景，题目给出两名受试者在两类视觉任务下的四组脑电记录。实验在Fz、F3和F4三个位置采集原始信号，同时记录视觉提示、目标应答和时间戳。围绕视觉响应的提取、形成机理的解释以及认知过程的刻画，需要解决以下三个问题：
 
-\noindent\textbf{问题1：脑电图信号预处理与视觉响应提取。}
+\noindent\textbf{问题1：脑电信号预处理与有效视觉响应提取}
 
-针对实验项目1（目标位置已知，等待目标出现）和实验项目2（目标位置未知，仅知道目标形状）两种实验范式下的脑电图数据，设计特定的降噪方法，在保留视物形状相关脑电图特征的前提下，有效去除运动、眨眼等伪影干扰；提取不同观测点位（F3、Fz、F4）的有效视觉响应，并拟合相应曲线。该问题的核心在于如何在去噪与信号特征保留之间取得平衡——现有的多种去干扰方法在去除伪影的同时也破坏了反映视物的脑电图特征，因此需要设计特定的降噪策略，避免直接使用题目中机器自带滤波器处理后的数据（通道4-6），而是基于原始数据（通道1-3）进行自主处理。
+针对目标位置已知的实验项目1和目标位置未知、仅给定目标形状的实验项目2，使用Fz、F3和F4三个原始通道设计预处理方法。在减弱运动、眨眼等伪影的同时，尽量保留与左右视觉刺激及其形状有关的特征；进而提取各观测点的有效视觉响应，并拟合相应波形。设备处理通道可能损伤视觉特征，故不能将其直接作为分析输入。
 
-\noindent\textbf{问题2：脑电图计算模型建立与视觉刺激区分机制解释。}
+\noindent\textbf{问题2：脑电信号形成机理与视觉刺激区分}
 
-建立描述从外侧膝状体核（LGN）到大脑皮层再到头皮观测的脑电图信号形成机理的计算模型；利用所建立的模型解释左右三角形视觉刺激产生脑电信号差异的形成机制；并给出能够有效区分左右三角形视觉刺激响应的特征表示。该问题需要结合神经生理学证据——神经生理学研究表明，人脸等物体的识别是通过检测特定空间方式排列的某些特征来实现的，颞下皮层神经元对满足"轮廓包裹双眼、双眼位于嘴部上方"结构的刺激才会产生强响应——从神经元群体活动的角度阐释视觉刺激的脑电响应差异，进而建立视觉刺激物形状与大脑皮层响应神经元分布之间的联系，以及脑电图观测与大脑皮层响应神经元之间的联系。
+根据视觉信息由LGN传入皮层并最终形成头皮电位的过程，建立脑电信号的计算模型，说明微观刺激特征、皮层神经群体响应与宏观观测之间的联系。结合物体识别依赖空间特征组合的神经生理学事实，解释左、右三角形刺激产生不同脑电响应的原因，并给出能够表征和区分两类刺激的特征。
 
-\noindent\textbf{问题3：认知模型建立与验证。}
+\noindent\textbf{问题3：视觉认知宏观模型的建立与验证}
 
-截取与视觉认知相关联的信号（该信号的终点可能是应答响应之前的大约100ms），借助问题二所建立的脑电信号形成机制，同时考虑信号可能同时来源于海马体和LGN等脑区，建立认知过程的宏观计算模型；并利用题目所提供的四组实验脑电图数据(VisualCogA\_Task-1.mat、VisualCogA\_Task-2.mat、VisualCogB\_Task-1.mat、VisualCogB\_Task-2.mat)验证该模型。需要注意的是，被试的应答行为不一定正确，也可能包括没有及时应答的情况，模型需对此进行合理处理。本题的实验数据采样率为256Hz，包含十个数据记录通道，涵盖原始数据、视觉提示、目标应答和时间戳等信息。
-
-本文针对上述三个子问题依次开展建模研究：首先对脑电图原始数据进行预处理和降噪，提取有效视觉响应并拟合曲线；其次建立脑电图计算模型，解释视觉刺激差异导致脑电信号差异的机理并提取区分特征；最后建立认知宏观模型并利用实验数据进行验证。通过上述研究，给出可行的解决方案与结论。
+从实验记录中截取与视觉认知有关的脑电片段，其终点可设在应答前约100 ms。以问题2中的信号形成机制为基础，考虑海马体的记忆作用和LGN的视觉输入，建立由视觉提示、信息保持、目标辨认到应答形成的宏观认知模型，并利用四组实验数据检验。对于错误应答、应答缺失或未及时应答的试次，应在模型和统计处理中分别作出说明。
 \newpage
 
 
@@ -168,71 +178,65 @@
 
 \subsection{问题一的分析}
 
-问题一的核心任务是从两个视觉认知项目的原始脑电中提取有效视觉响应，并分别拟合 Fz、F3、F4 三个观测点的响应曲线。分析既要减弱干扰，也要检查处理过程是否改变了左右视觉提示所对应的波形特征。
+本问题的核心任务是从两类视觉认知实验的原始脑电中提取有效响应，并分别拟合 Fz、F3、F4 三个观测点的响应曲线。本质上，这是一个强干扰背景下的弱信号提取问题：既要减弱眼动、眨眼和运动等伪影，又要保留左右三角形刺激所对应的波形差异。
 
-\noindent\textbf{难点一：视觉响应较弱，伪影与目标信号相互混合。}
+\noindent\textbf{难点一：额区视觉响应与多源生理伪影耦合。}
 
-前额区脑电同时包含视觉任务相关活动、眼动、眨眼、运动及缓慢漂移等成分。这些干扰可能出现在视觉提示后的同一时段，仅依据幅度或频率难以将其与有效响应分开。两个实验项目的任务条件不同，响应形态也可能不同，因此还需分别分析，避免用总体平均波形掩盖项目差异。
+三个电极均位于前额区，眼动和眨眼会在同一位置产生较强电位变化，运动伪影与缓慢漂移也可能落在视觉响应所在的时段内。仅依据幅值大小或某一频段进行滤波，难以将这些成分与有效响应完全分开。项目1中受试者已知目标位置，项目2中受试者只知道目标形状，两种任务下的准备状态和应答过程存在差异，若统一平均处理，容易掩盖项目间的真实变化。
 
-\noindent\textbf{针对难点一：建立以视觉提示事件为基准的分项目处理流程。}
+\noindent\textbf{针对难点一：采用分项目事件对齐与残差双分量自适应校正模型。}
 
-首先从原始 Fz、F3、F4 通道提取提示事件，对连续信号进行预处理，并通过固定的质量规则识别严重异常试次；然后在训练试次中估计响应参考和伪影校正参数，将确定的处理规则用于留出试次。处理后按项目、提示方向和通道计算事件相关平均波形，重点观察提示后 \(250\sim500\,\mathrm{ms}\) 的正向活动及三个电极之间的空间差异。
+首先由视觉提示通道确定事件起点，对 Fz、F3、F4 原始记录完成工频抑制、带通滤波和刺激前基线校正，并用固定规则剔除饱和、突跳等严重异常试次。随后分别在两个实验项目内估计响应参考和伪影校正参数，按提示方向形成事件相关平均波形。校正参数只由训练试次确定，再用于对应的留出试次，以减少同一试次同时参与参数估计和效果评价所造成的偏差。
 
-\noindent\textbf{难点二：降低波形波动与保留视觉特征需要同时评价。}
+\noindent\textbf{难点二：伪影抑制与视觉响应保真难以兼顾。}
 
-平滑或伪影校正可以使试次间波形更加接近，却也可能改变左右条件差异、正向峰值及其潜伏期。题目没有提供同步眼电或独立的无噪声脑电，设备处理后的 Decon 通道也不能充当干净真值。因此，单一误差指标不足以判断视觉信息是否得到保留。此外，三个电极均位于额区，不能仅凭这些记录认定观察到了中央--顶区的典型 P300。
+加强平滑或扩大校正幅度可以降低试次间波动，却也可能改变左右条件差异、正向峰值及其潜伏期。已有研究表明，P300 的波幅与潜伏期能够反映注意分配、刺激辨认及认知加工差异，但其有效解码依赖合理的预处理、时间窗和特征表示\upcite{lin2012p300,xia2024p300,feng2026mdd}。题目没有提供同步眼电或独立的无噪声脑电，设备处理后的通道又可能损伤视觉特征，不能作为绝对真值。因此，波形变得平稳并不等于有效信息得到保留，也不能仅凭三个额区电极认定观察到了中央--顶区的典型 P300。
 
-\noindent\textbf{针对难点二：联合评价去噪效果、条件差异与曲线拟合质量。}
+\noindent\textbf{针对难点二：采用多指标联合评价与三次 B 样条拟合。}
 
-在相同试次上比较处理前后的波形波动、刺激前基线、左右条件差异以及特征时窗内的峰值和面积，并用训练试次构造的参考及人工污染恢复实验检验校正方法。随后对各条件平均响应进行曲线拟合，报告拟合残差和峰值位置。由此分别回答干扰是否减弱、观测到的响应形态如何变化，以及现有数据能够在何种程度上支持视觉特征保留的判断。
+在相同试次上比较处理前后的基线波动、峰峰值和试次间离散程度，同时考察左右条件差异、特征时窗内的正向活动及 F3、F4 的空间差异。依据事件相关电位的记录与报告规范\upcite{picton2000guidelines}，本文预先固定分析窗和评价口径，避免观察平均波形后再选择电极或时间窗。再通过人工加入眨眼样、扫视样和运动样扰动，检查校正后波形对污染前记录的恢复程度。最后采用固定复杂度的样条曲线拟合各条件平均响应，以拟合残差、峰值位置和正面积共同描述有效视觉响应，避免用单一指标判断去噪优劣。
 
 \subsection{问题二的分析}
 
-问题二要求说明左右三角形视觉刺激如何经过视觉通路形成可观测的脑电差异，并给出区分两类刺激的特征表示。该问题同时涉及形状信息的编码、神经群体活动的形成和头皮电位的观测。
+本问题要求说明左右三角形刺激如何经视觉通路形成可观测的脑电差异，并给出区分两类刺激的特征表示。与问题一侧重信号处理不同，本问题需要把图像中的方向信息、皮层神经群体活动和头皮电位联系起来，属于由刺激到观测的跨尺度建模问题。
 
-\noindent\textbf{难点一：图像形状与头皮脑电处于不同层次，内部来源无法直接观测。}
+\noindent\textbf{难点一：刺激形状与头皮电位存在跨尺度映射障碍。}
 
-三角形的左右朝向属于图像空间结构，而 Fz、F3、F4 记录的是多个内部活动源叠加后的头皮电位。仅有三个额区通道时，即使模型能够拟合实测波形，也难以唯一确定每个内部状态对应的真实脑区。因此，需要构造各环节含义明确、能够生成预测波形的候选形成模型。
+三角形的左右朝向属于图像空间结构，Fz、F3、F4 记录的却是多个活动源经过体积传导后的叠加结果。有限通道下的反演具有非唯一性，即使模型能够拟合实测波形，也不能据此唯一确定每个内部状态所对应的真实脑区。因此，模型既要保留视觉通路的基本生理含义，又要能够从刺激出发生成可与实测数据比较的预测波形。
 
-\noindent\textbf{针对难点一：按视觉输入、中继、群体动力学和头皮观测建立模型链。}
+\noindent\textbf{针对难点一：构建形状编码--LGN 中继--Wilson--Cowan 神经群--头皮观测正向模型。}
 
-首先提取左右三角形的边缘及空间组合特征，形成具有方向差异的视觉输入；再设置 LGN 中继环节，将输入传递至具有形状选择性的皮层兴奋--抑制群体。由群体活动构造等效突触源，并通过同一观测映射生成三个额区通道的预测脑电。左右条件共享动力学和观测参数，使模型差异由刺激输入产生。最后比较留出试次的共同响应与左右差异波，并通过移除模型环节的实验检查各环节对预测的影响。
+首先提取左右三角形的边缘方向及空间组合关系，构造具有镜像差异的形状输入；再利用 LGN 环节完成视觉信息中继，将输入传递至具有形状选择性的兴奋--抑制神经群体。由群体活动形成等效突触源，并通过统一的头皮观测矩阵生成三个额区通道的预测脑电。左右条件共享动力学参数和观测参数，使两类波形的差异主要由刺激结构产生；同时设置去除形状编码、递归连接或侧化观测等对照模型，检查各环节的实际作用。
 
-\noindent\textbf{难点二：波形拟合能力与未知方向的单试次区分能力并不相同。}
+\noindent\textbf{难点二：平均波形拟合与单试次方向判别不等价。}
 
-模型可能较好地重现两类刺激共有的平均波形，却无法稳定预测它们之间较弱的差异。第一问的部分校正过程利用了已知提示方向；若直接将此类输出用于未知方向判别，就会使判别特征预先包含待预测的信息。相邻试次还可能受到共同的慢变化影响，普通随机划分难以充分检验时间稳定性。
+左右刺激的共同响应通常强于两者之间的差异，模型可能较好地重现平均波形，却无法稳定预测较弱的方向信息。问题一的部分处理利用了已知提示方向，若直接将这类输出用于未知方向判别，会使特征中预先含有待预测标签。此外，相邻试次可能共享缓慢漂移或实验状态，普通随机划分容易高估判别效果。
 
-\noindent\textbf{针对难点二：将形成机制检验与方向判别分别验证。}
+\noindent\textbf{针对难点二：采用正向模型留出检验与收缩协方差 LDA 独立判别。}
 
-从原始三通道记录重新构建独立时间块，在训练块内完成预处理参数估计、模型选择和特征标准化。分别提取时域幅度、峰值潜伏期、空间差异及机制模型投影特征，再对留出时间块进行未知方向预测。通过简单特征基线、块内置换和多特征比较检验判别结果，区分模型内部的形状响应、实测差异预测与单试次识别能力。
+形成模型主要比较共同响应、左右差异波和留出试次预测误差，用于判断所建模型能否解释信号的产生过程；方向判别则从原始三通道记录重新构造时间块，只在训练块内完成预处理参数估计、特征标准化和判别器训练。特征包括时域幅度、峰值潜伏期、额区空间差异及机制模板投影系数，并通过留出时间块和块内置换检验判别结果，从而避免把波形拟合能力与单试次识别能力混为一谈。
 
 \subsection{问题三的分析}
 
-问题三需要把视觉提示、目标出现和应答前的脑电活动联系起来，建立认知过程的宏观模型。相较于前两问，本问的观测时间更长，还需要处理应答错误或未及时应答的可能情形。
+本问题需要把视觉提示、目标出现和应答前的脑电活动联系起来，建立视觉认知过程的宏观模型。相较于前两问，分析时间由短时视觉响应扩展到提示保持、目标辨认和应答形成的连续过程，同时还要处理错误应答和未及时应答等不完整行为信息。
 
-\noindent\textbf{难点一：事件标记的含义及应答前分析窗口需要谨慎确定。}
+现有中文研究已从静息态节律特征、混合双线性连接特征和睡眠脑电深度表征等角度开展精神性疾病辅助识别\upcite{lai2019classification,jia2024depression,tao2023sleep}。这些结果说明，脑电特征可为精神性疾病诊断提供客观补充，但特征来源、记录范式和样本结构均会影响模型解释，因此本题仍需围绕给定视觉任务单独建立认知过程模型。
 
-提示、候选目标和点击标记并非都具有相同的确定性。项目二记录了独立点击，项目一的部分应答时刻只能由标记变化推定。若将应答后的活动纳入认知模型，可能混入动作相关信号；若将没有明确点击标记的试次直接判为超时，又会赋予数据中并不存在的行为标签。
+\noindent\textbf{难点一：事件语义异质导致认知窗口边界不确定。}
 
-\noindent\textbf{针对难点一：区分事件证据并制定统一的截窗规则。}
+项目2记录了独立点击，而项目1中的部分应答时刻只能由目标标记的变化推定，两类标记的证据强度不同。若分析窗口延伸到应答之后，容易混入运动相关活动；若把没有明确点击的试次一律视为超时，又会人为补充题目未给出的行为标签。除此之外，记录边界、下一次提示和异常波形也会限制单个试次可使用的时间范围。
 
-先核对四组记录中的提示、候选目标和应答标记，将独立点击、应答代理与应答不可观测的试次分别标识。有可用应答时，将脑电分析终点限制在应答前约 \(100\,\mathrm{ms}\)；无明确应答时，采用预先规定的有限观察窗，并检查记录边界和试次质量。长时间序列使用符合时间顺序的信号处理方式，减少未来观测对较早认知状态估计的影响。
+\noindent\textbf{针对难点一：设计事件审计与应答状态驱动的变长截窗算法。}
 
-\noindent\textbf{难点二：记忆和认知活动可能表现为缓慢变化，难与一般背景趋势区分。}
+首先核对四组记录中的视觉提示、候选目标和点击变化，将独立点击、应答代理和应答不可观测的试次分别标识。存在可用应答时，取应答前约 \(100\,\mathrm{ms}\) 作为分析终点；没有明确应答时，采用预先规定的有限观察窗，并同时检查记录边界、下一提示和试次质量。错误应答不预先剔除，缺失点击也不直接记为超时，使截窗规则与行为结论彼此分离。
 
-题目要求考虑海马体等潜在来源，但额区头皮脑电不能直接定位深部结构。提示后的缓慢活动也可能来自背景漂移、任务准备或其他过程。若模型只在训练数据中得到较好拟合，尚不足以说明记忆环节对实测脑电提供了额外解释。
+\noindent\textbf{难点二：认知状态不可直接观测且行为标签不完备。}
 
-\noindent\textbf{针对难点二：建立功能性认知状态，并与简单慢趋势模型比较。}
+题目要求考虑海马体和 LGN 等潜在来源，但三个额区电极不能直接定位深部结构。提示后的缓慢变化既可能与记忆保持有关，也可能来自背景漂移或任务准备。与此同时，现有记录没有给出完整的目标布局、正确目标映射和实验超时阈值，点击方向不能直接换算成答题正误，缺失点击也不能直接换算成真实超时。
 
-继承第二问的形状编码和视觉形成结构，分别描述提示保持、目标触发提取与认知整合过程，再将这些状态映射到头皮观测波形。以留出时间块上的预测误差为依据，比较含记忆状态的模型与普通慢趋势模型在目标前后各阶段的表现，并分析观察窗和参数变化对结论的影响。模型中的记忆变量表示功能过程，其生理来源仍需独立证据检验。
+\noindent\textbf{针对难点二：构建功能状态模型与有界随机证据累积模型。}
 
-\noindent\textbf{难点三：缺少可确认的真实正误与实验超时标签。}
-
-现有数据没有提供完整的逐试次目标布局、正确目标映射和实验规定的超时阈值。点击方向不能直接转换为答题正误，缺失点击也不能直接转换为实验超时。因此，真实脑电验证与正确、错误、未决行为的研究需要采用不同的评价口径。
-
-\noindent\textbf{针对难点三：用决策仿真分析模型行为，并与实测观测分开报告。}
-
-将认知状态作为决策过程的输入，在给定的模拟目标布局和观察期限下生成正确、错误及未决三类结局，考察记忆保持、证据增益和噪声变化对模拟结果的影响。真实数据用于检验脑电波形及可确认的点击时间；模拟结局用于说明模型能够产生何种行为，不将其作为实测正确率或真实超时率。
+继承问题二的形状编码、LGN 中继和头皮观测结构，增加提示保持、目标触发提取与认知整合状态，构成视觉--记忆--认知的宏观模型。模型先在留出时间块上比较预测波形，并与不含记忆状态的普通慢趋势模型进行对照，判断新增环节是否带来额外解释。随后将认知状态输入证据累积过程，在给定的模拟目标和观察期限下产生正确、错误及未决三类结局，用于研究参数变化对模型行为的影响；实测脑电与模拟行为分别报告，不把仿真结果写成受试者的真实正确率或超时率。
 
 
 %% -----------------------------------------------------------------------------
@@ -261,7 +265,7 @@
 \renewcommand{\arraystretch}{1.24}
 \setlength{\tabcolsep}{4pt}
 \begin{longtable}{@{}>{\centering\arraybackslash}p{0.22\textwidth}>{\centering\arraybackslash}p{0.60\textwidth}>{\centering\arraybackslash}p{0.12\textwidth}@{}}
-\caption{本文的符号说明}\label{tab:all_symbols}\\
+\caption{符号说明}\label{tab:all_symbols}\\
 \toprule
 符号 & 说明 & 单位 \\
 \midrule
@@ -291,6 +295,15 @@
 \end{longtable}
 \endgroup
 
+\subsection{技术路线图}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.90\textwidth]{三问总体技术路线图（优化）.drawio.pdf}
+\caption{三问总体技术路线图}
+\label{fig:overall_technical_route}
+\end{figure}
+
 
 %% -----------------------------------------------------------------------------
 %% 模块 5：模型的建立与求解（核心篇幅）
@@ -315,7 +328,7 @@
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.94\textwidth]{q1_waveform.png}
-    \caption{同一试次三通道原始记录、设备处理与本文处理结果对比}
+    \caption{三通道脑电预处理结果图}
     \label{fig:q1_preprocess_waveform}
 \end{figure}
 
@@ -352,7 +365,7 @@
 
 \begin{table}[H]
     \centering
-    \caption{四组实验数据的事件与有效试次对账}
+    \caption{实验数据有效试次统计表}
     \label{tab:q1_trial_audit}
     \begin{tabular}{lccccc}
         \toprule
@@ -431,13 +444,13 @@
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.86\textwidth]{q1_metrics.png}
-    \caption{四组数据的去噪代理指标与左右条件差异保留结果}
+    \caption{去噪性能与条件差异保留图}
     \label{fig:q1_metric_dashboard}
 \end{figure}
 
 \begin{table}[H]
     \centering
-    \caption{问题一核心评价结果及 $95\%$ Bootstrap 区间}
+    \caption{问题一核心评价指标表}
     \label{tab:q1_core_metrics}
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{lcccc}
@@ -570,7 +583,7 @@
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{q1_spline_a1.png}
-    \caption{受试者 A 项目一左右条件 ERP 的三次 B 样条拟合与残差}
+    \caption{A1 左右条件 ERP 样条拟合图}
     \label{fig:q1_spline_example}
 \end{figure}
 
@@ -582,7 +595,7 @@
     \centering
     \includegraphics[width=0.94\textwidth]{q1_erp_a.png}\\[-0.3em]
     \includegraphics[width=0.94\textwidth]{q1_erp_b.png}
-    \caption{受试者 A、B 在两个项目中的左右提示三通道 ERP 对比}
+    \caption{四组记录的三通道 ERP 图}
     \label{fig:q1_erp_all}
 \end{figure}
 
@@ -591,7 +604,7 @@
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.92\textwidth]{q1_recovery.png}
-    \caption{四组数据在不同伪影强度下的半合成恢复检验}
+    \caption{半合成伪影恢复结果图}
     \label{fig:q1_semisynthetic}
 \end{figure}
 
@@ -618,7 +631,7 @@
 
 \begin{table}[H]
 \centering
-\caption{问题二四组记录的数据审计与留出划分}
+\caption{问题二数据审计与留出划分表}
 \label{tab:q2_trial_audit}
 \begin{tabular}{ccccc}
 \toprule
@@ -644,8 +657,8 @@ B2 & B & 项目二 & 69 & 5 \\
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.98\textwidth]{Q2_图1_机制与形状编码.pdf}
-\caption{左右三角形状编码及脑电正向计算模型的总体路径}
+\includegraphics[width=0.98\textwidth]{Q2_图1_机制与形状编码2.png}
+\caption{视觉刺激编码与脑电正向模型图}
 \label{fig:q2_model_pipeline}
 \end{figure}
 
@@ -653,7 +666,7 @@ B2 & B & 项目二 & 69 & 5 \\
 
 \paragraph{（1）视觉形状的空间边缘组合编码}
 
-左、右三角具有镜像对称的轮廓结构。若只使用全图像素差，会使输入对位置和平移过于敏感，因此本文借鉴 COSFIRE 感受野的“定向边缘加空间组合”思想\cite{azzopardi2014ventral}。设标准化刺激图像为 $X_d(x,y)$，$d\in\{L,R\}$，$r_{\theta}(p;X_d)$ 表示在位置 $p$、方向 $\theta$ 上的边缘响应。对形状偏好群 $j\in\{L,R,0\}$，在 $K_j$ 个模板点上进行局部容差最大化，再以几何平均聚合：
+左、右三角具有镜像对称的轮廓结构。若只使用全图像素差，会使输入对位置和平移过于敏感，因此本文采用“定向边缘加空间组合”的形状编码方法。设标准化刺激图像为 $X_d(x,y)$，$d\in\{L,R\}$，$r_{\theta}(p;X_d)$ 表示在位置 $p$、方向 $\theta$ 上的边缘响应。对形状偏好群 $j\in\{L,R,0\}$，在 $K_j$ 个模板点上进行局部容差最大化，再以几何平均聚合：
 \begin{equation}
 f_j(X_d)=
 \exp\!\left[
@@ -677,7 +690,7 @@ r_{\theta_{jk}}(p_{jk}+\delta;X_d)+\varepsilon
 \qquad T_s=\frac{52}{256}\ \mathrm{s}.
 \label{eq:q2_lgn}
 \end{equation}
-为描述由早期视觉、中阶形状整合至额区响应的时序传递，构建三级 Wilson--Cowan 型神经群模型\cite{wilson1972excitatory,glomb2022computational}。令 $\boldsymbol E_s(t),\boldsymbol I_s(t)\in\mathbb R^3$ 分别为第 $s$ 级的兴奋性与抑制性群体状态，$s=1,2,3$，则
+为描述由早期视觉、中阶形状整合至额区响应的时序传递，构建三级 Wilson--Cowan 型神经群模型。Wilson--Cowan 方程以兴奋性、抑制性群体的平均活动描述神经群体动力学\upcite{wilson1972excitatory}；在此基础上引入逐级传递、递归耦合和突触低通环节，使模型能够生成具有传播时延的 EEG 与视觉诱发电位样波形。令 $\boldsymbol E_s(t),\boldsymbol I_s(t)\in\mathbb R^3$ 分别为第 $s$ 级的兴奋性与抑制性群体状态，$s=1,2,3$，则
 \begin{align}
 \tau_{E,s}\dot{\boldsymbol E}_s
 &=-\boldsymbol E_s+
@@ -702,14 +715,14 @@ r_{\theta_{jk}}(p_{jk}+\delta;X_d)+\varepsilon
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.98\textwidth]{Q2_图2_皮层内部响应.pdf}
-\caption{A1 记录对应的三级 E/I 神经群及突触等效源响应}
+\includegraphics[width=0.98\textwidth]{Q2_图2_皮层内部响应.png}
+\caption{A1 三级神经群与等效源响应图}
 \label{fig:q2_cortex_response}
 \end{figure}
 
 \paragraph{（3）突触等效源与头皮观测}
 
-头皮脑电主要反映大规模同步突触后电流，而非单个神经元动作电位\cite{steeghs2025slow}。因此，对每一级兴奋、抑制状态分别施加二阶低通突触核：
+头皮脑电是大量神经元同步电生理活动在头皮表面的整体反映\upcite{han2020eeg}，其慢波形态还会受到突触整合和传播时延的影响。因此，对每一级兴奋、抑制状态分别施加二阶低通突触核：
 \begin{align}
 \tau_{e,s}\dot{\boldsymbol u}_{e,s}
 &=\boldsymbol E_s-\boldsymbol E_{s,0}-\boldsymbol u_{e,s},
@@ -762,7 +775,7 @@ r_{\theta_{jk}}(p_{jk}+\delta;X_d)+\varepsilon
 
 \begin{table}[H]
 \centering
-\caption{问题二神经动力学模型的主要参数}
+\caption{神经动力学模型参数表}
 \label{tab:q2_params}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{llll}
@@ -785,8 +798,8 @@ $\lambda$ & 观测矩阵岭参数 & $\{0.1,0.3,1,3,10,30,100\}$ & 训练块内�
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.98\textwidth]{Q2_图3_ERP拟合与留出.pdf}
-\caption{A1 左右条件 ERP 的同样本描述拟合与连续时间块留出预测}
+\includegraphics[width=0.98\textwidth]{Q2_图3_ERP拟合与留出.png}
+\caption{A1 ERP 拟合与留出预测图}
 \label{fig:q2_erp_fitting}
 \end{figure}
 
@@ -821,8 +834,8 @@ S_\Delta
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.78\textwidth]{Q2_图4_左右差异波.pdf}
-\caption{四组记录右减左 ERP 差异波的连续时间块留出预测}
+\includegraphics[width=0.78\textwidth]{Q2_图4_左右差异波.png}
+\caption{四组记录的 ERP 差异波预测图}
 \label{fig:q2_diff_waves}
 \end{figure}
 
@@ -830,7 +843,7 @@ S_\Delta
 
 \begin{table}[H]
 \centering
-\caption{完整模型在四组记录上的留出预测结果}
+\caption{完整模型留出预测结果表}
 \label{tab:q2_mechanism_results}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lccccc}
@@ -862,8 +875,8 @@ B2 & 0.2562 & $[-1.1102,\ 0.5607]$ & 90.6075 & $-0.1176$ & 0.1193 \\
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.98\textwidth]{Q2_图5_空间侧化.pdf}
-\caption{四组记录的 F4--F3 电位差与稳定化侧化指数}
+\includegraphics[width=0.98\textwidth]{Q2_图5_空间侧化.png}
+\caption{额区电位差与侧化指数图}
 \label{fig:q2_lateralization}
 \end{figure}
 
@@ -875,8 +888,8 @@ B2 & 0.2562 & $[-1.1102,\ 0.5607]$ & 90.6075 & $-0.1176$ & 0.1193 \\
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.98\textwidth]{Q2_图6_消融与敏感性.pdf}
-\caption{模型消融、固定参数干预及差异预测增益的敏感性分析}
+\includegraphics[width=0.98\textwidth]{Q2_图6_消融与敏感性.png}
+\caption{模型消融与敏感性分析图}
 \label{fig:q2_ablation}
 \end{figure}
 
@@ -909,7 +922,7 @@ A_{\mathrm{F4}}-A_{\mathrm{F3}},
 
 \begin{table}[H]
 \centering
-\caption{二十三维视觉刺激响应特征的组成}
+\caption{视觉刺激响应特征构成表}
 \label{tab:q2_feature_def}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lccl}
@@ -967,7 +980,7 @@ h(\boldsymbol\phi)
 
 \begin{table}[H]
 \centering
-\caption{不同视觉刺激响应特征的连续时间块留出判别性能}
+\caption{视觉刺激特征留出判别性能表}
 \label{tab:q2_feature_performance}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lccccc}
@@ -990,8 +1003,8 @@ h(\boldsymbol\phi)
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.98\textwidth]{Q2_图7_特征与判别.pdf}
-\caption{A1 视觉刺激特征投影、留出判别与块内置换检验}
+\includegraphics[width=0.98\textwidth]{Q2_图7_特征与判别.png}
+\caption{A1 特征投影与留出判别图}
 \label{fig:q2_classification}
 \end{figure}
 
@@ -1006,11 +1019,11 @@ h(\boldsymbol\phi)
 
 \paragraph{（1）从事件证据到认知状态的分层建模}
 
-本问采用“事件层---认知层---观测层---决策层”的递进结构。事件层确定提示、目标和应答的时间边界；认知层描述视觉输入在短时保持与目标触发下的状态演化；观测层把模型状态投影为头皮电位；决策层仅在仿真任务布局中把方向证据转换为行为结局。各层的输入、状态与输出如表~\ref{tab:q3_route} 所示。该结构一方面复用问题二已建立的视觉通路，另一方面将无法由三导联 EEG 直接确认的深部来源保留为功能性状态，而不将其解释为海马体的直接源定位结果\cite{glomb2022computational,daume2024control}。
+为同时描述视觉事件、信息保持和目标触发过程，本问采用“事件层---认知层---观测层---决策层”的递进结构。事件层确定提示、目标和应答的时间边界；认知层描述视觉输入在短时保持与目标触发下的状态演化；观测层把模型状态投影为头皮电位；决策层仅在仿真任务布局中把方向证据转换为行为结局。各层的输入、状态与输出如表~\ref{tab:q3_route} 所示。该结构一方面复用问题二已建立的视觉通路，另一方面将无法由三导联 EEG 直接确认的深部来源保留为功能性状态，而不将其解释为海马体的直接源定位结果\upcite{he2025eegmodels,daume2024control}。
 
 \begin{table}[H]
 \centering
-\caption{问题三认知模型的分层结构}
+\caption{认知模型分层结构表}
 \label{tab:q3_route}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{llll}
@@ -1038,7 +1051,7 @@ h(\boldsymbol\phi)
 
 \begin{table}[H]
 \centering
-\caption{问题三候选模型与对照关系}
+\caption{候选认知模型及对照表}
 \label{tab:q3_candidates}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{clll}
@@ -1069,7 +1082,7 @@ N2 消融 & 删除记忆投影或关闭目标触发提取 & 定位主模型的�
 
 \begin{table}[H]
 \centering
-\caption{四组记录的事件标记与认知 EEG 保留情况}
+\caption{事件标记与认知 EEG 保留统计表}
 \label{tab:q3_event_audit}
 \begin{tabular}{cccccc}
 \toprule
@@ -1104,7 +1117,7 @@ T_i^{\mathrm{end}}=
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.94\textwidth]{q3_events.png}
-\caption{四组记录的应答标记审计与认知信号截窗规则}
+\caption{应答标记与认知信号截窗图}
 \label{fig:q3_events}
 \end{figure}
 
@@ -1209,7 +1222,7 @@ c_{i,h,c}(t)=s_{i,h,c}^{\mathrm{pre}}\tau_h
 
 \begin{table}[H]
 \centering
-\caption{认知模型与决策层的主要参数}
+\caption{认知与决策模型参数表}
 \label{tab:q3_parameters}
 \begin{tabular}{cllc}
 \toprule
@@ -1237,7 +1250,7 @@ $b$ & 决策边界 & 1 & 归一化设定 \\
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{q3_eeg.png}
-\caption{四组记录的认知模型留出预测与实测 $F_z$ 脑电对比}
+\caption{认知模型留出预测结果图}
 \label{fig:q3_eeg}
 \end{figure}
 
@@ -1272,7 +1285,7 @@ r_i=\frac{\langle\boldsymbol f_i^{\mathrm c},\boldsymbol f_i^{\mathrm R}\rangle
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.96\textwidth]{q3_states.png}
-\caption{提示保持、目标触发认知状态与决策证据的连续演化}
+\caption{认知状态与决策证据演化图}
 \label{fig:q3_states}
 \end{figure}
 
@@ -1309,7 +1322,7 @@ F_{\mathrm c}(t)+F_{\mathrm e}(t)+S_{\mathrm u}(t)=1.
 
 \begin{table}[H]
 \centering
-\caption{不同机制扰动下的三类决策仿真结果}
+\caption{决策机制扰动仿真结果表}
 \label{tab:q3_decision}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lccccc}
@@ -1329,7 +1342,7 @@ F_{\mathrm c}(t)+F_{\mathrm e}(t)+S_{\mathrm u}(t)=1.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{q3_decision.png}
-\caption{认知状态驱动的正确、错误与未决决策仿真}
+\caption{认知状态驱动的决策仿真图}
 \label{fig:q3_decision}
 \end{figure}
 
@@ -1359,7 +1372,7 @@ $S_g>0$ 表示认知模型在该阶段的留出误差更低。表~\ref{tab:q3_ee
 
 \begin{table}[H]
 \centering
-\caption{认知模型相对慢趋势对照的目标后留出预测增益}
+\caption{认知模型目标后留出增益表}
 \label{tab:q3_eeg_validation}
 \begin{tabular}{ccccc}
 \toprule
@@ -1380,7 +1393,7 @@ B2 & 71 & $-0.0148$ & $[-0.0547,\ 0.0298]$ & 轻微负向 \\
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.80\textwidth]{q3_window.png}
-\caption{目标后观察窗敏感性与项目二实测点击时间分布}
+\caption{观察窗敏感性与点击时间分布图}
 \label{fig:q3_window}
 \end{figure}
 
@@ -1397,6 +1410,7 @@ B2 & 71 & $-0.0148$ & $[-0.0547,\ 0.0298]$ & 轻微负向 \\
 %% -----------------------------------------------------------------------------
 %% 模块 6：模型评价与优缺点讨论
 %% -----------------------------------------------------------------------------
+\newpage
 \section{模型优缺点评价}
 \subsection{问题一模型评价}
 
@@ -1429,323 +1443,168 @@ B2 & 71 & $-0.0148$ & $[-0.0547,\ 0.0298]$ & 轻微负向 \\
 \clearpage
 \begin{thebibliography}{99}
 \addcontentsline{toc}{section}{参考文献} % 将参考文献加入到 PDF 目录大纲中
-\bibitem{glomb2022computational}
-GLOMB K, CABRAL J, CATTANI A, et al. Computational models in electroencephalography[J]. \emph{Brain Topography}, 2022, 35(2): 142--161.
+\bibitem{ding2024bci}
+丁晶. 脑电与基于脑电的脑机接口技术的临床应用进展[J]. 上海医学, 2024, 47(4): 217--219.
+\bibitem{qiu2023bci}
+邱爽, 杨帮华, 陈小刚, 等. 非侵入式脑—机接口编解码技术研究进展[J]. 中国图象图形学报, 2023, 28(6): 1543--1566.
+\bibitem{he2025eegmodels}
+何中阳, 高源龙, 曾颖, 等. 脑电大模型研究进展综述[J]. 信息工程大学学报, 2025, 26(6): 674--682.
+\bibitem{picton2000guidelines}
+PICTON T W, BENTIN S, BERG P, et al. Guidelines for using human event-related potentials to study cognition: Recording standards and publication criteria[J]. \emph{Psychophysiology}, 2000, 37(2): 127--152.
+\bibitem{han2020eeg}
+韩伟, 卓雁文, 李艳, 等. 脑电信号处理与分析方法研究进展[J]. 中国医疗设备, 2020, 35(4): 149--154.
+\bibitem{yang2015sobi}
+杨帮华, 章云元, 李华荣, 等. 基于二阶盲辨识结合小波包的脑电信号预处理[J]. 上海交通大学学报, 2015, 49(12): 1900--1906.
+\bibitem{zhang2026ssmd}
+张伟, 涂伟, 邓国金, 等. 基于辛稀疏模态分解的抑郁症患者脑电信号眼电伪迹自适应去除方法研究[J]. 现代仪器与医疗, 2026, 32(2): 15--22.
+\bibitem{daume2024control}
+DAUME J, KAMINSKI J, SCHJETNAN A G P, et al. Control of working memory by phase-amplitude coupling of human hippocampal neurons[J]. \emph{Nature}, 2024, 629: 393--401.
+\bibitem{lin2012p300}
+林彬, 钱若兵, 傅先明, 等. 海洛因成瘾者冲动行为的事件相关电位 P300 研究[J]. 中华行为医学与脑科学杂志, 2012, 21(3): 235--237.
+\bibitem{xia2024p300}
+夏天, 李竞斌, 向程乐, 等. 基于卷积神经网络的 P300 脑电信号解码[J]. 南京大学学报（自然科学）, 2024, 60(4): 577--585.
+\bibitem{feng2026mdd}
+冯捷, 张函, 夏叶, 等. 事件相关电位在重性抑郁障碍诊断与治疗中的研究进展[J]. 神经损伤与功能重建, 2026, 21(1): 13--19.
+\bibitem{lai2019classification}
+赖虹宇, 冯静雯, 王毅, 等. 抑郁症和精神分裂症患者静息态脑电信号的分类研究[J]. 生物医学工程学杂志, 2019, 36(6): 916--923.
+\bibitem{jia2024depression}
+贾建, 孙新娜, 张瑞. 基于混合双线性模型的抑郁症辅助诊断[J]. 西北大学学报（自然科学版）, 2024, 54(2): 145--155.
+\bibitem{tao2023sleep}
+陶然, 丁胜男, 陈洁, 等. 基于睡眠脑电信号和深度学习的抑郁症识别研究[J]. 四川大学学报（医学版）, 2023, 54(2): 287--292.
 \bibitem{wilson1972excitatory}
 WILSON H R, COWAN J D. Excitatory and inhibitory interactions in localized populations of model neurons[J]. \emph{Biophysical Journal}, 1972, 12(1): 1--24.
-\bibitem{steeghs2025slow}
-STEEGHS-TURCHINA M, SRINIVASAN R, NUNEZ P L, et al. Slow wave dynamics of scalp EEG can be explained by simple statistical models of long-range connections[J]. \emph{NeuroImage}, 2025, 321: 121418.
-\bibitem{daume2024control}
-DAUME J, KAMINSKI J, et al. Control of working memory by phase-amplitude coupling of human hippocampal neurons[J]. \emph{Nature}, 2024, 629: 808--816.
-\bibitem{acebron2005kuramoto}
-ACEBR\'{O}N J A, BONILLA L L, P\'{E}REZ VICENTE C J, et al. The Kuramoto model: A simple paradigm for synchronization phenomena[J]. \emph{Reviews of Modern Physics}, 2005, 77(1): 137--185.
-\bibitem{azzopardi2014ventral}
-AZZOPARDI G, PETKOV N. Ventral-stream-like shape representation: from pixel intensity values to trainable object-selective COSFIRE models[J]. \emph{Frontiers in Computational Neuroscience}, 2014, 8: 112.
 \end{thebibliography}
 
 \appendix
-% ==============================================================================
-% 附录：核心算法程序代码（严格对标华为杯优秀论文版式）
-% ==============================================================================
 \clearpage
+\renewcommand{\headrulewidth}{0pt}
+\phantomsection
+\addcontentsline{toc}{section}{附录 A\ 人工智能软件辅助答题说明}
+
 \begin{center}
-    {\zihao{3} \heiti \textbf{附\quad 录}}
+    {\zihao{3}\heiti\bfseries 附录 A\quad 人工智能软件辅助答题说明}
 \end{center}
-\addcontentsline{toc}{section}{附录}
+\vspace{1.0em}
 
-\noindent
-% 1. 表头部分：注意第二行末尾不要加 \hline，让下方代码框的顶线无缝接上！
-\begin{tabularx}{\linewidth}{|p{0.55\textwidth}|>{\centering\arraybackslash}X|}
-\hline
-\multicolumn{2}{|l|}{\textbf{附录 1} 由于篇幅问题对附录中的代码进行了删减，完整代码在对应的附件中} \\
-\hline
-\centering 问题一建模代码 & 编程语言：Python \\ 
-\end{tabularx}%
-\vspace{1.2pt}% 消除微小缝隙，使竖线严丝合缝对接
+\begingroup
+\zihao{-4}
+在本论文的研究与撰写过程中，本团队使用了人工智能工具进行辅助。相关信息说明如下：
 
-% 2. 代码部分：封闭单框，彻底关闭行号，左右边距设为 0
-\begin{lstlisting}[
+\vspace{0.8em}
+\noindent\textbf{1. AI 软件平台：}
+
+\noindent 名称：ChatGPT
+
+\noindent 版本：GPT-6 Sol
+
+\noindent 制造商：OpenAI
+
+\vspace{0.8em}
+\noindent\textbf{2. AI 使用方式：}
+
+\noindent 以下工作借助了 AI 工具：
+
+围绕脑电信号预处理、视觉神经群体动力学和宏观认知过程建模，对研究思路、模型结构及评价指标进行讨论，并为部分参数设置提供参考建议。
+
+辅助检查用于数据处理、模型求解与结果分析的 Python 程序，并对论文文字进行语言润色。
+
+\vspace{0.8em}
+\noindent\textbf{3. 作者责任确认：}
+
+论文作者对 AI 辅助生成或修改的内容进行了审查、验证与修订。论文中的模型选择、参数确定、实验分析、图表结果及最终结论均由作者确认，论文内容的准确性和完整性由全体作者承担责任。AI 工具仅用于辅助研究与写作，不作为数据来源或论文作者，也不替代作者作出关键学术判断。
+
+\endgroup
+\newpage
+
+\phantomsection
+\addcontentsline{toc}{section}{附录 B\ 主要程序代码内容}
+
+\begin{center}
+    {\zihao{3}\heiti\bfseries 附录 B\quad 主要程序代码内容}
+\end{center}
+\vspace{0.4em}
+
+% 附录采用参考论文的连续代码版式：标题栏与代码框共用边线。
+\lstset{
+    language=Python,
+    basicstyle=\fontsize{7.2pt}{8.4pt}\selectfont\ttfamily,
+    numbers=none,
     frame=single,
-    numbers=none,           % 核心：关闭行号，彻底去掉左侧数字！
-    xleftmargin=3.4pt,        % 左侧零边距，与表格左边框精准对齐
-    xrightmargin=3.4pt,       % 右侧零边距，与表格右边框精准对齐
-    basicstyle=\footnotesize\ttfamily
-]
-import os
-import argparse
-import hashlib
-import json
-import platform
-from pathlib import Path
-
-import numpy as np
-import pandas as pd
-from scipy.interpolate import LSQUnivariateSpline
-import scipy.io as sio
-from scipy.stats import median_abs_deviation
-from scipy.signal import find_peaks, butter, sosfiltfilt, iirnotch, filtfilt, savgol_filter, welch
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from sklearn.model_selection import StratifiedKFold, train_test_split
-
-ROOT = Path(__file__).resolve().parent
-
-# 时间轴、校正参数和绘图设置
-FS_EXPECTED = 256
-PRE_SEC = 0.25      # 刺激前 250 ms 基线
-POST_SEC = 0.80     # 刺激后 800 ms 分析窗
-
-N_PRE = round(PRE_SEC * FS_EXPECTED)
-N_POST = round(POST_SEC * FS_EXPECTED)
-TIMES = np.arange(-N_PRE, N_POST) / FS_EXPECTED
-TIMES_MS = TIMES * 1000.0
-
-P300_MASK = (TIMES >= 0.25) & (TIMES <= 0.50)
-CHANNEL_NAMES = ["Fz", "F3", "F4"]
-
-# 双分量校正参数
-CORRECTION_PARAMS = {
-    "win_blink": 41,        # 垂直眼电平滑窗长 (约 160 ms)
-    "win_saccade": 31,      # 水平扫视平滑窗长 (约 120 ms)
-    "gate_z_v": 2.2,        # 垂直软门控阈值
-    "gate_z_h": 2.2,        # 水平软门控阈值
-    "gate_width": 1.2,      # 软门控过渡带宽度
-    "reg_lambda": 0.05,     # 岭回归正则化系数，防止过减
-    "max_beta_v": 1.8,      # 垂直通道最大增益
-    "max_beta_h": 1.5,      # 水平通道最大增益
+    rulecolor=\color{black},
+    breaklines=true,
+    breakatwhitespace=false,
+    breakindent=0pt,
+    columns=fullflexible,
+    keepspaces=true,
+    upquote=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    xleftmargin=6pt,
+    xrightmargin=6pt,
+    framexleftmargin=3pt,
+    framexrightmargin=3pt,
+    aboveskip=0pt,
+    belowskip=0pt
 }
 
-def load_mat_file(filepath):
-    """读取赛题 .mat 文件"""
-    mat = sio.loadmat(filepath, squeeze_me=True, struct_as_record=False)
-    fs = int(mat["SampleRate"])
-    labels = list(mat["DataLabel"])
-    data = mat["data"]
-    return fs, labels, data
+\newcommand{\appendixcodeheader}[2]{%
+\par\nointerlineskip
+\begingroup
+\renewcommand{\arraystretch}{1.45}%
+\noindent
+\begin{tabularx}{\linewidth}{|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|}
+\hline
+\strut #2 & 编程语言：Python \\
+\hline
+\end{tabularx}%
+\endgroup
+\par\nointerlineskip
+\vspace{-\arrayrulewidth}%
+}
 
-def extract_viscue_events(viscue):
-    """根据 VisCue 通道提取事件上升沿与方向标签 (-1: 左三角, +1: 右三角)"""
-    nonzero = (viscue != 0)
-    onset_mask = nonzero & np.r_[True, ~nonzero[:-1]]
-    onsets = np.where(onset_mask)[0]
-    cue_values = viscue[onsets].astype(int)
-    return onsets, cue_values
-
-def segment_epochs(signal, onsets, n_pre=N_PRE, n_post=N_POST):
-    """截取 [-N_PRE, N_POST] 试次片段，shape: (trials, channels, time)"""
-    epochs = []
-    n_samples = signal.shape[-1]
-    for onset in onsets:
-        start = onset - n_pre
-        end = onset + n_post
-        if start < 0 or end > n_samples:
-            continue
-        epochs.append(signal[..., start:end])
-    return np.stack(epochs, axis=0)
-
-def preprocess_continuous_eeg(data_3ch, fs=FS_EXPECTED):
-    """
-    对连续 3 通道 EEG 进行预处理：
-    1. 60 Hz 陷波滤波（抑制实测强工频干扰）
-    2. 0.1-30 Hz 四阶 Butterworth 零相位带通
-    """
-    b_notch, a_notch = iirnotch(w0=60.0, Q=30.0, fs=fs)
-    notched = filtfilt(b_notch, a_notch, data_3ch, axis=-1)
-
-    sos = butter(4, [0.1, 30.0], btype="bandpass", fs=fs, output="sos")
-    filtered = sosfiltfilt(sos, notched, axis=-1)
-    return filtered
-
-def robust_baseline_correct(epochs, n_pre=N_PRE):
-    """使用刺激前 [-250, 0] ms 的稳健中位数/截断均值作为基线，扣除慢漂移偏置"""
-    baseline = np.median(epochs[:, :, :n_pre], axis=2, keepdims=True)
-    return epochs - baseline
-
-def detect_bad_trials(raw_epochs, filtered_epochs):
-    """
-    识别不可恢复严重坏试次：
-    1. 原始采样点发生 ±1000 硬件饱和截幅连续超过 15 个点
-    2. 峰峰值超过 1800 原始幅值单位
-    3. 相邻点发生物理不可能的跳跃
-    """
-    peak_to_peak = np.ptp(filtered_epochs, axis=2).max(axis=1)
-    sat_points = np.sum(np.abs(raw_epochs) >= 999.0, axis=(1, 2))
-    max_jump = np.max(np.abs(np.diff(filtered_epochs, axis=2)), axis=(1, 2))
-
-    irrecoverable = (sat_points >= 15) | (peak_to_peak > 1800) | (max_jump > 600)
-    return irrecoverable
-
-def correct_single_epoch(epoch, template, scale_v, scale_h, params=CORRECTION_PARAMS):
-    """双分量自适应校正核心算法"""
-    residual = epoch - template
-
-    # 1. 垂直与水平正交眼动参考
-    ref_v = np.median(residual, axis=0)
-    ref_v_smooth = savgol_filter(ref_v, window_length=params["win_blink"], polyorder=3)
-    ref_h = 0.5 * (residual[2] - residual[1])
-    ref_h_smooth = savgol_filter(ref_h, window_length=params["win_saccade"], polyorder=3)
-
-    # 2. 动态自适应软门控
-    z_v = np.abs(ref_v_smooth) / (scale_v + 1e-6)
-    gate_v = np.clip((z_v - params["gate_z_v"]) / params["gate_width"], 0, 1)
-    art_v = ref_v_smooth * gate_v
-
-    z_h = np.abs(ref_h_smooth) / (scale_h + 1e-6)
-    gate_h = np.clip((z_h - params["gate_z_h"]) / params["gate_width"], 0, 1)
-    art_h = ref_h_smooth * gate_h
-
-    # 3. 带约束岭回归消除
-    X = np.column_stack([art_v, art_h])
-    lambda_eye = params["reg_lambda"] * np.eye(2)
-    XtX = X.T @ X + lambda_eye
-
-    corrected = epoch.copy()
-    for ch in range(3):
-        y = residual[ch]
-        beta = np.linalg.solve(XtX, X.T @ y)
-        beta_v = float(np.clip(beta[0], 0, params["max_beta_v"]))
-        beta_h = float(np.clip(beta[1], -params["max_beta_h"], params["max_beta_h"]))
-        if ch == 0:
-            beta_h = float(np.clip(beta_h, -0.3, 0.3))
-        corrected[ch] = epoch[ch] - (beta_v * art_v + beta_h * art_h)
-
-    corrected -= np.mean(corrected[:, :N_PRE], axis=1, keepdims=True)
-    return corrected
-\end{lstlisting}
-
-% ==============================================================================
-% 附录 2：问题二建模核心代码
-% ==============================================================================
+\appendixcodeheader{附录 1}{问题一建模代码}
+\lstinputlisting[frame=lrb,firstline=1,lastline=53]{appendix_q1_core.py}
+\clearpage
+\lstinputlisting[firstline=54,lastline=106]{appendix_q1_core.py}
+\clearpage
+\lstinputlisting[firstline=107,lastline=159]{appendix_q1_core.py}
+\clearpage
+\lstinputlisting[firstline=160,lastline=212]{appendix_q1_core.py}
+\clearpage
+\lstinputlisting[firstline=213,lastline=261]{appendix_q1_core.py}
 
 \clearpage
+\appendixcodeheader{附录 2}{问题二建模代码}
+\lstinputlisting[frame=lrb,firstline=1,lastline=55]{appendix_q2_core.py}
+\clearpage
+\lstinputlisting[firstline=56,lastline=110]{appendix_q2_core.py}
+\clearpage
+\lstinputlisting[firstline=111,lastline=165]{appendix_q2_core.py}
+\clearpage
+\lstinputlisting[firstline=166,lastline=220]{appendix_q2_core.py}
+\clearpage
+\lstinputlisting[firstline=221,lastline=275]{appendix_q2_core.py}
+\clearpage
+\lstinputlisting[firstline=276,lastline=330]{appendix_q2_core.py}
+\clearpage
+\lstinputlisting[firstline=331,lastline=384]{appendix_q2_core.py}
 
-\noindent
-% 1. 表头部分：注意第二行末尾不要加 \hline，让下方代码框的顶线无缝接上！
-\begin{tabularx}{\linewidth}{|p{0.55\textwidth}|>{\centering\arraybackslash}X|}
-\hline
-\multicolumn{2}{|l|}{\textbf{附录 2} 由于篇幅问题对附录中的代码进行了删减，完整代码在对应的附件中} \\
-\hline
-\centering 问题二建模代码 & 编程语言：Python \\ 
-\end{tabularx}%
-\vspace{1.2pt}% 消除微小缝隙，使竖线严丝合缝对接
-
-% 2. 代码部分：封闭单框，彻底关闭行号，左右边距设为 0
-\begin{lstlisting}[
-    frame=single,
-    numbers=none,           % 核心：关闭行号，彻底去掉左侧数字！
-    xleftmargin=3.4pt,        % 左侧零边距，与表格左边框精准对齐
-    xrightmargin=3.4pt,       % 右侧零边距，与表格右边框精准对齐
-    basicstyle=\footnotesize\ttfamily
-]
-import numpy as np
-from scipy.integrate import solve_ivp
-from scipy.optimize import root
-from scipy.special import expit
-from scipy.ndimage import maximum_filter
-
-# ==================== 1. COSFIRE 几何边缘组合编码 ====================
-def encode_shapes(left_img, right_img, templates):
-    """
-    基于 COSFIRE 空间边缘组合思想，提取三角形边缘与朝向偏好驱动
-    """
-    images = np.stack([left_img, right_img])
-    # 空间定向边缘滤波响应 (Gabor 算子模拟初级视皮层感受野)
-    response = np.stack([maximum_filter(oriented_edges(im), size=(1, 3, 3)) for im in images])
-    
-    # 局部特征空间容差模糊最大值与几何加权平均
-    activation = np.array([[np.exp(np.mean(np.log([r[o, y, x] + 1e-5 
-                           for y, x, o in pos]))) for pos in templates] 
-                           for r in response])
-    # 归一化为对偶形状输入向量
-    activation /= np.maximum(np.diag(activation[:2]), 1e-10)[None, :]
-    return activation  # 输出左、右对偶形状驱动强度
-
-# ==================== 2. 三级 Wilson-Cowan 介观动力学网络 ====================
-def simulate(inputs, scale=1.0, recurrence=0.1, duration=52/256):
-    """
-    三级 E/I 神经元群动力学仿真：LGN 中继 -> 早期视皮层 -> 形状整合 -> 前额响应
-    """
-    tau_e = scale * np.array([0.020, 0.040, 0.080])[:, None]
-    tau_i = 2 * tau_e
-    tau_se = scale * np.array([0.025, 0.050, 0.100])[:, None]
-    tau_si = 3 * tau_se
-    W = (np.ones((3, 3)) - np.eye(3)) / 2
-
-    eq = root(lambda z: np.r_[-z[:3] + expit(z[:3]-z[3:] + recurrence*W@z[:3]-2),
-                              -z[3:] + expit(z[:3]-z[3:]-2)], np.full(6, 0.12))
-    resting_e = np.tile(eq.x[:3], (3, 1))
-    resting_i = np.tile(eq.x[3:], (3, 1))
-    state0 = np.r_[np.zeros(3), resting_e.ravel(), resting_i.ravel(), np.zeros(36)]
-
-    def derivative(t, state, feature):
-        g = state[:3]
-        e = state[3:12].reshape(3, 3)
-        i = state[12:21].reshape(3, 3)
-        ue, ve, ui, vi = state[21:].reshape(4, 3, 3)
-        
-        drive = np.vstack([g, 3 * (e[:-1] - resting_e[:-1])])
-        de = (-e + expit(e - i + recurrence * (e @ W.T) + drive - 2)) / tau_e
-        di = (-i + expit(e - i - 2)) / tau_i
-        
-        stim_drive = 3 * feature if 0 <= t < duration else np.zeros(3)
-        dg = (-g + stim_drive) / (0.020 * scale)
-        
-        due = (e - resting_e - ue) / tau_se
-        dve = (ue - ve) / tau_se
-        dui = (i - resting_i - ui) / tau_si
-        dvi = (ui - vi) / tau_si
-        
-        return np.r_[dg, de.ravel(), di.ravel(), due.ravel(), dve.ravel(), dui.ravel(), dvi.ravel()]
-
-    t_eval = np.arange(-250, 4001) / 1000.0
-    sol = solve_ivp(lambda tt, z: derivative(tt, z, inputs), (-0.25, 4.0), state0, 
-                    t_eval=t_eval, method='RK45', rtol=1e-7, atol=1e-9)
-    
-    syn = sol.y[21:].reshape(4, 3, 3, len(t_eval))
-    q_sources = syn[1] - 0.7 * syn[3]
-    return t_eval, q_sources
-
-# ==================== 3. 头皮有效观测矩阵 L 岭回归联合求解 ====================
-def solve_observation_matrix(q_sources, eeg_erps, lambda_reg=1.0):
-    """共同-差分双目标优化求解条件共享有效观测矩阵 L (3x9)"""
-    Cy = 0.5 * (eeg_erps['Right'] + eeg_erps['Left'])
-    Dy = eeg_erps['Right'] - eeg_erps['Left']
-    Cq = 0.5 * (q_sources['Right'] + q_sources['Left'])
-    Dq = q_sources['Right'] - q_sources['Left']
-    
-    Y_joint = np.hstack([Cy, Dy])
-    Q_joint = np.hstack([Cq, Dq])
-    
-    L_hat = Y_joint @ Q_joint.T @ np.linalg.inv(Q_joint @ Q_joint.T + lambda_reg * np.eye(9))
-    return L_hat
-
-# ==================== 4. 区分左右刺激的 23 维机制增强特征提取 ====================
-def extract_23d_features(epoch, template_common, template_diff, train_q10):
-    """提取融合幅值、潜伏期、侧化指数与机理投影的 23 维特征向量"""
-    amp = np.mean(epoch[:, P300_MASK], axis=-1)
-    
-    peaks, lats, missing = [], [], []
-    for ch in range(3):
-        seg = epoch[ch, P300_MASK]
-        idx = np.argmax(seg)
-        if seg[idx] > 0:
-            peaks.append(seg[idx]); lats.append(TIMES_MS[P300_MASK][idx]); missing.append(0)
-        else:
-            peaks.append(0.0); lats.append(np.nan); missing.append(1)
-            
-    li = (amp[2] - amp[1]) / np.maximum(np.abs(amp[2]) + np.abs(amp[1]), train_q10)
-    lat_diff = amp[2] - amp[1]
-    
-    proj_coefs, residuals = [], []
-    for ch in range(3):
-        M = np.column_stack([template_common[ch], template_diff[ch]])
-        coef = np.linalg.lstsq(M, epoch[ch], rcond=None)[0]
-        proj_coefs.extend(coef)
-        res_rms = np.sqrt(np.mean((epoch[ch] - M @ coef)**2))
-        residuals.append(res_rms)
-        
-    return np.r_[amp, peaks, lats, missing, li, lat_diff, proj_coefs, residuals]
-\end{lstlisting}
+\clearpage
+\appendixcodeheader{附录 3}{问题三建模代码}
+\lstinputlisting[frame=lrb,firstline=1,lastline=58]{appendix_q3_core.py}
+\clearpage
+\lstinputlisting[firstline=59,lastline=116]{appendix_q3_core.py}
+\clearpage
+\lstinputlisting[firstline=117,lastline=174]{appendix_q3_core.py}
+\clearpage
+\lstinputlisting[firstline=175,lastline=232]{appendix_q3_core.py}
+\clearpage
+\lstinputlisting[firstline=233,lastline=290]{appendix_q3_core.py}
+\clearpage
+\lstinputlisting[firstline=291,lastline=348]{appendix_q3_core.py}
+\clearpage
+\lstinputlisting[firstline=349,lastline=402]{appendix_q3_core.py}
 
 \end{document}
